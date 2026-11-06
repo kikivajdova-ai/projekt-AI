@@ -45,7 +45,7 @@ def ring(cx, cy, n, rx, ry, dist, fill, offset=0.0, extra=''):
 
 
 # ---------- slunečnice ----------
-SUN = {'': ('#F2B33D', '#F7CB4D', '#E39A2A'), 'oranzova': ('#EE8A3C', '#F5A65E', '#D9722A')}
+SUN = {'': ('#FDC43F', '#F9A825', '#EF7A22'), 'oranzova': ('#F9A04A', '#F2822F', '#D9601F')}
 
 def sunflower(stage, variant=''):
     p1, p2, p3 = SUN[variant]
@@ -61,38 +61,25 @@ def sunflower(stage, variant=''):
                + f'<path d="M462 372 C470 352 490 352 498 372 Z" fill="{p2}"/>')
         return stem('M480 800 C474 680 488 540 480 440', 14) + leaves + bud
     cx, cy = 480, 300
-    # Slunečnice: špičaté, mírně prohnuté jazykovité lístky se středovým žlábkem (dvoubarevné),
-    # dvě řady (zadní tmavší), velký tmavý terč se semínky ve spirále.
-    import random
-    rnd = random.Random(5)
-
-    def ray(a, R, L, W, light, crease):
-        bend = rnd.uniform(-0.12, 0.12) * W
-        tip = f'{bend:.1f} {-L:.1f}'
-        outline = (f'M{-W*0.42:.1f} 0 C{-W*1.05:.1f} {-L*0.3:.1f} {-W*0.7:.1f} {-L*0.78:.1f} {tip} '
-                   f'C{W*0.7:.1f} {-L*0.78:.1f} {W*1.05:.1f} {-L*0.3:.1f} {W*0.42:.1f} 0 Z')
-        half = (f'M0 0 Q{bend*0.4:.1f} {-L*0.5:.1f} {tip} C{W*0.7:.1f} {-L*0.78:.1f} {W*1.05:.1f} {-L*0.3:.1f} {W*0.42:.1f} 0 Z')
+    # Slunečnice: široké mandlové lístky se špičkou (střídavě dva odstíny), zadní řada
+    # tmavší a pootočená, vroubkovaný terč se semínky paprskovitě kolem středu.
+    def petal(a, R, L, W, fill):
         x = cx + R * math.sin(math.radians(a)); y = cy - R * math.cos(math.radians(a))
-        return (f'<g transform="translate({x:.1f} {y:.1f}) rotate({a:.1f})"><path d="{outline}" fill="{light}"/>'
-                f'<path d="{half}" fill="{crease}" opacity=".55"/></g>')
-
-    back = ''.join(ray(360 * i / 12 + 15 + rnd.uniform(-4, 4), 56, rnd.uniform(96, 112), 20, p3, p1) for i in range(12))
-    front = ''.join(ray(360 * i / 14 + rnd.uniform(-4, 4), 60, rnd.uniform(86, 104), 19, p2, p1) for i in range(14))
-    seeds = ''
-    golden = math.pi * (3 - math.sqrt(5))
-    for k in range(1, 130):
-        r = 5.6 * math.sqrt(k)
-        if r > 62: break
-        t = k * golden
-        seeds += f'<circle cx="{cx + r*math.cos(t):.1f}" cy="{cy + r*math.sin(t):.1f}" r="{1.6 + r/40:.1f}" fill="{"#8A5E36" if r > 34 else "#6E5A2C"}"/>'
-    head = (back + front
-            + f'<circle cx="{cx}" cy="{cy}" r="74" fill="#5A3A22"/>'
-            + f'<circle cx="{cx}" cy="{cy}" r="66" fill="#6B4423"/>'
-            + f'<circle cx="{cx}" cy="{cy}" r="36" fill="#4E3A1F"/>'
+        return (f'<path d="M0 0 C{W*1.05:.1f} {-L*0.18:.1f} {W*0.62:.1f} {-L*0.8:.1f} 0 {-L:.1f} '
+                f'C{-W*0.62:.1f} {-L*0.8:.1f} {-W*1.05:.1f} {-L*0.18:.1f} 0 0 Z" fill="{fill}" '
+                f'transform="translate({x:.1f} {y:.1f}) rotate({a:.1f})"/>')
+    back = ''.join(petal(360 * i / 10 + 18, 50, 128, 40, p3) for i in range(10))
+    front = ''.join(petal(360 * i / 12, 54, 118, 38, p2 if i % 2 else p1) for i in range(12))
+    scallop = ''.join(f'<circle cx="{cx + 71*math.cos(math.radians(a)):.1f}" cy="{cy + 71*math.sin(math.radians(a)):.1f}" r="8" fill="#7D3A2E"/>'
+                      for a in range(0, 360, 15))
+    seeds = ''.join(f'<ellipse cx="{cx}" cy="{cy - r:.1f}" rx="{4 + r/14:.1f}" ry="{7 + r/9:.1f}" fill="#9A4A3A" transform="rotate({a + (r % 2) * 11} {cx} {cy})"/>'
+                    for r, step in ((44, 30), (26, 45)) for a in range(0, 360, step))
+    head = (back + front + scallop
+            + f'<circle cx="{cx}" cy="{cy}" r="72" fill="#7D3A2E"/>'
+            + f'<circle cx="{cx}" cy="{cy}" r="58" fill="#4A1F1C"/>'
             + seeds
-            + f'<path d="M{cx+74} {cy} A74 74 0 0 1 {cx-52} {cy+52} A80 80 0 0 0 {cx+74} {cy} Z" fill="#3F2814" opacity=".55"/>'
-            + f'<path d="M{cx-60} {cy-20} A64 64 0 0 1 {cx+10} {cy-64}" fill="none" stroke="#9A6A3E" stroke-width="5" stroke-linecap="round" opacity=".6"/>')
-    return stem('M480 800 C472 660 490 480 480 360', 16) + leaves + head
+            + f'<circle cx="{cx}" cy="{cy}" r="12" fill="#8A3F30"/>')
+    return stem('M480 800 C472 660 490 480 480 360', 20, '#6F8F35') + leaves + head
 
 
 # ---------- levandule ----------
