@@ -27,14 +27,12 @@ a { color: var(--primary); }
 a:hover { color: var(--ink-green); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-/* Telefon: na mobilu celá obrazovka, na počítači rámeček telefonu */
+/* Aplikace je navržená pro telefon (vzor 390×844). Na tabletu a počítači se rozvine,
+   viz sekci „Tablet a počítač“ na konci souboru. */
+html, body { background: var(--bg); }
 .phone {
-  position: relative; margin: 0 auto; width: 100%; max-width: 430px; min-height: 100dvh;
+  position: relative; margin: 0 auto; width: 100%; height: 100dvh;
   background: var(--bg); display: flex; flex-direction: column; overflow: hidden;
-}
-@media (min-width: 520px) {
-  body { padding: 24px 0; }
-  .phone { min-height: 0; height: min(880px, calc(100dvh - 48px)); border-radius: 40px; box-shadow: var(--shadow-float); }
 }
 .screen { flex: 1; overflow-y: auto; padding: 24px 20px 120px; display: flex; flex-direction: column; gap: 14px; }
 .screen > * { flex-shrink: 0; }
@@ -210,3 +208,99 @@ h3 { font-size: 15px; font-weight: 700; }
 .big-garden .fireflies circle:nth-child(3n) { animation-delay: 1.5s; }
 @keyframes glow { from { opacity: .25; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .big-garden .fireflies circle { animation: none; } }
+
+
+/* ---------- obaly pro širší obrazovky: na telefonu se neprojeví ---------- */
+.two-col, .col, .home-side, .home-main, .tasks, .auth-form { display: contents; }
+.hero-art, .sidebar, .garden-levels, .only-wide { display: none; }
+.only-narrow, .only-wide { position: absolute; inset: 0; }
+.only-narrow > svg, .only-wide > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.auth-art { margin: -24px -20px 0; height: 200px; position: relative; overflow: hidden; background: var(--tint); flex-shrink: 0; }
+
+/* ---------- Tablet (600–1023 px): stejné ovládání, obsah vycentrovaný a zúžený ---------- */
+@media (min-width: 600px) {
+  .screen { padding-inline: max(24px, calc((100% - 640px) / 2)); }
+  .screen.home { padding-inline: 0; }
+  .hero { padding-inline: max(24px, calc((100% - 640px) / 2)); }
+  .home-body { padding-inline: max(24px, calc((100% - 640px) / 2)); }
+  .tabbar { left: 50%; right: auto; width: min(560px, calc(100% - 32px)); transform: translateX(-50%); }
+  .toast { left: 50%; right: auto; width: min(520px, calc(100% - 32px)); transform: translateX(-50%); }
+  .garden-head { padding-inline: max(24px, calc((100% - 640px) / 2)); }
+  .auth-art { margin-inline: calc(-1 * max(24px, calc((100% - 640px) / 2))); height: 260px; }
+  .sheet { width: min(640px, 100%); margin-inline: auto; }
+}
+
+/* ---------- Počítač (od 1024 px): boční navigace, víc sloupců ---------- */
+@media (min-width: 1024px) {
+  .phone { display: grid; grid-template-columns: 264px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .demo-banner { grid-column: 1 / -1; }
+  .phone > .screen, .phone > .sheet-wrap, .phone > .center { grid-column: 2; min-height: 0; }
+  .phone:not(:has(> .sidebar)) > .screen, .phone:not(:has(> .sidebar)) > .sheet-wrap, .phone:not(:has(> .sidebar)) > .center { grid-column: 1 / -1; }
+  .tabbar, .only-narrow { display: none; }
+  .only-wide { display: block; }
+  .toast { left: auto; right: 28px; bottom: 28px; transform: none; width: 400px; }
+
+  /* boční navigace */
+  .sidebar { display: flex; flex-direction: column; gap: 18px; grid-row: 2; padding: 28px 18px 22px; background: var(--surface); border-right: 1px solid #ECEBE4; overflow-y: auto; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; padding: 0 8px 6px; }
+  .side-nav { display: flex; flex-direction: column; gap: 4px; }
+  .side-item { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px; border: none; border-radius: 999px; background: transparent; font-size: 15px; font-weight: 600; color: var(--ink-2); cursor: pointer; text-align: left; }
+  .side-item:hover { background: var(--chip); color: var(--ink); }
+  .side-item[aria-current="page"] { background: var(--tint-2); color: var(--ink-green); }
+  .side-garden { margin-top: auto; border: none; padding: 0; background: var(--bg); border-radius: 22px; overflow: hidden; cursor: pointer; text-align: left; display: flex; flex-direction: column; }
+  .side-garden:hover { box-shadow: 0 0 0 2px var(--tint); }
+  .side-garden-art { aspect-ratio: 390 / 230; }
+  .side-garden-art svg { width: 100%; height: 100%; display: block; }
+  .side-garden-text { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+
+  /* obsah: široký, ale ne roztažený */
+  .screen { padding: 36px max(40px, calc((100% - 1120px) / 2)) 48px; gap: 18px; }
+  .screen.home { padding: 28px max(40px, calc((100% - 1120px) / 2)) 48px; }
+  .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+  /* Domů: hlavička s ilustrací, vpravo cíl a pozvánky, vlevo chvilky ve mřížce */
+  .hero { position: relative; overflow: hidden; border-radius: 32px; padding: 32px 36px; min-height: 220px; justify-content: center; }
+  .hero > :not(.hero-art) { position: relative; z-index: 1; max-width: 55%; }
+  .hero h1 { font-size: 34px; }
+  .hero-art { display: block; position: absolute; right: 0; top: 0; bottom: 0; width: 46%; }
+  .hero-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-art::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 90px; background: linear-gradient(90deg, var(--tint), transparent); z-index: 1; }
+  .home-body { padding: 24px 0 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  .home-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .home-side { display: flex; flex-direction: column; gap: 14px; grid-column: 2; grid-row: 1; position: sticky; top: 0; }
+  .tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; align-items: start; }
+
+  /* Zahrada: velký obraz vlevo, úroveň a podoby zahrady vpravo */
+  .screen.garden-screen { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(480px, 1fr); gap: 24px; padding: 28px max(40px, calc((100% - 1180px) / 2)); overflow-y: auto; }
+  .garden-bg { position: relative; inset: auto; border-radius: 32px; overflow: hidden; min-height: 480px; box-shadow: var(--shadow); }
+  .garden-head { padding: 0; grid-column: 2; grid-row: 1; align-self: start; }
+  .garden-head h1 { font-size: 30px; }
+  .card.glass { background: var(--surface); backdrop-filter: none; }
+  .garden-levels { display: flex; }
+  .level-row { padding: 6px; border-radius: 18px; }
+  .level-row.now { background: var(--tint-2); }
+  .level-thumb { width: 72px; height: 48px; border-radius: 12px; overflow: hidden; background: var(--chip); flex-shrink: 0; }
+  .level-thumb svg { width: 100%; height: 100%; display: block; }
+
+  /* přihlášení: ilustrace vlevo, formulář vpravo */
+  .screen.auth { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(380px, 1fr); padding: 0; gap: 0; }
+  .auth-art { margin: 0; height: auto; min-height: 100%; }
+  .auth-form { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 48px max(40px, calc((100% - 1100px) / 2 + 40px)) 48px 56px; max-width: 520px; width: 100%; }
+
+  /* sdílení a další panely: karta uprostřed nad ilustrací */
+  .sheet-wrap { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 520px); justify-content: center; align-content: center; gap: 0; padding: 40px; background: var(--tint); }
+  .sheet-top { position: relative; min-height: 560px; height: 100%; border-radius: var(--r-sheet) 0 0 var(--r-sheet); box-shadow: var(--shadow-float); }
+  .sheet { margin: 0; border-radius: 0 var(--r-sheet) var(--r-sheet) 0; width: auto; box-shadow: var(--shadow-float); padding: 32px 32px 28px; justify-content: center; background: var(--surface); }
+  .sheet .handle { display: none; }
+  .phone:not(:has(> .sidebar)) > .screen:not(.auth) { padding-inline: max(40px, calc((100% - 640px) / 2)); }
+
+  /* okénko po splnění je na velké obrazovce o kousek větší */
+  .modal { width: min(400px, 100%); padding: 32px 28px 26px; }
+}
+
+/* Velké monitory: víc místa pro chvilky, obsah pořád vycentrovaný */
+@media (min-width: 1440px) {
+  .phone { grid-template-columns: 288px minmax(0, 1fr); }
+  .home-body { grid-template-columns: minmax(0, 1fr) 360px; }
+}
