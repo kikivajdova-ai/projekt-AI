@@ -170,3 +170,31 @@ h3 { font-size: 15px; font-weight: 700; }
 .card.just-done { animation: just-done 1.6s ease-out; }
 @keyframes just-done { 0% { box-shadow: 0 0 0 3px var(--primary); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .card.just-done { animation: none; outline: 2px solid var(--primary); } }
+
+/* okénko „Skvělá práce!“ po splnění chvilky */
+.modal-layer { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(35, 48, 26, 0.45); animation: fade-in .25s ease-out; }
+.modal { position: relative; width: min(340px, 100%); background: var(--surface); border-radius: 28px; padding: 26px 22px 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; box-shadow: 0 18px 50px rgba(35, 48, 26, .25); animation: pop-in .35s cubic-bezier(.2, .9, .3, 1.3); }
+.modal h2 { font-size: 24px; margin-top: 4px; }
+.modal .btn { width: 100%; margin-top: 10px; }
+.grow-flower { overflow: visible; }
+.gf-stem { stroke-dasharray: 60; stroke-dashoffset: 60; animation: gf-stem .7s ease-out .15s forwards; }
+.gf-leaf { transform-box: fill-box; transform-origin: center; scale: 0; animation: gf-pop .4s ease-out forwards; }
+.gf-leaf-l { animation-delay: .55s; }
+.gf-leaf-r { animation-delay: .7s; }
+.gf-bloom { transform-box: fill-box; transform-origin: center; scale: 0; animation: gf-bloom .6s cubic-bezier(.2, .9, .3, 1.4) .85s forwards; }
+.gf-spark { opacity: 0; animation: gf-spark 1.2s ease-out 1.3s forwards; }
+@keyframes gf-stem { to { stroke-dashoffset: 0; } }
+@keyframes gf-pop { to { scale: 1; } }
+@keyframes gf-bloom { 0% { scale: 0; rotate: -40deg; } 100% { scale: 1; rotate: 0deg; } }
+@keyframes gf-spark { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: .55; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.modal.static, .modal.static *, .modal-layer:has(.static) .modal-backdrop { animation: none !important; }
+.modal.static .gf-stem { stroke-dashoffset: 0; }
+.modal.static .gf-leaf, .modal.static .gf-bloom { scale: 1; }
+.modal.static .gf-spark { opacity: .55; }
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal *, .modal-backdrop { animation: none !important; }
+  .gf-stem { stroke-dashoffset: 0; } .gf-leaf, .gf-bloom { scale: 1; } .gf-spark { opacity: .55; }
+}

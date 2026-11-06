@@ -77,7 +77,7 @@ const GARDEN_SCENE = `<svg viewBox="0 0 390 280" preserveAspectRatio="xMidYMax s
 const S = {
   phase: 'loading', // loading | auth | onboarding | app
   tab: 'domu',
-  overlay: null, // pomoc | nalada | sdileni | pozvanka
+  overlay: null, // nalada | sdileni | pozvanka
   authMode: 'login', authError: null, authInfo: null, busy: false,
   me: null, game: null, moments: [], custom: [], friends: [], feed: [], pings: [], invites: [], groups: [], groupInvites: [],
   mode: {}, friendFor: {}, sentInvite: {}, contribute: true,
@@ -91,8 +91,45 @@ const S = {
 };
 
 function toast(msg) { S.toast = msg; render(); }
-// Krátké zablikání karty po splnění; pak je karta zase v původní podobě.
-function flashDone(id) { S.justDone = id; setTimeout(() => { if (S.justDone === id) { S.justDone = null; render(); } }, 1600); }
+// Okénko „Skvělá práce!“ uprostřed obrazovky s rostoucí květinou.
+function celebrate(title, cat, res, extra = '') {
+  const c = CAT[cat] || CAT.JINE;
+  const game = S.game?.hraZapnuta;
+  const note = res?.zprava && res.zprava !== 'Chvilka pro tebe je zapsaná.' ? res.zprava : '';
+  S.celebrate = {
+    title,
+    flower: c.flower,
+    text: game ? `V zahradě ti roste: ${c.plant}.` : 'Chvilka pro tebe je zapsaná.',
+    extra: [extra, note].filter(Boolean).join(' '),
+  };
+}
+
+function celebrateView() {
+  const c = S.celebrate;
+  if (!c) return '';
+  return `<div class="modal-layer">
+    <div class="modal-backdrop" data-a="closeCelebrate"></div>
+    <div class="modal${c === lastCelebrate ? ' static' : ''}" role="dialog" aria-modal="true" aria-labelledby="cel-title">
+      <svg class="grow-flower" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+        <ellipse cx="60" cy="106" rx="34" ry="8" fill="#C9D29C"/>
+        <path class="gf-stem" d="M60 104 C60 88 58 74 60 52" fill="none" stroke="#5F7424" stroke-width="5" stroke-linecap="round"/>
+        <g class="gf-leaf gf-leaf-l"><ellipse cx="50" cy="86" rx="11" ry="5.5" fill="#7E9240" transform="rotate(-30 50 86)"/></g>
+        <g class="gf-leaf gf-leaf-r"><ellipse cx="70" cy="74" rx="11" ry="5.5" fill="#8FA34A" transform="rotate(30 70 74)"/></g>
+        <g class="gf-bloom">
+          ${[0, 60, 120, 180, 240, 300].map((a) => `<ellipse cx="60" cy="34" rx="8" ry="14" fill="${esc(c.flower)}" transform="rotate(${a} 60 46)"/>`).join('')}
+          <circle cx="60" cy="46" r="8" fill="#FFF6D6"/>
+        </g>
+        <g class="gf-spark" fill="#F2C94C"><circle cx="24" cy="30" r="3"/><circle cx="98" cy="24" r="2.5"/><circle cx="102" cy="60" r="3"/><circle cx="18" cy="64" r="2.5"/></g>
+      </svg>
+      <h2 id="cel-title">Skvělá práce!</h2>
+      <p style="font-weight:600">${esc(c.title)}</p>
+      <p class="green-text">${esc(c.text)}</p>
+      ${c.extra ? `<p class="muted small">${esc(c.extra)}</p>` : ''}
+      <button class="btn big" id="cel-ok" data-a="closeCelebrate">Pokračovat</button>
+    </div>
+  </div>`;
+}
+
 
 async function guard(fn) {
   if (S.busy) return;
@@ -143,12 +180,11 @@ function view() {
   if (S.phase === 'loading') return `${demo}<div class="center"><p class="muted">Načítám…</p></div>`;
   if (S.phase === 'auth') return demo + authView();
   if (S.phase === 'onboarding') return demo + onboardingView() + toastView();
-  if (S.overlay === 'pomoc') return demo + helpView();
   if (S.overlay === 'nalada') return demo + moodView() + toastView();
   if (S.overlay === 'sdileni') return demo + shareView() + toastView();
   if (S.overlay === 'pozvanka') return demo + inviteAcceptView();
   const screens = { domu: homeView, pratele: friendsView, zahrada: gardenView, ja: meView };
-  return demo + screens[S.tab]() + toastView() + tabbar();
+  return demo + screens[S.tab]() + toastView() + tabbar() + celebrateView();
 }
 
 function authView() {
@@ -172,7 +208,6 @@ function authView() {
       <button class="btn big" type="submit" ${S.busy ? 'disabled' : ''}>${reg ? 'Vytvořit účet' : 'Přihlásit se'}</button>
       ${reg ? '' : '<button class="btn ghost" type="button" data-a="forgot">Zapomenuté heslo</button>'}
     </form>
-    <button class="btn ghost" type="button" data-a="openHelp">Potřebuješ pomoc hned?</button>
   </div>`;
 }
 
@@ -219,7 +254,6 @@ function homeView() {
     <header class="hero">
       <div class="hero-top">
         ${g.hraZapnuta ? `<button class="btn soft small-btn" style="background:#fff;color:var(--ink-green)" data-a="tab" data-v="zahrada">Úroveň ${esc(g.uroven)} · Zahrada</button>` : `<p class="label green-text">${new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>`}
-        <button class="icon-btn" aria-label="Potřebuješ pomoc hned?" data-a="openHelp">${ICON.heart}</button>
       </div>
       <h1>Ahoj, ${esc(name)}</h1>
       <p class="green-text" style="font-size:16px">Jak si dnes odpočineš?</p>
@@ -421,8 +455,6 @@ function gardenView() {
 function meView() {
   const st = S.me?.nastaveni || {};
   const g = S.game || {};
-  const owned = new Set((g.odznaky || []).map((b) => b.code));
-  const all = [['PRVNI_CHVILKA', 'První chvilka'], ['NAVRAT', 'Návrat'], ['DOBRY_KAMARAD', 'Dobrý kamarád'], ['BEZ_TELEFONU', 'Bez obrazovky'], ['SPOLU', 'Spolu'], ['PESTROST', 'Pestrost']];
   const toggle = (key, label, hint) => `<div class="setting"><div class="grow"><p style="font-weight:600">${label}</p><p class="muted small">${hint}</p></div>
     <button type="button" class="switch" role="switch" aria-checked="${!!st[key]}" aria-label="${label}" data-a="setting" data-v="${key}"><span></span></button></div>`;
   const recent = S.moments.filter((m) => m.status === 'SPLNENO').slice(0, 6);
@@ -432,41 +464,22 @@ function meView() {
     <button class="card" style="text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between" data-a="openMood">
       <span><b>Jak se dnes mám?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
     <section class="card" style="padding:6px 18px;gap:0">
-      ${toggle('gameEnabled', 'Herní prvky', 'Zahrada, úrovně, odznaky. Vypnutí ostatní nevidí.')}
+      ${toggle('gameEnabled', 'Herní prvky', 'Zahrada a úrovně. Vypnutí ostatní nevidí.')}
       ${toggle('quietHoursEnabled', `Noční klid ${esc(st.quietStart || '22:00')}–${esc(st.quietEnd || '08:00')}`, 'V noci žádné notifikace')}
-      ${toggle('shareBadges', 'Sdílet odznaky s přáteli', 'Ve výchozím stavu vypnuto')}
       ${toggle('receivePings', 'Přijímat povzbuzení', 'Když vypneš, odesílatel se to nedozví')}
       ${toggle('receiveRestInvites', 'Přijímat pozvánky k odpočinku', 'Když vypneš, odesílatel se to nedozví')}
     </section>
-    ${g.hraZapnuta ? `<section class="card"><h3>Odznaky za péči</h3><div class="badges">${all.map(([code, label]) => `<div class="badge${owned.has(code) ? ' on' : ''}">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="${owned.has(code) ? '#5F7424' : '#9A9E92'}" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="10" r="6"/><path d="M8.5 15l-1.5 6 5-2.5 5 2.5-1.5-6"/></svg>
-      <p>${label}</p><small>${owned.has(code) ? 'Získáno' : 'Čeká na tebe'}</small></div>`).join('')}</div></section>` : ''}
     <section class="card"><h3>Moje chvilky</h3><p class="muted small">Nová chvilka je vždy „Jen já“. Sdílet můžeš po náhledu.</p>
-      ${recent.length ? recent.map((m) => `<div class="row between"><div class="grow"><p style="font-size:14px;font-weight:600">${esc(CAT[m.category]?.title || m.label)}</p><p class="muted small">${m.day === todayStr() ? 'dnes' : esc(m.day)}</p></div>
+      ${recent.length ? recent.map((m) => `<div class="row between"><div class="grow"><p style="font-size:14px;font-weight:600">${esc(m.customActivityId ? m.label : CAT[m.category]?.title || m.label)}</p><p class="muted small">${m.day === todayStr() ? 'dnes' : esc(m.day)}</p></div>
         <span class="chip${m.visibility === 'JEN_JA' ? '' : ' group'}">${m.visibility === 'JEN_JA' ? 'Jen já' : m.visibility === 'PRATELE' ? 'Přátelé' : 'Skupina'}</span>
         ${m.visibility === 'JEN_JA' ? `<button class="btn ghost small-btn" data-a="openShare" data-id="${esc(m.id)}">Sdílet</button>` : `<button class="btn ghost small-btn" data-a="unshare" data-id="${esc(m.id)}">Zrušit</button>`}</div>`).join('') : '<p class="muted small">Zatím žádné.</p>'}
     </section>
-    <button class="btn ghost" data-a="openHelp">Potřebuješ pomoc hned?</button>
     <section class="card"><h3>Moje data</h3>
       <button class="btn soft" data-a="export">Stáhnout moje data</button>
       <button class="btn soft" data-a="logout">Odhlásit se</button>
       ${S.confirmDelete
         ? `<p class="small">Smazání je nevratné: zmizí chvilky, nálada, zahrada i přátelství.</p><div class="btn-row"><button class="btn ghost" data-a="cancelDelete">Nechat účet</button><button class="btn dark" data-a="deleteAccount">Smazat natrvalo</button></div>`
         : `<button class="btn soft" data-a="askDelete">Smazat účet</button>`}
-    </section>
-  </div>`;
-}
-
-function helpView() {
-  return `<div class="sheet-wrap">
-    <div class="sheet-top">${GARDEN_SCENE}<button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zavřít</button></div>
-    <section class="sheet" aria-label="Linky pomoci">
-      <div class="handle"></div>
-      <h1 style="font-size:22px">Pomoc je na dosah</h1>
-      <p class="muted">Nemusíš na to být sám ani sama. Linky jsou zdarma a kdykoli.</p>
-      ${CRISIS.map((c) => `<div class="help-card"><div class="grow"><h3>${c.name}</h3><p class="muted small">${c.desc}</p></div><a class="btn" href="tel:${c.tel}">${c.show}</a></div>`).join('')}
-      <div class="help-card urgent"><div class="grow"><h3>V ohrožení života</h3><p class="green-text small">Záchranná služba nebo tísňová linka.</p></div><a class="btn dark" href="tel:155">155</a><a class="btn dark" href="tel:112">112</a></div>
-      <p class="muted small">Aplikace ani kamarádi odbornou pomoc nenahradí.</p>
     </section>
   </div>`;
 }
@@ -482,10 +495,12 @@ function moodView() {
          <button class="btn" data-a="consentHealth">Souhlasím</button></section>`
       : `<div class="moods" role="radiogroup" aria-label="Nálada">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${S.mood === n}" aria-label="${labels[n - 1]}" data-a="pickMood" data-v="${n}">${n}</button>`).join('')}</div>
          <div class="row between small muted"><span>Je to těžké</span><span>Je mi dobře</span></div>
-         ${S.moodResult === 'low' ? `<section class="card" aria-live="polite"><h2>Je nám líto, že je to teď těžké.</h2><p class="green-text" style="line-height:1.5">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít s někým mluvit, pomoc je na dosah.</p><button class="btn big" data-a="openHelp">Potřebuješ pomoc hned?</button></section>` : ''}
+         ${S.moodResult === 'low' ? `<section class="card" aria-live="polite"><h2>Je nám líto, že je to teď těžké.</h2><p class="green-text" style="line-height:1.5">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít s někým mluvit, linky jsou zdarma a nonstop.</p>
+           ${CRISIS.map((c) => `<div class="row between"><div class="grow"><p style="font-weight:600">${c.name}</p><p class="muted small">${c.desc}</p></div><a class="btn small-btn" href="tel:${c.tel}">${c.show}</a></div>`).join('')}
+           <div class="row between"><div class="grow"><p style="font-weight:600">V ohrožení života</p></div><a class="btn dark small-btn" href="tel:155">155</a><a class="btn dark small-btn" href="tel:112">112</a></div></section>` : ''}
          ${S.moodResult === 'ok' ? `<section class="card" aria-live="polite"><p class="green-text">Díky, je to zapsané. Jen pro tebe.</p></section>` : ''}
          <button class="btn soft" data-a="revokeHealth">Odvolat souhlas s ukládáním nálady</button>`}
-    <p class="muted small">U záznamu nálady nejsou body, odznaky ani oslavy. Aplikace tvoje texty nečte ani nevyhodnocuje.</p>
+    <p class="muted small">U záznamu nálady nejsou body ani oslavy. Aplikace tvoje texty nečte ani nevyhodnocuje.</p>
   </div>`;
 }
 
@@ -537,7 +552,6 @@ function tabbar() {
 const actions = {
   closeToast() { S.toast = null; },
   tab(d) { S.tab = d.v; S.menuFor = null; },
-  openHelp() { S.overlay = 'pomoc'; },
   closeOverlay() { S.overlay = null; S.preview = null; S.shareTarget = null; },
   authMode(d) { S.authMode = d.v; S.authError = null; S.authInfo = null; },
   async resend() {
@@ -574,18 +588,15 @@ const actions = {
     delete S.sentInvite[d.cat];
     delete S.mode[d.cat];
     S.lastGrown = d.cat;
-    flashDone(d.cat);
     await loadAll();
-    const plant = CAT[d.cat].plant;
-    S.toast = S.game?.hraZapnuta ? `${res.zprava} V zahradě roste: ${plant}.` : res.zprava || 'Chvilka pro tebe je zapsaná.';
+    celebrate(CAT[d.cat].title, d.cat, res);
   },
   async completeCustom(d) {
     const c = S.custom.find((x) => x.id === d.id);
     const res = await api.logMoment({ category: 'JINE', customActivityId: d.id });
     S.lastGrown = 'JINE';
-    flashDone(d.id);
     await loadAll();
-    S.toast = S.game?.hraZapnuta ? `${c ? `${c.nazev}: ` : ''}${res.zprava} V zahradě roste: ${CAT.JINE.plant}.` : res.zprava || 'Chvilka pro tebe je zapsaná.';
+    celebrate(c?.nazev || CAT.JINE.title, 'JINE', res);
   },
   async removeCustom(d) {
     await api.deleteCustomActivity(d.id);
@@ -628,8 +639,9 @@ const actions = {
     S.lastGrown = d.cat;
     await loadAll();
     const counted = (res.zapocitanoDoCilu || []).includes(d.id);
-    S.toast = counted ? `Započítáno do společného cíle. ${S.game?.hraZapnuta ? `V zahradě roste: ${CAT[d.cat].plant}.` : ''}` : (res.zprava || 'Chvilka je zapsaná.');
+    celebrate(CAT[d.cat].title, d.cat, res, counted ? 'Započítáno do společného cíle.' : '');
   },
+  closeCelebrate() { S.celebrate = null; },
   async createInvite() {
     const r = await api.createInvite();
     // Odkaz poskládáme podle adresy, kde aplikace právě běží (GitHub Pages i localhost).
@@ -711,6 +723,10 @@ root.addEventListener('click', (ev) => {
   guard(() => fn(el.dataset, el));
 });
 
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && S.celebrate) { S.celebrate = null; render(); }
+});
+
 root.addEventListener('submit', (ev) => {
   ev.preventDefault();
   const form = ev.target;
@@ -781,6 +797,7 @@ window.addEventListener('hashchange', () => { readHash(); if (S.inviteToken && S
 
 let lastView = '';
 let lastToast = null;
+let lastCelebrate = null;
 let toastTimer;
 function render() {
   const focusId = document.activeElement?.id;
@@ -801,6 +818,11 @@ function render() {
   // Na stejné obrazovce zůstane posunutí, nová obrazovka začne nahoře.
   if (next && where === lastView) next.scrollTop = scroll;
   lastView = where;
+  if (S.celebrate) {
+    // Animace a fokus jen při otevření, ne při každém dalším překreslení.
+    if (S.celebrate !== lastCelebrate) root.querySelector('#cel-ok')?.focus();
+    lastCelebrate = S.celebrate;
+  } else lastCelebrate = null;
   if (S.scrollTo) { root.querySelector(`#${CSS.escape(S.scrollTo)}`)?.scrollIntoView({ block: 'start' }); S.scrollTo = null; }
   if (focusId) root.querySelector(`#${CSS.escape(focusId)}`)?.focus();
 }
