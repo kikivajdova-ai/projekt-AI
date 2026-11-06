@@ -194,11 +194,14 @@ h3 { font-size: 15px; font-weight: 700; }
   .gf-stem { stroke-dashoffset: 0; } .gf-leaf, .gf-bloom { scale: 1; } .gf-spark { opacity: .55; }
 }
 
-/* jedna velká zahrada */
-.garden-big { border-radius: var(--r-sheet); overflow: hidden; background: #E6EBCF; box-shadow: inset 0 0 0 1px rgba(35, 48, 26, .06); }
-.big-garden { display: block; width: 100%; height: auto; }
-.big-garden .gp.grew { animation: gp-grow .9s cubic-bezier(.2, .9, .3, 1.3); }
-.big-garden .butterfly { animation: flutter 3s ease-in-out infinite; }
-@keyframes gp-grow { from { transform: scale(0.2); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+/* jedna velká zahrada přes celou stránku */
+.screen.garden-screen { position: relative; padding: 0; overflow: hidden; }
+.garden-bg { position: absolute; inset: 0; }
+.big-garden { display: block; width: 100%; height: 100%; }
+.garden-head { position: relative; z-index: 1; padding: 24px 20px 0; display: flex; flex-direction: column; gap: 12px; }
+.card.glass { background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.big-garden .gp.grew { animation: gp-grow 1s cubic-bezier(.2, .9, .3, 1.3); }
+.big-garden .butterfly { animation: flutter 3.4s ease-in-out infinite; }
+@keyframes gp-grow { from { transform: scale(0.15); opacity: .2; } to { transform: scale(1); opacity: 1; } }
 @keyframes flutter { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(14px, -10px); } }
 @media (prefers-reduced-motion: reduce) { .big-garden .gp.grew, .big-garden .butterfly { animation: none; } }

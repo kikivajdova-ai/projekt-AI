@@ -494,24 +494,57 @@ function gardenPlant(p, stage) {
   }
 }
 
+// Pseudonáhodné, ale vždy stejné rozmístění (zahrada nepřeskakuje při každém otevření).
+function seeded(n) { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
+const EXTRA_COLORS = ['#F2C94C', '#FFFFFF', '#B48ACB', '#E8742A', '#9B8FD1', '#F6E7A1', '#F2994A'];
+const EXTRA_KINDS = ['dot', 'daisy', 'dot', 'tulip', 'dot', 'lavender'];
+const MAX_EXTRAS = 240;
+
+/** Co přesně vyrostlo za `total` splněných chvilek. Každá chvilka = jedna viditelná změna. */
+function gardenItems(total) {
+  const items = [];
+  const base = Math.min(total, GARDEN_STEPS);
+  GARDEN_PLANTS.forEach((p, i) => {
+    const stage = Math.max(0, Math.min(3, base - i * 3));
+    if (stage) items.push({ p, i, stage });
+  });
+  // Po rozkvetlé zahradě dál přibývají kvítky (každá chvilka jeden), občas i motýl.
+  const extras = Math.min(Math.max(0, total - GARDEN_STEPS), MAX_EXTRAS);
+  for (let k = 0; k < extras; k++) {
+    const p = {
+      kind: EXTRA_KINDS[k % EXTRA_KINDS.length],
+      x: Math.round(12 + seeded(k + 1) * 366),
+      y: Math.round(246 + seeded(k + 101) * 72),
+      color: EXTRA_COLORS[k % EXTRA_COLORS.length],
+    };
+    items.push({ p, i: GARDEN_PLANTS.length + k, stage: 3, small: true });
+  }
+  return { items, butterflies: total >= GARDEN_STEPS ? 1 + Math.min(5, Math.floor(extras / 12)) : 0 };
+}
+
 function gardenScene(total, grewIndex) {
-  const steps = Math.max(0, Math.min(total, GARDEN_STEPS));
-  // Rostliny se kreslí odzadu dopředu (podle toho, jak nízko stojí), ať se nepřekrývají divně.
-  const plants = GARDEN_PLANTS.map((p, i) => ({ p, i, stage: Math.max(0, Math.min(3, steps - i * 3)) }))
-    .filter((x) => x.stage > 0)
-    .sort((a, b) => a.p.y - b.p.y);
-  const full = total >= GARDEN_STEPS;
-  return `<svg class="big-garden" viewBox="0 0 390 300" role="img" aria-label="Tvoje zahrada: ${plants.length ? `${plants.length} ${plants.length === 1 ? 'rostlina' : plants.length < 5 ? 'rostliny' : 'rostlin'}` : 'zatím jen louka, první chvilka zasadí semínko'}">
-    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F4E4"/><stop offset="1" stop-color="#E6EBCF"/></linearGradient></defs>
-    <rect width="390" height="300" fill="url(#sky)"/>
-    <circle cx="312" cy="72" r="26" fill="#F6E7A1"/><circle cx="312" cy="72" r="40" fill="#F6E7A1" opacity="0.35"/>
-    <ellipse cx="92" cy="76" rx="30" ry="10" fill="#FFFFFF" opacity="0.85"/><ellipse cx="118" cy="68" rx="20" ry="9" fill="#FFFFFF" opacity="0.85"/>
-    <ellipse cx="226" cy="44" rx="22" ry="7" fill="#FFFFFF" opacity="0.7"/>
-    ${full || total >= 20 ? '<path d="M246 112 q7 -9 14 0 q7 -9 14 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"/>' : ''}
-    <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 300 L0 300 Z" fill="#C9D29C"/>
-    <path d="M0 226 C80 204 166 208 244 222 C310 234 356 216 390 212 L390 300 L0 300 Z" fill="#A9B676"/>
-    ${plants.map(({ p, i, stage }) => `<g class="gp${i === grewIndex ? ' grew' : ''}" style="transform-origin:${p.x}px ${p.y}px">${gardenPlant(p, stage)}</g>`).join('')}
-    ${full ? `<g class="butterfly"><ellipse cx="200" cy="140" rx="7" ry="5" fill="#B48ACB" transform="rotate(-20 200 140)"/><ellipse cx="210" cy="140" rx="7" ry="5" fill="#9B8FD1" transform="rotate(20 210 140)"/><path d="M205 135 V146" stroke="#23301A" stroke-width="1.6" stroke-linecap="round"/></g>` : ''}
+  const { items, butterflies } = gardenItems(total);
+  items.sort((a, b) => a.p.y - b.p.y);
+  const label = items.length ? `${items.length} ${items.length === 1 ? 'rostlina' : items.length < 5 ? 'rostliny' : 'rostlin'}` : 'zatím jen louka, první chvilka zasadí semínko';
+  // Scéna je vysoká, aby vyplnila celou stránku; krajina s rostlinami je dole (posun o 360).
+  return `<svg class="big-garden" viewBox="0 0 390 760" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Tvoje zahrada: ${label}">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F1DE"/><stop offset="0.7" stop-color="#E9EDD3"/></linearGradient></defs>
+    <rect width="390" height="760" fill="url(#sky)"/>
+    <circle cx="312" cy="300" r="30" fill="#F6E7A1"/><circle cx="312" cy="300" r="48" fill="#F6E7A1" opacity="0.35"/>
+    <ellipse cx="92" cy="300" rx="34" ry="11" fill="#FFFFFF" opacity="0.85"/><ellipse cx="122" cy="291" rx="22" ry="10" fill="#FFFFFF" opacity="0.85"/>
+    <ellipse cx="220" cy="250" rx="24" ry="8" fill="#FFFFFF" opacity="0.7"/>
+    ${total >= 20 ? '<path d="M240 400 q7 -9 14 0 q7 -9 14 0 M272 380 q5 -6 10 0 q5 -6 10 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"/>' : ''}
+    <g transform="translate(0 360)">
+      <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 400 L0 400 Z" fill="#C9D29C"/>
+      <path d="M0 226 C80 204 166 208 244 222 C310 234 356 216 390 212 L390 400 L0 400 Z" fill="#A9B676"/>
+      <path d="M0 300 C90 286 200 292 280 300 C330 305 370 298 390 296 L390 400 L0 400 Z" fill="#9AAA66" opacity="0.55"/>
+      ${items.map(({ p, i, stage, small }) => {
+        const plant = `<g class="gp${i === grewIndex ? ' grew' : ''}" style="transform-origin:${p.x}px ${p.y}px">${gardenPlant(p, stage)}</g>`;
+        return small ? `<g transform="translate(${p.x} ${p.y}) scale(0.7) translate(${-p.x} ${-p.y})">${plant}</g>` : plant;
+      }).join('')}
+    </g>
+    ${Array.from({ length: butterflies }, (_, b) => { const x = 60 + seeded(b + 500) * 270; const y = 420 + seeded(b + 700) * 120; const c = EXTRA_COLORS[(b + 2) % EXTRA_COLORS.length];
+      return `<g class="butterfly" style="animation-delay:${(b * 0.7).toFixed(1)}s"><ellipse cx="${x}" cy="${y}" rx="7" ry="5" fill="${c === '#FFFFFF' ? '#B48ACB' : c}" transform="rotate(-20 ${x} ${y})"/><ellipse cx="${x + 10}" cy="${y}" rx="7" ry="5" fill="#9B8FD1" transform="rotate(20 ${x + 10} ${y})"/><path d="M${x + 5} ${y - 5} V${y + 6}" stroke="#23301A" stroke-width="1.6" stroke-linecap="round"/></g>`; }).join('')}
   </svg>`;
 }
 
@@ -523,14 +556,19 @@ function gardenView() {
   const lo = levelPoints(g.uroven);
   const pct = Math.max(4, Math.round((100 * (g.body - lo)) / (g.dalsiUrovenPri - lo)));
   const total = Object.values(g.zahrada || {}).reduce((a, b) => a + b, 0);
-  // Která rostlina právě povyrostla (jen jednou, při prvním zobrazení po splnění).
-  const grew = S.gardenSeen != null && total > S.gardenSeen && S.gardenSeen < GARDEN_STEPS ? Math.floor((Math.min(total, GARDEN_STEPS) - 1) / 3) : -1;
+  // Co právě vyrostlo (animuje se jen jednou, při prvním zobrazení po splnění).
+  let grew = -1;
+  if (S.gardenSeen != null && total > S.gardenSeen && total - GARDEN_STEPS <= MAX_EXTRAS) {
+    grew = total <= GARDEN_STEPS ? Math.floor((total - 1) / 3) : GARDEN_PLANTS.length + (total - GARDEN_STEPS - 1);
+  }
   S.gardenSeen = total;
-  return `<div class="screen">
-    <h1>Moje zahrada</h1>
-    <section class="card"><div class="row between"><h2>Úroveň ${esc(g.uroven)}</h2><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
-      <div class="bar" role="img" aria-label="Cesta k další úrovni: ${pct} %"><span style="width:${pct}%"></span></div></section>
-    <section class="garden-big">${gardenScene(total, grew)}</section>
+  return `<div class="screen garden-screen">
+    <div class="garden-bg">${gardenScene(total, grew)}</div>
+    <div class="garden-head">
+      <h1>Moje zahrada</h1>
+      <section class="card glass"><div class="row between"><h2>Úroveň ${esc(g.uroven)}</h2><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
+        <div class="bar" role="img" aria-label="Cesta k další úrovni: ${pct} %"><span style="width:${pct}%"></span></div></section>
+    </div>
   </div>`;
 }
 
