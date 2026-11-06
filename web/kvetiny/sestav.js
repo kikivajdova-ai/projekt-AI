@@ -18,6 +18,8 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.svg')).sort())
     .replace(/^[\s\S]*?<svg[^>]*>/, '')
     .replace(/<\/svg>\s*$/, '')
     .replace(/<title>[\s\S]*?<\/title>/g, '')
+    // Hlína pod rostlinou do zahrady nepatří (rostliny stojí přímo v trávě).
+    .replace(/<g\s+id=["']ground["'][^>]*>[\s\S]*?<\/g>/g, '')
     .replace(/\s+id=("[^"]*"|'[^']*')/g, '') // v zahradě je každá rostlina víckrát, id by se opakovala
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/\s*\n\s*/g, '')
