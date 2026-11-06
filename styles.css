@@ -171,25 +171,18 @@ h3 { font-size: 15px; font-weight: 700; }
 .modal h2 { font-size: 24px; margin-top: 4px; }
 .modal .btn { width: 100%; margin-top: 10px; }
 .grow-flower { overflow: visible; }
-.gf-stem { stroke-dasharray: 60; stroke-dashoffset: 60; animation: gf-stem .7s ease-out .15s forwards; }
-.gf-leaf { transform-box: fill-box; transform-origin: center; scale: 0; animation: gf-pop .4s ease-out forwards; }
-.gf-leaf-l { animation-delay: .55s; }
-.gf-leaf-r { animation-delay: .7s; }
-.gf-bloom { transform-box: fill-box; transform-origin: center; scale: 0; animation: gf-bloom .6s cubic-bezier(.2, .9, .3, 1.4) .85s forwards; }
-.gf-spark { opacity: 0; animation: gf-spark 1.2s ease-out 1.3s forwards; }
-@keyframes gf-stem { to { stroke-dashoffset: 0; } }
-@keyframes gf-pop { to { scale: 1; } }
-@keyframes gf-bloom { 0% { scale: 0; rotate: -40deg; } 100% { scale: 1; rotate: 0deg; } }
+.gf-plant { transform-origin: 480px 805px; scale: 0; animation: gf-grow 1.1s cubic-bezier(.2, .9, .3, 1.25) .15s forwards; }
+.gf-spark { opacity: 0; animation: gf-spark 1.2s ease-out 1.1s forwards; }
+@keyframes gf-grow { 0% { scale: 0.05 0; } 55% { scale: 0.9 1.06; } 100% { scale: 1 1; } }
 @keyframes gf-spark { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: .55; } }
 @keyframes pop-in { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .modal.static, .modal.static *, .modal-layer:has(.static) .modal-backdrop { animation: none !important; }
-.modal.static .gf-stem { stroke-dashoffset: 0; }
-.modal.static .gf-leaf, .modal.static .gf-bloom { scale: 1; }
+.modal.static .gf-plant { scale: 1; }
 .modal.static .gf-spark { opacity: .55; }
 @media (prefers-reduced-motion: reduce) {
   .modal, .modal *, .modal-backdrop { animation: none !important; }
-  .gf-stem { stroke-dashoffset: 0; } .gf-leaf, .gf-bloom { scale: 1; } .gf-spark { opacity: .55; }
+  .gf-plant { scale: 1; } .gf-spark { opacity: .55; }
 }
 
 /* jedna velká zahrada přes celou stránku */
