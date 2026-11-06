@@ -638,6 +638,29 @@ function appleTree(x, y, k) {
     <path d="M${x - 20 * k} ${y - 44 * k} A${20 * k} ${20 * k} 0 0 1 ${x + 4 * k} ${y - 64 * k} A${22 * k} ${22 * k} 0 0 0 ${x - 20 * k} ${y - 44 * k} Z" fill="#A3C474"/>
     ${[[-8, -50], [7, -44], [-2, -36], [12, -54], [-14, -40]].map(([a, b]) => `<circle cx="${x + a * k}" cy="${y + b * k}" r="${2.6 * k}" fill="#E8665A"/>`).join('')}`;
 }
+/** Domeček: dvoubarevné zdi, taška na střeše, okna s rámem a truhlíkem, dveře, komín s kouřem. */
+function cottage(cx, base) {
+  const w = 66, wall = 40, l = cx - w / 2, r = cx + w / 2, top = base - wall, ridge = top - 30;
+  return `<g>
+    <rect x="${r - 16}" y="${ridge + 4}" width="9" height="22" fill="#B86452"/><rect x="${r - 17.5}" y="${ridge + 1}" width="12" height="5" rx="1.5" fill="#9E5444"/>
+    <circle cx="${r - 10}" cy="${ridge - 6}" r="5" fill="#FFFFFF" opacity="0.85"/><circle cx="${r - 4}" cy="${ridge - 16}" r="6.5" fill="#FFFFFF" opacity="0.65"/><circle cx="${r + 4}" cy="${ridge - 28}" r="8" fill="#FFFFFF" opacity="0.45"/>
+    <rect x="${l}" y="${top}" width="${w}" height="${wall}" fill="#FBF1DE"/>
+    <rect x="${cx}" y="${top}" width="${w / 2}" height="${wall}" fill="#F1E2C6"/>
+    <rect x="${l}" y="${top}" width="${w}" height="5" fill="#E6D3B2"/>
+    <path d="M${l - 7} ${top + 2} L${cx} ${ridge} L${r + 7} ${top + 2} Z" fill="#E9806A"/>
+    <path d="M${cx} ${ridge} L${r + 7} ${top + 2} L${cx} ${top + 2} Z" fill="#D46A57"/>
+    ${[0.33, 0.66].map((k) => `<path d="M${cx - (cx - l + 7) * k} ${ridge + (top + 2 - ridge) * k} H${cx + (r + 7 - cx) * k}" stroke="#C85F4D" stroke-width="1.6" opacity="0.7"/>`).join('')}
+    <path d="M${l - 9} ${top + 3} L${cx} ${ridge - 2} L${r + 9} ${top + 3}" fill="none" stroke="#B85645" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${ridge + 15}" r="5" fill="#F7D36A"/><path d="M${cx} ${ridge + 10} V${ridge + 20} M${cx - 5} ${ridge + 15} H${cx + 5}" stroke="#E6D3B2" stroke-width="1.4"/>
+    ${[l + 7, r - 21].map((x) => `<rect x="${x - 1.5}" y="${top + 9.5}" width="17" height="15" rx="2" fill="#E6D3B2"/><rect x="${x}" y="${top + 11}" width="14" height="12" rx="1.5" fill="#F7D36A"/>
+      <path d="M${x + 7} ${top + 11} V${top + 23} M${x} ${top + 17} H${x + 14}" stroke="#E6D3B2" stroke-width="1.6"/>
+      <rect x="${x - 2}" y="${top + 24}" width="18" height="4" rx="1.5" fill="#A27C56"/>
+      <circle cx="${x + 2}" cy="${top + 23}" r="2.4" fill="#F49AB6"/><circle cx="${x + 7}" cy="${top + 22.5}" r="2.4" fill="#F6A58C"/><circle cx="${x + 12}" cy="${top + 23}" r="2.4" fill="#F49AB6"/>`).join('')}
+    <path d="M${cx - 7} ${base} V${top + 18} a7 7 0 0 1 14 0 V${base} Z" fill="#8A6447"/><path d="M${cx} ${base} V${top + 11} a7 7 0 0 1 7 7 V${base} Z" fill="#6E4D35"/>
+    <circle cx="${cx + 4}" cy="${base - 10}" r="1.3" fill="#F7D36A"/>
+    <rect x="${cx - 10}" y="${base - 1}" width="20" height="3" rx="1" fill="#D9CBB0"/>
+  </g>`;
+}
 const stars = (pts) => pts.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#FFF6E0"/>`).join('');
 
 const GARDEN_LEVELS = [
@@ -702,22 +725,17 @@ const GARDEN_LEVELS = [
   },
   {
     name: 'Kouzelná zahrada',
-    sky: ['#D8E9EE', '#EEF1E6', '#FBF2D8'],
-    sky2: (t) => `<g opacity="0.7" fill="none" stroke-width="7">${['#F6A58C', '#F7D36A', '#A9C97A', '#8CC6D2', '#B79BDD'].map((c, i) => `<path d="M${18 + i * 7} 580 A${177 - i * 7} ${177 - i * 7} 0 0 1 ${372 - i * 7} 580" stroke="${c}"/>`).join('')}</g>
-      <path d="M40 540 L120 400 Q126 390 132 400 L210 540 Z" fill="#C3DDE5"/><path d="M120 400 Q126 390 132 400 L150 432 L138 426 L126 440 L114 428 L104 436 Z" fill="#FFFFFF"/>
-      <path d="M150 540 L238 380 Q245 368 252 380 L340 540 Z" fill="#B2D2DC"/><path d="M238 380 Q245 368 252 380 L272 416 L258 410 L246 424 L232 412 L220 420 Z" fill="#FFFFFF"/>
-      <circle cx="196" cy="344" r="26" fill="#F49AB6"/>
-      ${cloud(30, 330, 80, '#F7D36A', '#EFBF45')}${cloud(266, 300, 72, '#F7D36A', '#EFBF45')}
-      ${birdsAt([[150, 410, 1], [176, 396, 0.8]], '#3D7BB8')}${t >= 20 ? birdsAt([[300, 420, 0.9]], '#3D7BB8') : ''}`,
-    far: [['#E3EEE4', '#F4F8F2'], ['#C9DDBE', '#D9E8CF'], ['#A9C995', '#BCD7A6']],
+    sky: ['#DCEBEF', '#EEF2E8', '#FBF2D8'],
+    // Bez hor: jen jemná duha, slunce a mraky, ať scéna dýchá.
+    sky2: (t) => `<g opacity="0.55" fill="none" stroke-width="8" stroke-linecap="round">${['#F6A58C', '#F7D36A', '#A9C97A', '#8CC6D2', '#B79BDD'].map((c, i) => `<path d="M${40 + i * 8} 560 A${155 - i * 8} ${155 - i * 8} 0 0 1 ${350 - i * 8} 560" stroke="${c}"/>`).join('')}</g>
+      <circle cx="318" cy="300" r="28" fill="#F49AB6"/>
+      ${cloud(26, 330, 84, '#F7D36A', '#EFBF45')}${cloud(250, 262, 66, '#F7D36A', '#EFBF45')}
+      ${birdsAt([[150, 400, 1], [176, 386, 0.8]], '#3D7BB8')}${t >= 20 ? birdsAt([[110, 420, 0.8]], '#3D7BB8') : ''}`,
+    far: [['#E3EEE4', '#F4F8F2'], ['#CFE2C4', '#DDEBD3'], ['#B3D09E', '#C4DCAE']],
     hills: { mid: ['#3F6B4E', '#4F7B57'], back: ['#8DB062', '#A3C474'], front: ['#6F9A52', '#86AD62'], fore: ['#4F7B47', null] },
-    back: () => `${pine(22, 198, 54, '#3F6B4E', '#4F7B57')}${pine(54, 194, 40, '#5E8A5B', '#6F9A5B')}${pine(250, 198, 36, '#3F6B4E', '#4F7B57')}
-      <g><rect x="296" y="148" width="58" height="42" rx="3" fill="#FBF1DE"/><rect x="325" y="148" width="29" height="42" fill="#EFE1C8"/>
-      <path d="M288 152 L325 120 L362 152 Z" fill="#E9806A"/><path d="M325 120 L362 152 L325 152 Z" fill="#D46A57"/>
-      <rect x="318" y="166" width="14" height="24" rx="2" fill="#8A6447"/><rect x="301" y="158" width="11" height="11" rx="2" fill="#F7D36A"/><rect x="338" y="158" width="11" height="11" rx="2" fill="#F7D36A"/>
-      <rect x="340" y="124" width="7" height="18" fill="#B06A55"/><circle cx="345" cy="114" r="5" fill="#FFFFFF" opacity="0.8"/><circle cx="351" cy="103" r="6.5" fill="#FFFFFF" opacity="0.6"/></g>
-      <path d="M325 190 C300 206 330 220 296 236 C270 248 300 262 270 274" fill="none" stroke="#FFF8E8" stroke-width="10" stroke-linecap="round"/>
-      ${bush(372, 200, 9, '#3F6B4E', '#2F5B44', '#F7D36A')}${bush(200, 202, 8, '#4F7B57', '#3F6B4E', '#F49AB6')}`,
+    back: () => `${pine(20, 198, 50, '#3F6B4E', '#4F7B57')}${pine(50, 196, 36, '#5E8A5B', '#6F9A5B')}${lolli(250, 198, 8, '#F7C9A1', '#FBDDBF')}
+      ${cottage(318, 200)}
+      ${bush(282, 202, 9, '#4F7B57', '#3F6B4E', '#F49AB6')}${bush(360, 204, 10, '#3F6B4E', '#2F5B44', '#F7D36A')}${bush(200, 202, 7, '#4F7B57', '#3F6B4E', '#F49AB6')}`,
     front: () => '',
   },
 ];
