@@ -130,7 +130,14 @@ export function createApp() {
   app.onError((err, c) => {
     if (err instanceof AppError) return c.json({ error: { code: err.code, message: err.message } }, err.status);
     // Do logu jen typ chyby, žádná data uživatele; ven obecná věta bez detailů.
-    console.error('Neočekávaná chyba', (err as Error)?.name);
+    // Do logu typ, kód a zprávu chyby (ne detail, ten může obsahovat hodnoty z řádků).
+    const e = err as { name?: string; code?: string; message?: string; cause?: { name?: string; code?: string; message?: string } };
+    // Drizzle přidává do zprávy „params: …“ s hodnotami dotazu – ty do logu nesmí.
+    const short = (s?: string) => (s ?? '').split('\nparams')[0].slice(0, 200);
+    console.error('Neočekávaná chyba', JSON.stringify({
+      name: e?.name, code: e?.code, message: short(e?.message),
+      cause: e?.cause ? { name: e.cause.name, code: e.cause.code, message: short(e.cause.message) } : undefined,
+    }));
     return c.json({ error: { code: 'CHYBA', message: 'Něco se pokazilo. Zkus to prosím za chvíli.' } }, 500);
   });
 
