@@ -79,7 +79,7 @@ function celebrate(title, cat, res, extra = '') {
   S.celebrate = {
     title,
     cat,
-    text: game ? 'Tvoje zahrada zase o kousek vyrostla.' : 'Chvilka pro tebe je zapsaná.',
+    text: game ? 'Tvoje zahrada je zase o kousek krásnější.' : 'Chvilka pro tebe je zapsaná.',
     extra: [extra, note].filter(Boolean).join(' '),
   };
 }
@@ -171,7 +171,7 @@ function authView() {
     <div class="auth-form">
     <h1>Odpočívat spolu</h1>
     <p class="muted">Odpočinek místo výkonu. Spolu s kamarády, bez tlaku a srovnávání.</p>
-    <p class="small green-text" style="line-height:1.5">Vybíráš si malé chvilky odpočinku, třeba procházku nebo večer bez telefonu. Za každou ti vyroste kousek zahrady. S kamarády si můžete dát společnou výzvu.</p>
+    <p class="small green-text" style="line-height:1.5">Vybíráš si malé chvilky odpočinku, třeba procházku nebo večer bez telefonu. S každou z nich rozkvétá tvoje zahrada. S kamarády si můžete dát společnou výzvu.</p>
     <div class="seg" role="group" aria-label="Přihlášení nebo registrace">
       <button type="button" aria-pressed="${!reg}" data-a="authMode" data-v="login">Přihlásit se</button>
       <button type="button" aria-pressed="${reg}" data-a="authMode" data-v="register">Nový účet</button>
@@ -247,7 +247,7 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a v zahradě ti něco vyroste. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a tvoje zahrada zase o kousek rozkvete. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
@@ -801,7 +801,7 @@ function gardenView() {
       <section class="card glass"><div class="row between"><div><h2>Úroveň ${esc(g.uroven)}</h2><p class="green-text small" style="font-weight:600">${esc(gardenLevel(g.uroven).name)}</p></div><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
         <div class="bar" role="img" aria-label="Cesta k další úrovni: ${pct} %"><span style="width:${pct}%"></span></div></section>
       <section class="card glass garden-levels"><h3>Podoby zahrady</h3>
-        <p class="muted small">Každá chvilka nechá něco vyrůst. S novou úrovní se zahrada promění, rostliny zůstávají.</p>
+        <p class="muted small">S každou chvilkou zahrada rozkvétá. S novou úrovní se zahrada promění, rostliny zůstávají.</p>
         ${GARDEN_LEVELS.map((L, i) => { const n = i + 1; const now = Math.min(g.uroven, GARDEN_LEVELS.length) === n; const open = g.uroven >= n;
           return `<div class="row level-row${now ? ' now' : ''}"><div class="level-thumb">${open ? gardenScene(total, -1, n, true) : ''}</div>
             <div class="grow"><p style="font-weight:600">${esc(L.name)}</p><p class="muted small">${now ? 'Tvoje zahrada teď' : open ? 'Tuhle podobu už máš za sebou' : `Od úrovně ${n}`}</p></div>${now ? '<span class="chip group">Teď</span>' : ''}</div>`; }).join('')}
