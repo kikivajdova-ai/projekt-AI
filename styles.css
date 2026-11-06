@@ -158,3 +158,10 @@ h3 { font-size: 15px; font-weight: 700; }
 .demo-banner { background: #FFF3C9; color: #5A4500; font-size: 12px; text-align: center; padding: 6px 12px; }
 .feed-item { background: var(--surface); border-radius: 20px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
 .center { display: flex; align-items: center; justify-content: center; flex: 1; }
+
+/* společný cíl v Přátelích */
+.goal-item { padding-top: 12px; border-top: 1px solid var(--line); }
+.goal-form { padding-top: 12px; border-top: 1px solid var(--line); }
+.stepper { gap: 12px; }
+.stepper .icon-btn { font-size: 22px; font-weight: 700; color: var(--ink-green); }
+.stepper-value { min-width: 36px; text-align: center; font-size: 22px; font-weight: 700; }
