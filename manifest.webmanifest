@@ -1,0 +1,10 @@
+{
+  "name": "Odpočívat spolu",
+  "short_name": "Odpočívat",
+  "lang": "cs",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F6F5F1",
+  "theme_color": "#E4E8C8",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
