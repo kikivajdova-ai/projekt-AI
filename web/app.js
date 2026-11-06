@@ -247,7 +247,7 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a tvoje zahrada zase o kousek rozkvete. Chceš ji zažít s někým? Klepni na „Přizvat kamaráda“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na „Zapsat chvilku“ a tvoje zahrada zase o kousek rozkvete. Chceš ji zažít s někým? Klepni na „Přizvat kamaráda“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
@@ -265,7 +265,7 @@ function taskCard(c) {
   const head = `<div class="row"><div class="task-icon">${taskIcon(c.id)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip${spolu ? ' group' : ''}">${spolu ? 'Spolu' : 'Jen já'}</span></div>`;
   let body;
   if (!spolu) {
-    body = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>
+    body = `<button class="btn" data-a="complete" data-cat="${c.id}">Zapsat chvilku</button>
       <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Přizvat kamaráda</span></button>`;
   } else if (!friends.length) {
     body = `<p class="small muted">Zatím tu nemáš žádné kamarády. Pozvat je můžeš v záložce Přátelé.</p>
@@ -276,10 +276,10 @@ function taskCard(c) {
       <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="inviteFor" data-cat="${c.id}">Přizvat: ${esc(friend?.jmeno)}</button></div>`;
   } else if (sent.prijato) {
     body = `<p class="small green-text" style="font-weight:600">${esc(friend?.jmeno)} se přidá. Užijte si to spolu.</p>
-      <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Hotovo spolu</button>`;
+      <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Zapsat společnou chvilku</button>`;
   } else {
     body = `<p class="small green-text">Pozvánka odeslána (${esc(friend?.jmeno)}). Odpověď uvidíš tady.</p>
-      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Hotovo i bez kamaráda</button></div>`;
+      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Zapsat i bez kamaráda</button></div>`;
   }
   // Po splnění se karta vrátí do původní podoby, ať jde chvilku kdykoli zapsat znovu.
   return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">${head}<div class="stack">${body}</div></section>`;
@@ -343,7 +343,7 @@ function customCard(c) {
   const j = CAT.JINE;
   return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">
     <div class="row"><div class="task-icon">${taskIcon('JINE')}</div><div class="grow"><h3>${esc(c.nazev)}</h3><p class="muted small">Tvoje vlastní chvilka</p></div><span class="chip">Jen já</span></div>
-    <div class="btn-row"><button class="btn ghost" data-a="removeCustom" data-id="${esc(c.id)}" aria-label="Odebrat chvilku ${esc(c.nazev)}">Odebrat</button><button class="btn" data-a="completeCustom" data-id="${esc(c.id)}">Hotovo</button></div>
+    <div class="btn-row"><button class="btn ghost" data-a="removeCustom" data-id="${esc(c.id)}" aria-label="Odebrat chvilku ${esc(c.nazev)}">Odebrat</button><button class="btn" data-a="completeCustom" data-id="${esc(c.id)}">Zapsat chvilku</button></div>
   </section>`;
 }
 
