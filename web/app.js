@@ -172,13 +172,15 @@ function view() {
   if (S.overlay === 'sdileni') return demo + shareView() + toastView();
   if (S.overlay === 'pozvanka') return demo + inviteAcceptView();
   const screens = { domu: homeView, pratele: friendsView, zahrada: gardenView, ja: meView };
-  return demo + screens[S.tab]() + toastView() + tabbar() + celebrateView();
+  return demo + sidebar() + screens[S.tab]() + toastView() + tabbar() + celebrateView();
 }
 
 function authView() {
   const reg = S.authMode === 'register';
-  return `<div class="screen" style="padding-bottom:28px">
-    <div style="margin:-24px -20px 0;height:200px;position:relative;overflow:hidden;background:var(--tint)">${GARDEN_SCENE.replace('<svg ', '<svg style="position:absolute;inset:0;width:100%;height:100%" ')}</div>
+  return `<div class="screen auth" style="padding-bottom:28px">
+    <div class="auth-art"><div class="only-narrow">${GARDEN_SCENE.replace('<svg ', '<svg style="position:absolute;inset:0;width:100%;height:100%" ')}</div>
+      <div class="only-wide">${gardenScene(44, -1, 5)}</div></div>
+    <div class="auth-form">
     <h1>Odpočívat spolu</h1>
     <p class="muted">Odpočinek místo výkonu. Spolu s kamarády, bez tlaku a srovnávání.</p>
     <div class="seg" role="group" aria-label="Přihlášení nebo registrace">
@@ -196,6 +198,7 @@ function authView() {
       <button class="btn big" type="submit" ${S.busy ? 'disabled' : ''}>${reg ? 'Vytvořit účet' : 'Přihlásit se'}</button>
       ${reg ? '' : '<button class="btn ghost" type="button" data-a="forgot">Zapomenuté heslo</button>'}
     </form>
+    </div>
   </div>`;
 }
 
@@ -247,12 +250,17 @@ function homeView() {
       </div>
       <h1>Ahoj, ${esc(name)}</h1>
       <p class="green-text" style="font-size:16px">Jak si dnes odpočineš?</p>
+      <div class="hero-art" aria-hidden="true">${GARDEN_SCENE}</div>
     </header>
     <div class="home-body">
-      ${goalCard}
-      ${inviteCard}
-      <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
-      ${tasks}
+      <div class="home-side">
+        ${goalCard}
+        ${inviteCard}
+      </div>
+      <div class="home-main">
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
+        <div class="tasks">${tasks}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -342,6 +350,7 @@ function friendsView() {
   const group = S.groups[0];
   return `<div class="screen">
     <div><h1>Přátelé</h1><p class="muted">Kamarády přidáš jen přes pozvánku. Nikoho cizího tu nenajdeš.</p></div>
+    <div class="two-col"><div class="col">
     <section class="card tint">
       <div class="stack" style="gap:6px"><h2>Odpočívat spolu je víc</h2><p class="green-text small" style="line-height:1.5">Pošli kamarádovi osobní odkaz. Jakmile ho přijme, jste přátelé. Nic dalšího potvrzovat nemusíš.</p></div>
       ${S.inviteLink
@@ -350,6 +359,7 @@ function friendsView() {
         : `<button class="btn big" data-a="createInvite">Pozvat kamaráda odkazem</button>`}
     </section>
     ${goalSection(group, friends)}
+    </div><div class="col">
     ${pending.map((f) => `<section class="card"><div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">chce být tvůj kamarád/kamarádka</p></div></div>
       <div class="btn-row"><button class="btn ghost" data-a="removeFriend" data-id="${esc(f.id)}">Teď ne</button><button class="btn" data-a="confirmFriend" data-id="${esc(f.id)}">Potvrdit</button></div></section>`).join('')}
     ${S.groupInvites.map((g) => `<section class="card"><p class="label">${esc(g.odKoho)} tě zve do skupiny</p><h3>${esc(g.skupina)}</h3>
@@ -372,6 +382,7 @@ function friendsView() {
     <h2 style="margin-top:6px">Co se kamarádům podařilo</h2>
     <p class="muted small" style="margin-top:-8px">Jen splněné chvíle, které kamarádi sami sdíleli.</p>
     ${S.feed.length ? S.feed.map((e) => `<div class="feed-item"><p><b>${esc(e.authorName)}</b> · ${esc(e.label)}</p><span class="small muted">${e.day === todayStr() ? 'dnes' : esc(new Date(e.day + 'T12:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }))}</span></div>`).join('') : '<p class="muted">Zatím tu nic není.</p>'}
+    </div></div>
   </div>`;
 }
 
@@ -596,8 +607,8 @@ function gardenScene(total, grewIndex, level = 1, crop = false) {
   const label = `${L.name}. ${items.length ? `${items.length} ${items.length === 1 ? 'rostlina' : items.length < 5 ? 'rostliny' : 'rostlin'}` : 'Zatím jen krajina, první chvilka zasadí semínko'}`;
   // crop = výřez jen s krajinou a rostlinami (pro menší ilustrace, třeba u sdílení)
   return `<svg class="big-garden${L.dusk ? ' dusk' : ''}" viewBox="${crop ? '0 380 390 300' : '0 0 390 760'}" preserveAspectRatio="${crop ? 'xMidYMid' : 'xMidYMax'} slice" role="img" aria-label="Tvoje zahrada: ${label}">
-    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.sky[0]}"/><stop offset="0.7" stop-color="${L.sky[1]}"/></linearGradient></defs>
-    <rect width="390" height="760" fill="url(#sky)"/>
+    <defs><linearGradient id="sky-${level}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.sky[0]}"/><stop offset="0.7" stop-color="${L.sky[1]}"/></linearGradient></defs>
+    <rect width="390" height="760" fill="url(#sky-${level})"/>
     ${L.sky2(total)}
     <g transform="translate(0 360)">
       <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 400 L0 400 Z" fill="${L.hills[0]}"/>
@@ -635,6 +646,12 @@ function gardenView() {
       <h1>Moje zahrada</h1>
       <section class="card glass"><div class="row between"><div><h2>Úroveň ${esc(g.uroven)}</h2><p class="green-text small" style="font-weight:600">${esc(gardenLevel(g.uroven).name)}</p></div><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
         <div class="bar" role="img" aria-label="Cesta k další úrovni: ${pct} %"><span style="width:${pct}%"></span></div></section>
+      <section class="card glass garden-levels"><h3>Podoby zahrady</h3>
+        <p class="muted small">Každá chvilka nechá něco vyrůst. S novou úrovní se zahrada promění, rostliny zůstávají.</p>
+        ${GARDEN_LEVELS.map((L, i) => { const n = i + 1; const now = Math.min(g.uroven, GARDEN_LEVELS.length) === n; const open = g.uroven >= n;
+          return `<div class="row level-row${now ? ' now' : ''}"><div class="level-thumb">${open ? gardenScene(total, -1, n, true) : ''}</div>
+            <div class="grow"><p style="font-weight:600">${esc(L.name)}</p><p class="muted small">${now ? 'Tvoje zahrada teď' : open ? 'Už jsi tu byl(a)' : `Od úrovně ${n}`}</p></div>${now ? '<span class="chip group">Teď</span>' : ''}</div>`; }).join('')}
+      </section>
     </div>
   </div>`;
 }
@@ -648,6 +665,7 @@ function meView() {
   const name = S.me?.profil?.prezdivka || '';
   return `<div class="screen">
     <div class="row"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(name.charAt(0))}</div><div><h1 style="font-size:24px">${esc(name)}</h1><p class="muted small">Přezdívku vidí jen tvoji přátelé.</p></div></div>
+    <div class="two-col"><div class="col">
     <button class="card" style="text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between" data-a="openMood">
       <span><b>Jak se dnes mám?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
     <section class="card" style="padding:6px 18px;gap:0">
@@ -656,6 +674,7 @@ function meView() {
       ${toggle('receivePings', 'Přijímat povzbuzení', 'Když vypneš, odesílatel se to nedozví')}
       ${toggle('receiveRestInvites', 'Přijímat pozvánky k odpočinku', 'Když vypneš, odesílatel se to nedozví')}
     </section>
+    </div><div class="col">
     <section class="card"><h3>Moje chvilky</h3><p class="muted small">Nová chvilka je vždy „Jen já“. Sdílet můžeš po náhledu.</p>
       ${recent.length ? recent.map((m) => `<div class="row between"><div class="grow"><p style="font-size:14px;font-weight:600">${esc(m.customActivityId ? m.label : CAT[m.category]?.title || m.label)}</p><p class="muted small">${m.day === todayStr() ? 'dnes' : esc(m.day)}</p></div>
         <span class="chip${m.visibility === 'JEN_JA' ? '' : ' group'}">${m.visibility === 'JEN_JA' ? 'Jen já' : m.visibility === 'PRATELE' ? 'Přátelé' : 'Skupina'}</span>
@@ -668,6 +687,7 @@ function meView() {
         ? `<p class="small">Smazání je nevratné: zmizí chvilky, nálada, zahrada i přátelství.</p><div class="btn-row"><button class="btn ghost" data-a="cancelDelete">Nechat účet</button><button class="btn dark" data-a="deleteAccount">Smazat natrvalo</button></div>`
         : `<button class="btn soft" data-a="askDelete">Smazat účet</button>`}
     </section>
+    </div></div>
   </div>`;
 }
 
@@ -698,7 +718,7 @@ function shareView() {
     ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven, true)
     : GARDEN_SCENE;
   return `<div class="sheet-wrap">
-    <div class="sheet-top">${art}<button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
+    <div class="sheet-top"><div class="only-narrow">${art}</div><div class="only-wide">${g.hraZapnuta ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven) : GARDEN_SCENE}</div><button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
     <section class="sheet" aria-label="Náhled sdílení">
       <div class="handle"></div>
       <h1 style="font-size:22px">S kým to sdílet?</h1>
@@ -727,6 +747,25 @@ function inviteAcceptView() {
 
 function toastView() {
   return S.toast ? `<div class="toast" role="status"><p>${esc(S.toast)}</p><button aria-label="Zavřít oznámení" data-a="closeToast">×</button></div>` : '';
+}
+
+// Na počítači (od 1024 px) je místo spodní lišty boční navigace, jako u desktopových aplikací.
+function sidebar() {
+  const g = S.game || {};
+  const item = (id, label) => {
+    const on = S.tab === id;
+    return `<button class="side-item" ${on ? 'aria-current="page"' : ''} data-a="tab" data-v="${id}">${ICON.tab[id](on ? '#5F7424' : '#6B7064')}<span>${label}</span></button>`;
+  };
+  const total = Object.values(g.zahrada || {}).reduce((a, b) => a + b, 0);
+  return `<nav class="sidebar" aria-label="Hlavní navigace">
+    <div class="brand"><img src="icon.svg" alt="" width="36" height="36"><span>Odpočívat spolu</span></div>
+    <div class="side-nav">${item('domu', 'Domů')}${item('pratele', 'Přátelé')}${item('zahrada', 'Zahrada')}${item('ja', 'Já')}</div>
+    <button class="btn big" data-a="tab" data-v="domu">${ICON.plus.replace('width="26" height="26"', 'width="20" height="20"')}<span style="margin-left:6px">Vybrat chvilku</span></button>
+    ${g.hraZapnuta && S.tab !== 'zahrada' ? `<button class="side-garden" data-a="tab" data-v="zahrada" aria-label="Moje zahrada, úroveň ${esc(g.uroven)}">
+      <div class="side-garden-art">${gardenScene(total, -1, g.uroven, true)}</div>
+      <div class="side-garden-text"><p style="font-weight:700">Moje zahrada</p><p class="muted small">Úroveň ${esc(g.uroven)} · ${esc(gardenLevel(g.uroven).name)}</p></div>
+    </button>` : ''}
+  </nav>`;
 }
 
 function tabbar() {
