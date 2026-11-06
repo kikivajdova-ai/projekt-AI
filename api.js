@@ -13,9 +13,11 @@ const CATEGORIES = [
   { id: 'BEZ_TELEFONU', title: 'Večer bez telefonu', hint: 'Telefon odložit od osmi večer', plant: 'Levandule', flower: '#B48ACB', gen: 'večerů bez telefonu' },
   { id: 'POHYB', title: 'Protažení', hint: 'Pár minut jógy nebo protažení', plant: 'Šípek', flower: '#E8742A', gen: 'chvil pohybu' },
   { id: 'TVORENI', title: 'Něco vytvořit', hint: 'Kreslení, vaření, hudba, cokoli', plant: 'Slunečnice', flower: '#F2994A', gen: 'chvil tvoření' },
-  { id: 'JINE', title: 'Čaj v klidu', hint: 'Hrnek čaje bez spěchu a obrazovky', plant: 'Heřmánek', flower: '#F6E7A1', gen: 'chvil pro sebe' },
+  { id: 'JINE', title: 'Vlastní chvilka', hint: 'Tvoje vlastní chvilka pro sebe', plant: 'Heřmánek', flower: '#F6E7A1', gen: 'chvil pro sebe' },
 ];
 const CAT = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+/** Šest připravených chvilek na domovské obrazovce; další si člověk vytvoří sám (kategorie JINE). */
+const PRESETS = ['PROCHAZKA', 'CTENI', 'PAUZA', 'SPANEK', 'BEZ_TELEFONU', 'POHYB'].map((id) => CAT[id]);
 
 class ApiError extends Error {
   constructor(status, message, code) { super(message); this.status = status; this.code = code; }
@@ -93,6 +95,9 @@ class SupabaseApi {
   game() { return this.call('GET', '/game'); }
   moments() { return this.call('GET', '/activities'); }
   logMoment(m) { return this.call('POST', '/activities', { id: newId(), done: true, ...m }); }
+  customActivities() { return this.call('GET', '/custom-activities'); }
+  createCustomActivity(title) { return this.call('POST', '/custom-activities', { title }); }
+  deleteCustomActivity(id) { return this.call('DELETE', `/custom-activities/${id}`); }
   sharePreview(id, visibility, crewId) { return this.call('POST', `/activities/${id}/share-preview`, { visibility, ...(crewId ? { crewId } : {}) }); }
   share(id, visibility, previewToken, crewId) { return this.call('POST', `/activities/${id}/share`, { visibility, previewToken, ...(crewId ? { crewId } : {}) }); }
   unshare(id) { return this.call('POST', `/activities/${id}/unshare`); }
@@ -256,14 +261,26 @@ class DemoApi {
   async game() { await this.wait(); return this.s.settings.gameEnabled ? this.computeGame() : { hraZapnuta: false }; }
   async moments() {
     await this.wait();
-    return [...this.s.moments].reverse().map((m) => ({ id: m.id, category: m.category, label: CAT[m.category].title, status: m.status, visibility: m.visibility, crewId: m.crewId || null, day: m.day }));
+    return [...this.s.moments].reverse().map((m) => ({ id: m.id, category: m.category, customActivityId: m.customActivityId || null,
+      label: m.customTitle || CAT[m.category].title, status: m.status, visibility: m.visibility, crewId: m.crewId || null, day: m.day }));
   }
-  async logMoment({ category, restInvitationId, goalIds = [] }) {
+  async customActivities() { await this.wait(); return (this.s.custom || []).map((c) => ({ id: c.id, nazev: c.nazev })); }
+  async createCustomActivity(title) {
+    this.s.custom = this.s.custom || [];
+    if (this.s.custom.length >= 12) throw new ApiError(429, 'Vlastních chvilek už máš hodně. Některou odeber a pak přidej novou.');
+    const c = { id: newId(), nazev: String(title).trim().replace(/\s+/g, ' ').slice(0, 60) };
+    this.s.custom.push(c); this.save(); return c;
+  }
+  async deleteCustomActivity(id) { this.s.custom = (this.s.custom || []).filter((c) => c.id !== id); this.save(); }
+  async logMoment({ category, restInvitationId, goalIds = [], customActivityId }) {
+    const custom = customActivityId ? (this.s.custom || []).find((c) => c.id === customActivityId) : null;
+    if (customActivityId && !custom) throw new ApiError(404, 'Tuhle vlastní chvilku jsme nenašli.');
+    if (custom) category = 'JINE';
     await this.wait();
     const before = levelFor(this.computeGame().body);
     const joint = !!restInvitationId && this.s.restInvites.some((r) => r.id === restInvitationId && r.status === 'PRIDAM_SE');
     // Nový záznam je vždy soukromý, stejně jako na serveru.
-    const m = { id: newId(), category, status: 'SPLNENO', visibility: 'JEN_JA', day: dayStr(0), joint };
+    const m = { id: newId(), category, status: 'SPLNENO', visibility: 'JEN_JA', day: dayStr(0), joint, customActivityId: custom?.id, customTitle: custom?.nazev };
     this.s.moments.push(m);
     const counted = [];
     for (const goal of this.s.group?.goals || []) {
@@ -278,7 +295,8 @@ class DemoApi {
   async sharePreview(id, visibility) {
     const m = this.findMoment(id);
     return {
-      nahled: { authorName: this.s.profile, label: CAT[m.category].title, day: m.day, visibility },
+      // Název vlastní chvilky ostatní neuvidí (může být osobní), jen obecné „Chvíle pro sebe“.
+      nahled: { authorName: this.s.profile, label: m.category === 'JINE' ? 'Chvíle pro sebe' : CAT[m.category].title, day: m.day, visibility },
       publikum: visibility === 'PRATELE' ? 'Uvidí tvoji přátelé.' : `Uvidí členové skupiny ${this.s.group.nazev}.`,
       poznamka: null,
       previewToken: `demo.${id}.${visibility}`,
@@ -364,5 +382,5 @@ function createApi() {
   return new DemoApi();
 }
 
-window.OS = { createApi, CATEGORIES, CAT, ApiError, levelPoints };
+window.OS = { createApi, CATEGORIES, CAT, PRESETS, ApiError, levelPoints };
 })();

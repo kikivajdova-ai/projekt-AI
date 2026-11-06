@@ -165,3 +165,8 @@ h3 { font-size: 15px; font-weight: 700; }
 .stepper { gap: 12px; }
 .stepper .icon-btn { font-size: 22px; font-weight: 700; color: var(--ink-green); }
 .stepper-value { min-width: 36px; text-align: center; font-size: 22px; font-weight: 700; }
+
+/* krátké potvrzení po splnění chvilky, karta se pak vrátí do původní podoby */
+.card.just-done { animation: just-done 1.6s ease-out; }
+@keyframes just-done { 0% { box-shadow: 0 0 0 3px var(--primary); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .card.just-done { animation: none; outline: 2px solid var(--primary); } }

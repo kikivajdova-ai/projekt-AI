@@ -3,7 +3,7 @@
 (() => {
 'use strict';
 
-const { createApi, CATEGORIES, CAT, levelPoints } = window.OS;
+const { createApi, CATEGORIES, CAT, PRESETS, levelPoints } = window.OS;
 const api = createApi();
 const root = document.getElementById('app');
 
@@ -79,7 +79,7 @@ const S = {
   tab: 'domu',
   overlay: null, // pomoc | nalada | sdileni | pozvanka
   authMode: 'login', authError: null, authInfo: null, busy: false,
-  me: null, game: null, moments: [], friends: [], feed: [], pings: [], invites: [], groups: [], groupInvites: [],
+  me: null, game: null, moments: [], custom: [], friends: [], feed: [], pings: [], invites: [], groups: [], groupInvites: [],
   mode: {}, friendFor: {}, sentInvite: {}, contribute: true,
   lastGrown: null, toast: null, menuFor: null, pinged: {}, inviteLink: null,
   inviteToken: null, invitePreview: null,
@@ -90,6 +90,8 @@ const S = {
 };
 
 function toast(msg) { S.toast = msg; render(); }
+// Krátké zablikání karty po splnění; pak je karta zase v původní podobě.
+function flashDone(id) { S.justDone = id; setTimeout(() => { if (S.justDone === id) { S.justDone = null; render(); } }, 1600); }
 
 async function guard(fn) {
   if (S.busy) return;
@@ -98,10 +100,11 @@ async function guard(fn) {
 }
 
 async function loadAll() {
-  const [me, game, ms, friends, feed, pings, invites, groups, gi] = await Promise.all([
+  const [me, game, ms, friends, feed, pings, invites, groups, gi, custom] = await Promise.all([
     api.me(), api.game(), api.moments(), api.friends(), api.feed(), api.pings(), api.restInvites(), api.groups(), api.groupInvitations(),
+    api.customActivities(),
   ]);
-  Object.assign(S, { me, game, moments: ms, friends, feed, pings, invites, groups, groupInvites: gi });
+  Object.assign(S, { me, game, moments: ms, friends, feed, pings, invites, groups, groupInvites: gi, custom });
 }
 
 async function boot() {
@@ -191,10 +194,6 @@ function sentFor(cat) {
   const id = S.sentInvite[cat];
   return id ? S.invites.find((i) => i.id === id) || { id, prijato: false, waiting: true } : null;
 }
-function doneToday(cat) {
-  const t = todayStr();
-  return S.moments.filter((m) => m.category === cat && m.status === 'SPLNENO' && m.day === t).length;
-}
 function confirmedFriends() { return S.friends.filter((f) => f.stav === 'PRATELE'); }
 
 function homeView() {
@@ -215,7 +214,7 @@ function homeView() {
           : `<div class="btn-row"><button class="btn ghost" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="TED_NE">Teď ne</button><button class="btn" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="PRIDAM_SE">Přidám se</button></div>`}
       </section>`
     : '';
-  const tasks = CATEGORIES.map((c) => taskCard(c, goal)).join('');
+  const tasks = PRESETS.map((c) => taskCard(c, goal)).join('') + S.custom.map(customCard).join('') + customCreateCard();
   return `<div class="screen home">
     <header class="hero">
       <div class="hero-top">
@@ -228,7 +227,7 @@ function homeView() {
     <div class="home-body">
       ${goalCard}
       ${inviteCard}
-      <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě.</p></div>
+      <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
       ${tasks}
     </div>
   </div>`;
@@ -240,7 +239,6 @@ function taskCard(c, goal) {
   const friendId = S.friendFor[c.id] || friends[0]?.id;
   const friend = friends.find((f) => f.id === friendId);
   const sent = sentFor(c.id);
-  const done = doneToday(c.id) > 0;
   const goalMatch = goal && goal.goal.category === c.id;
   let action;
   if (!spolu) action = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>`;
@@ -249,16 +247,34 @@ function taskCard(c, goal) {
   else if (sent.prijato) action = `<button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Splněno spolu s ${esc(friend?.jmeno)}</button>`;
   else action = `<p class="small green-text">Pozvánka odeslána: ${esc(friend?.jmeno)}. Odmítnout jde jedním klepnutím, bez vysvětlování.</p>
       <button class="btn ghost" data-a="complete" data-cat="${c.id}">Splnit i tak sám/sama</button>`;
-  return `<section class="card${done ? ' done' : ''}">
+  // Po splnění se karta vrátí do původní podoby, ať jde chvilku kdykoli zapsat znovu.
+  return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">
     <div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip">${spolu ? 'Spolu' : 'Jen já'}</span></div>
-    ${done
-      ? `<div class="row between"><p class="small green-text" style="font-weight:600">Hotovo · roste ${c.plant}</p><button class="btn ghost small-btn" data-a="complete" data-cat="${c.id}">Zapsat znovu</button></div>`
-      : `<div class="stack">
-        <div class="seg" role="group" aria-label="S kým"><button type="button" aria-pressed="${!spolu}" data-a="mode" data-cat="${c.id}" data-v="sam">Sám / sama</button><button type="button" aria-pressed="${spolu}" data-a="mode" data-cat="${c.id}" data-v="spolu">S kamarádem</button></div>
-        ${spolu && friends.length && !sent ? `<div class="pills"><span class="small muted">Pozvat:</span>${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
-        ${goalMatch ? `<label class="check small"><input type="checkbox" data-a="contribute" ${S.contribute ? 'checked' : ''}> <span>Započítat do cíle skupiny ${esc(goal.group.nazev)} (skupina uvidí jen společný součet)</span></label>` : ''}
-        ${action}
-      </div>`}
+    <div class="stack">
+      <div class="seg" role="group" aria-label="S kým"><button type="button" aria-pressed="${!spolu}" data-a="mode" data-cat="${c.id}" data-v="sam">Sám / sama</button><button type="button" aria-pressed="${spolu}" data-a="mode" data-cat="${c.id}" data-v="spolu">S kamarádem</button></div>
+      ${spolu && friends.length && !sent ? `<div class="pills"><span class="small muted">Pozvat:</span>${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
+      ${goalMatch ? `<label class="check small"><input type="checkbox" data-a="contribute" ${S.contribute ? 'checked' : ''}> <span>Započítat do cíle skupiny ${esc(goal.group.nazev)} (skupina uvidí jen společný součet)</span></label>` : ''}
+      ${action}
+    </div>
+  </section>`;
+}
+
+// Vlastní chvilka: jen pro sebe (název vidí jen autor), splní se jedním klepnutím.
+function customCard(c) {
+  const j = CAT.JINE;
+  return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">
+    <div class="row"><div class="task-icon">${taskIcon(j.flower)}</div><div class="grow"><h3>${esc(c.nazev)}</h3><p class="muted small">Tvoje vlastní chvilka</p></div><span class="chip">Jen já</span></div>
+    <div class="btn-row"><button class="btn ghost" data-a="removeCustom" data-id="${esc(c.id)}" aria-label="Odebrat chvilku ${esc(c.nazev)}">Odebrat</button><button class="btn" data-a="completeCustom" data-id="${esc(c.id)}">Hotovo</button></div>
+  </section>`;
+}
+
+function customCreateCard() {
+  return `<section class="card tint">
+    <div><h3>Vytvořit si vlastní chvilku</h3><p class="green-text small">Napiš, co ti dělá dobře, třeba „Koupel“ nebo „Hra s kočkou“. Název uvidíš jen ty.</p></div>
+    <form data-form="custom" class="stack">
+      <div class="field"><label for="f-custom">Název chvilky</label><input id="f-custom" name="title" maxlength="60" required placeholder="Např. Hrnek čaje v klidu"></div>
+      <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Vytvořit chvilku</button>
+    </form>
   </section>`;
 }
 
@@ -314,7 +330,7 @@ function goalSection(group, friends) {
   }
   const goals = group.cile || [];
   const used = new Set(goals.map((g) => g.category));
-  const free = CATEGORIES.filter((c) => !used.has(c.id));
+  const free = PRESETS.filter((c) => !used.has(c.id));
   const cat = S.goalCat && !used.has(S.goalCat) ? S.goalCat : free[0]?.id;
   const memberIds = new Set((group.clenove || []).map((m) => m.id));
   const invitable = friends.filter((f) => !memberIds.has(f.id));
@@ -362,7 +378,7 @@ function gardenView() {
     <section class="card"><div class="row between"><h2>Úroveň ${esc(g.uroven)}</h2><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
       <div class="bar" role="img" aria-label="Cesta k další úrovni"><span style="width:${pct}%"></span></div></section>
     <section class="garden" aria-label="Rostliny v zahradě">
-      ${CATEGORIES.map((c) => { const n = garden[c.id] || 0; return `<div class="plot${S.lastGrown === c.id ? ' grew' : ''}">${plantSvg(c, n)}<p class="name">${c.plant}</p><p class="green-text">${STAGES[Math.min(n, 4)]} · ${moments(n)}</p></div>`; }).join('')}
+      ${CATEGORIES.filter((c) => PRESETS.includes(c) || c.id === 'JINE' || garden[c.id]).map((c) => { const n = garden[c.id] || 0; return `<div class="plot${S.lastGrown === c.id ? ' grew' : ''}">${plantSvg(c, n)}<p class="name">${c.plant}</p><p class="green-text">${STAGES[Math.min(n, 4)]} · ${moments(n)}</p></div>`; }).join('')}
     </section>
     <section class="card"><h3>Jak zahrada roste</h3><p class="muted small">Semínko → klíček → roste → kvete → kvete naplno. Každý druh odpočinku má svou rostlinu. Pauza ani vynechaný týden nic nevezmou.</p>
       <button class="btn" data-a="tab" data-v="domu">Vybrat chvilku</button></section>
@@ -523,10 +539,25 @@ const actions = {
       ...(goal && goal.goal.category === d.cat && S.contribute ? { goalIds: [goal.goal.goalId] } : {}),
     });
     delete S.sentInvite[d.cat];
+    delete S.mode[d.cat];
     S.lastGrown = d.cat;
+    flashDone(d.cat);
     await loadAll();
     const plant = CAT[d.cat].plant;
     S.toast = S.game?.hraZapnuta ? `${res.zprava} V zahradě roste: ${plant}.` : res.zprava || 'Chvilka pro tebe je zapsaná.';
+  },
+  async completeCustom(d) {
+    const c = S.custom.find((x) => x.id === d.id);
+    const res = await api.logMoment({ category: 'JINE', customActivityId: d.id });
+    S.lastGrown = 'JINE';
+    flashDone(d.id);
+    await loadAll();
+    S.toast = S.game?.hraZapnuta ? `${c ? `${c.nazev}: ` : ''}${res.zprava} V zahradě roste: ${CAT.JINE.plant}.` : res.zprava || 'Chvilka pro tebe je zapsaná.';
+  },
+  async removeCustom(d) {
+    await api.deleteCustomActivity(d.id);
+    S.custom = await api.customActivities();
+    S.toast = 'Chvilka je odebraná. Co už jsi zapsal(a), v zahradě zůstává.';
   },
   async answerRest(d) {
     await api.answerRestInvite(d.id, d.v);
@@ -670,6 +701,15 @@ root.addEventListener('submit', (ev) => {
         S.authError = e.message || 'Něco se pokazilo.';
         if (e.code === 'NEPOTVRZENO') S.needsConfirm = String(f.email || '').trim();
       }
+    });
+  }
+  if (form.dataset.form === 'custom') {
+    guard(async () => {
+      const title = String(f.title || '').trim();
+      if (!title) return;
+      await api.createCustomActivity(title);
+      S.custom = await api.customActivities();
+      S.toast = `Vlastní chvilka „${title}“ je na seznamu.`;
     });
   }
   if (form.dataset.form === 'group') {
