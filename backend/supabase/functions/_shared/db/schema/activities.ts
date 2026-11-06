@@ -8,7 +8,7 @@
 //  3. API: ke změně viditelnosti je potřeba podepsaný token z náhledu (viz services).
 
 import { sql } from 'drizzle-orm';
-import { check, date, index, pgPolicy, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, date, index, pgPolicy, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import {
   activityCategoryEnum,
   activityStatusEnum,
@@ -20,6 +20,33 @@ import {
 import { users } from './users.ts';
 import { groups } from './groups.ts';
 import { restInvitations } from './interactions.ts';
+
+/**
+ * Vlastní chvilky, které si člověk sám pojmenuje („Koupel“, „Hra s kočkou“…).
+ * Název vidí JEN autor. Když chvilku sdílí, ostatní uvidí obecné „Chvíle pro sebe“
+ * (název může být osobní, proto z databáze ven k nikomu jinému nejde).
+ */
+export const customActivities = pgTable(
+  'custom_activities',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 60 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('custom_activities_user_idx').on(t.userId),
+    check('custom_activities_title_not_blank', sql`length(btrim(${t.title})) between 1 and 60`),
+    pgPolicy('custom_activities: jen autor', {
+      for: 'all',
+      to: appUser,
+      using: sql`${t.userId} = ${uid}`,
+      withCheck: sql`${t.userId} = ${uid}`,
+    }),
+  ],
+);
 
 export const activities = pgTable(
   'activities',
@@ -38,6 +65,8 @@ export const activities = pgTable(
     restInvitationId: uuid('rest_invitation_id').references(() => restInvitations.id, {
       onDelete: 'set null',
     }),
+    /** Vlastní chvilka (kategorie je pak vždy JINE). Smazáním vlastní chvilky historie zůstane. */
+    customActivityId: uuid('custom_activity_id').references(() => customActivities.id, { onDelete: 'set null' }),
     timezone: text('timezone').notNull(),
     localDay: date('local_day', { mode: 'string' }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -53,6 +82,7 @@ export const activities = pgTable(
       'activities_crew_matches_visibility',
       sql`(${t.visibility} = 'CHILL_CREW') = (${t.crewId} is not null)`,
     ),
+    check('activities_custom_is_jine', sql`${t.customActivityId} is null or ${t.category} = 'JINE'`),
     check(
       'activities_completed_has_time',
       sql`(${t.status} = 'SPLNENO') = (${t.completedAt} is not null)`,
@@ -86,7 +116,9 @@ export const activities = pgTable(
       withCheck: sql`${t.userId} = ${uid}
         and ${t.visibility} = 'JEN_JA'
         and ${t.crewId} is null
-        and (${t.restInvitationId} is null or private.is_party_to_accepted_invite(${t.restInvitationId}))`,
+        and (${t.restInvitationId} is null or private.is_party_to_accepted_invite(${t.restInvitationId}))
+        and (${t.customActivityId} is null or exists (
+          select 1 from public.custom_activities c where c.id = ${t.customActivityId} and c.user_id = ${uid}))`,
     }),
     pgPolicy('activities: mění jen autor, sdílí jen do své skupiny', {
       for: 'update',

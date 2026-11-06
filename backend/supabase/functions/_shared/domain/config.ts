@@ -43,6 +43,8 @@ export const LIMITS = {
   sharePreviewTtlSeconds: 600,
   /** Jak staré chvíle jde zapsat zpětně (proti „farmení“ bodů a odznaku Návrat). */
   maxBackdateHours: 48,
+  /** Kolik vlastních chvilek si jde vytvořit (přehlednost domovské obrazovky). */
+  maxCustomActivities: 12,
 } as const;
 
 export const NOTIFICATION_DEFAULTS = {

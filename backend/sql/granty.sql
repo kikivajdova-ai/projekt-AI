@@ -59,6 +59,9 @@ grant select, insert, delete on public.activities to app_user;
 grant update (status, completed_at, local_day, visibility, crew_id, shared_at) on public.activities to app_user;
 grant select on public.activities to app_system;
 
+-- custom_activities: vlastní chvilky, jen autor (systém k nim přístup nemá)
+grant select, insert, delete on public.custom_activities to app_user;
+
 -- groups a členství
 grant select, insert on public.groups to app_user;
 grant update (name) on public.groups to app_user;

@@ -12,6 +12,7 @@ import {
   consents,
   friendInvites,
   friendships,
+  customActivities,
   groupGoalContributions,
   groupInvitations,
   groupMembers,
@@ -99,6 +100,7 @@ export async function exportData(userId: string) {
     souhlasy: await tx.select().from(consents).where(eq(consents.userId, userId)),
     nalada: await tx.select().from(wellbeingCheckins).where(eq(wellbeingCheckins.userId, userId)),
     chvile: await tx.select().from(activities).where(eq(activities.userId, userId)),
+    vlastniChvilky: await tx.select().from(customActivities).where(eq(customActivities.userId, userId)),
     odznaky: await tx.select().from(userBadges).where(eq(userBadges.userId, userId)),
     pratelstvi: await tx
       .select()

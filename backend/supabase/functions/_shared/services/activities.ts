@@ -4,6 +4,7 @@ import { and, desc, eq, inArray, lt, ne } from 'drizzle-orm';
 import { asUser, isPermissionError, isUniqueViolation, type Tx } from '../db/client.ts';
 import {
   activities,
+  customActivities,
   groupGoalContributions,
   groups,
   restInvitations,
@@ -27,14 +28,17 @@ export interface LogMomentInput {
   occurredAt?: Date;
   restInvitationId?: string;
   goalIds?: string[];
+  /** Vlastní chvilka; kategorie je pak vždy JINE. */
+  customActivityId?: string;
 }
 
-/** Čím odpovídáme autorovi o jeho vlastní chvíli. */
-function ownView(a: typeof activities.$inferSelect) {
+/** Čím odpovídáme autorovi o jeho vlastní chvíli. Název vlastní chvilky jen jemu. */
+function ownView(a: typeof activities.$inferSelect, customTitle?: string | null) {
   return {
     id: a.id,
     category: a.category,
-    label: CATEGORY_LABEL[a.category],
+    customActivityId: a.customActivityId,
+    label: customTitle ?? CATEGORY_LABEL[a.category],
     status: a.status,
     visibility: a.visibility,
     crewId: a.crewId,
@@ -59,6 +63,17 @@ export async function logMoment(userId: string, input: LogMomentInput) {
   const activity = await asUser(userId, async (tx) => {
     const s = await loadSettings(tx, userId);
 
+    let customTitle: string | null = null;
+    if (input.customActivityId) {
+      // RLS ukáže jen moje vlastní chvilky; cizí id = nenalezeno (a databáze by ho ani nevložila).
+      const [c] = await tx
+        .select({ title: customActivities.title })
+        .from(customActivities)
+        .where(eq(customActivities.id, input.customActivityId));
+      if (!c) throw notFound('Tuhle vlastní chvilku jsme nenašli.');
+      customTitle = c.title;
+    }
+
     if (input.restInvitationId) {
       const [inv] = await tx
         .select({ status: restInvitations.status })
@@ -72,7 +87,8 @@ export async function logMoment(userId: string, input: LogMomentInput) {
       .values({
         id: input.id,
         userId,
-        category: input.category,
+        category: input.customActivityId ? 'JINE' : input.category,
+        customActivityId: input.customActivityId ?? null,
         status: input.done ? 'SPLNENO' : 'NAPLANOVANO',
         visibility: 'JEN_JA',
         crewId: null,
@@ -88,10 +104,10 @@ export async function logMoment(userId: string, input: LogMomentInput) {
     if (!row || row.userId !== userId) throw new AppError(409, 'KONFLIKT_ID', 'Zkus to prosím znovu.');
 
     const counted = row.status === 'SPLNENO' ? await contribute(tx, userId, row.id, input.goalIds ?? []) : [];
-    return { row, counted };
+    return { row, counted, customTitle };
   });
 
-  return afterMoment(userId, activity.row, activity.counted);
+  return afterMoment(userId, activity.row, activity.counted, activity.customTitle);
 }
 
 export async function completeMoment(userId: string, activityId: string, goalIds: string[] = []) {
@@ -142,14 +158,19 @@ async function insertOnce(run: () => Promise<unknown>) {
   }
 }
 
-async function afterMoment(userId: string, activity: typeof activities.$inferSelect, countedGoals: string[] = []) {
+async function afterMoment(
+  userId: string,
+  activity: typeof activities.$inferSelect,
+  countedGoals: string[] = [],
+  customTitle: string | null = null,
+) {
   if (activity.status !== 'SPLNENO') {
-    return { chvile: ownView(activity), zprava: GAME_TEXT.momentSaved, zapocitanoDoCilu: [] };
+    return { chvile: ownView(activity, customTitle), zprava: GAME_TEXT.momentSaved, zapocitanoDoCilu: [] };
   }
   const newBadges = await awardBadges(userId);
   const game = await getGameState(userId);
   return {
-    chvile: ownView(activity),
+    chvile: ownView(activity, customTitle),
     zapocitanoDoCilu: countedGoals,
     zprava: game.hraZapnuta && game.zprava ? game.zprava : GAME_TEXT.momentSaved,
     hra: game,
@@ -255,12 +276,13 @@ export async function deleteMoment(userId: string, activityId: string) {
 export async function listOwnMoments(userId: string, limit = 50) {
   return asUser(userId, async (tx) => {
     const rows = await tx
-      .select()
+      .select({ a: activities, title: customActivities.title })
       .from(activities)
+      .leftJoin(customActivities, eq(customActivities.id, activities.customActivityId))
       .where(eq(activities.userId, userId))
       .orderBy(desc(activities.createdAt))
       .limit(limit);
-    return rows.map(ownView);
+    return rows.map((r) => ownView(r.a, r.title));
   });
 }
 

@@ -21,6 +21,7 @@ import { requireUser, type AuthEnv } from './auth.ts';
 import * as account from '../services/account.ts';
 import * as moments from '../services/activities.ts';
 import * as checkins from '../services/checkins.ts';
+import * as custom from '../services/customActivities.ts';
 import * as friends from '../services/friends.ts';
 import * as game from '../services/game.ts';
 import * as groups from '../services/groups.ts';
@@ -64,7 +65,9 @@ const schemas = {
     occurredAt: z.coerce.date().optional(),
     restInvitationId: id.optional(),
     goalIds: z.array(id).max(10).optional(),
+    customActivityId: id.optional(),
   }),
+  customActivity: z.strictObject({ title: z.string().trim().min(1).max(60) }),
   complete: z.strictObject({ goalIds: z.array(id).max(10).optional() }),
   shareTarget: z.strictObject({ visibility: z.enum(VISIBILITY), crewId: id.optional() }),
   share: z.strictObject({
@@ -202,6 +205,16 @@ export function createApp() {
   // --- odpočinkové chvíle ---
   app.post('/activities', async (c) => c.json(await moments.logMoment(uid(c), await body(c.req.raw, schemas.moment)), 201));
   app.get('/activities', async (c) => c.json(await moments.listOwnMoments(uid(c))));
+
+  // --- vlastní chvilky (název vidí jen autor) ---
+  app.get('/custom-activities', async (c) => c.json(await custom.listCustomActivities(uid(c))));
+  app.post('/custom-activities', async (c) =>
+    c.json(await custom.createCustomActivity(uid(c), (await body(c.req.raw, schemas.customActivity)).title), 201),
+  );
+  app.delete('/custom-activities/:id', async (c) => {
+    await custom.deleteCustomActivity(uid(c), param(c.req.param('id')));
+    return c.body(null, 204);
+  });
   app.post('/activities/:id/complete', async (c) =>
     c.json(
       await moments.completeMoment(uid(c), param(c.req.param('id')), (await body(c.req.raw, schemas.complete)).goalIds),
