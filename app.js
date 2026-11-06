@@ -489,7 +489,22 @@ function sprout(x, y) {
     <ellipse cx="${x + 5}" cy="${y - 12}" rx="5" ry="2.6" fill="#7E9240" transform="rotate(25 ${x + 5} ${y - 12})"/>`;
 }
 
+// Ručně kreslené návrhy květin (web/kvetiny/*.svg -> flowers.js). Plátno 960×960, rostlina stojí v (480, 805).
+// Měřítko = jak velká je rostlina v zahradě. Druhy bez návrhu se kreslí jednoduchými tvary níže.
+const FLOWER_SCALE = { tulip: 0.085, daisy: 0.085 };
+// Barevné varianty: barva rostliny v zahradě -> návrh dané varianty (např. tulipan-zluty-*.svg).
+const FLOWER_VARIANT = { tulip: { '#F2C94C': 'zluty' } };
+function designedPlant(p, stage) {
+  const variant = FLOWER_VARIANT[p.kind]?.[p.color];
+  const art = (variant && window.FLOWER_ART?.[`${p.kind}:${variant}`]?.[stage - 1]) || window.FLOWER_ART?.[p.kind]?.[stage - 1];
+  if (!art) return '';
+  const k = FLOWER_SCALE[p.kind] || 0.08;
+  return `<g transform="translate(${p.x} ${p.y}) scale(${k}) translate(-480 -805)">${art}</g>`;
+}
+
 function gardenPlant(p, stage) {
+  const designed = designedPlant(p, stage);
+  if (designed) return designed;
   const { x, y, color } = p;
   if (stage === 1) return sprout(x, y);
   const bud = stage === 2;
