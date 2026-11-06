@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Těžký den</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#5F7424}a:hover{color:#3F4E16}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F6F5F1; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #23301A; padding: 28px 20px; display: flex; flex-direction: column; gap: 18px">
+  <a href="Main.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 999px; background: #FFFFFF; color: #23301A; font-size: 14px; font-weight: 600; text-decoration: none">Zpět</a>
+
+  <div>
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700">Jak se dnes máš?</h1>
+    <p style="margin: 6px 0 0; font-size: 14px; color: #6B7064">Vidíš to jen ty. Nikdy se nesdílí.</p>
+  </div>
+
+  <div role="radiogroup" aria-label="Nálada" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{ moods }}" as="m" hint-placeholder-count="5">
+      <button type="button" role="radio" aria-checked="{{ m.checked }}" aria-label="{{ m.label }}" onClick="{{ m.pick }}" style="{{ m.style }}">{{ m.n }}</button>
+    </sc-for>
+  </div>
+  <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6B7064"><span>Je to těžké</span><span>Je mi dobře</span></div>
+
+  <sc-if value="{{ low }}" hint-placeholder-val="{{ true }}">
+    <section aria-live="polite" style="background: #FFFFFF; border-radius: 24px; padding: 20px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 700">Je nám líto, že je to teď těžké.</h2>
+      <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #4C5A2A">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít s někým mluvit, pomoc je na dosah.</p>
+      <a href="Pomoc.dc.html" style="height: 54px; border-radius: 999px; background: #5F7424; color: #FFFFFF; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Potřebuješ pomoc hned?</a>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ ok }}" hint-placeholder-val="{{ false }}">
+    <section aria-live="polite" style="background: #FFFFFF; border-radius: 24px; padding: 20px; box-shadow: 0 2px 12px rgba(35,48,26,0.06)">
+      <p style="margin: 0; font-size: 15px; color: #4C5A2A">Díky, je to zapsané. Jen pro tebe.</p>
+    </section>
+  </sc-if>
+
+  <p style="margin: auto 0 0; font-size: 12px; color: #6B7064; line-height: 1.5">U záznamu nálady nejsou body, odznaky ani oslavy. Aplikace tvoje texty nečte ani nevyhodnocuje.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mood: 1 };
+  }
+  renderVals() {
+    var labels = ['Je to těžké', 'Spíš špatně', 'Ujde to', 'Docela dobře', 'Je mi dobře'];
+    var mood = this.state.mood;
+    var moods = [1, 2, 3, 4, 5].map((n) => {
+      var on = n === mood;
+      return {
+        n: String(n),
+        label: labels[n - 1],
+        checked: on ? 'true' : 'false',
+        pick: () => this.setState({ mood: n }),
+        style: 'height: 56px; border-radius: 18px; font-size: 18px; font-weight: 700; cursor: pointer; ' +
+          (on ? 'border: 2px solid #23301A; background: #E4E8C8; color: #23301A;' : 'border: 1.5px solid #D9DBD2; background: #FFFFFF; color: #23301A;')
+      };
+    });
+    return { moods: moods, low: mood === 1, ok: mood > 1 };
+  }
+}
+</script>
+</body>
+</html>

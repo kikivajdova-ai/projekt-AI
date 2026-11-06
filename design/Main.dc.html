@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Odpočívat spolu – aplikace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#5F7424}a:hover{color:#3F4E16}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F6F5F1; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #23301A; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+  <!-- ================= DOMŮ ================= -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; overflow-y: auto; padding-bottom: 110px">
+      <header style="background: #E4E8C8; padding: 24px 20px 28px; border-radius: 0 0 32px 32px; display: flex; flex-direction: column; gap: 6px; position: relative">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <sc-if value="{{ gameOn }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ goGarden }}" style="height: 36px; padding: 0 14px; border-radius: 999px; border: none; background: #FFFFFF; color: #3F4E16; font-size: 13px; font-weight: 700; cursor: pointer">Úroveň {{ level }} · Zahrada</button>
+          </sc-if>
+          <sc-if value="{{ gameOff }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: 14px; color: #4C5A2A; font-weight: 600">Pátek 6. listopadu</p>
+          </sc-if>
+          <a href="Pomoc.dc.html" aria-label="Potřebuješ pomoc hned?" style="width: 44px; height: 44px; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; text-decoration: none">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23301A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+          </a>
+        </div>
+        <h1 style="margin: 8px 0 0; font-size: 28px; line-height: 1.2; font-weight: 700">Ahoj, Kláro</h1>
+        <p style="margin: 0; font-size: 16px; color: #4C5A2A">Jak si dnes odpočineš?</p>
+      </header>
+
+      <div style="padding: 0 20px; margin-top: 20px; display: flex; flex-direction: column; gap: 14px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div>
+              <p style="margin: 0; font-size: 12px; color: #6B7064; font-weight: 600">Společný cíl tohoto týdne</p>
+              <h2 style="margin: 2px 0 0; font-size: 18px; font-weight: 700">Chill crew</h2>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; background: #EEF1DD; color: #3F4E16; padding: 6px 10px; border-radius: 999px">Skupina</span>
+          </div>
+          <p style="margin: 0; font-size: 15px">{{ goalText }}</p>
+          <div role="img" aria-label="{{ goalText }}" style="height: 12px; background: #EEF1DD; border-radius: 999px; overflow: hidden">
+            <div style="{{ goalBar }}"></div>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; flex-direction: column; gap: 12px">
+          <div>
+            <p style="margin: 0; font-size: 12px; color: #6B7064; font-weight: 600">Tom tě zve</p>
+            <h2 style="margin: 2px 0 0; font-size: 17px; font-weight: 700">Jdu na procházku, přidáš se?</h2>
+          </div>
+          <sc-if value="{{ inviteOpen }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 10px">
+              <button type="button" onClick="{{ decline }}" style="flex: 1; height: 48px; border-radius: 999px; border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A; font-size: 15px; font-weight: 600; cursor: pointer">Teď ne</button>
+              <button type="button" onClick="{{ join }}" style="flex: 1; height: 48px; border-radius: 999px; border: none; background: #5F7424; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Přidám se</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ inviteAnswered }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: 14px; color: #4C5A2A" aria-live="polite">{{ inviteText }}</p>
+          </sc-if>
+        </section>
+
+        <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 700">Vyber si chvilku pro sebe</h2>
+          <p style="margin: 0; font-size: 13px; color: #6B7064">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě.</p>
+        </div>
+
+        <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="8">
+          <section style="{{ t.cardStyle }}">
+            <div style="display: flex; gap: 12px; align-items: center">
+              <div style="width: 44px; height: 44px; border-radius: 999px; background: #F0F2E4; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+                <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 25V13" stroke="#5F7424" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="10" cy="17" rx="4" ry="2.4" fill="#7E9240"></ellipse><circle cx="14" cy="10" r="5" fill="{{ t.flower }}"></circle></svg>
+              </div>
+              <div style="flex: 1; min-width: 0">
+                <h3 style="margin: 0; font-size: 15px; font-weight: 700">{{ t.title }}</h3>
+                <p style="margin: 2px 0 0; font-size: 13px; color: #6B7064">{{ t.hint }}</p>
+              </div>
+              <span style="font-size: 11px; font-weight: 700; background: #F0EFEA; color: #23301A; padding: 5px 9px; border-radius: 999px; white-space: nowrap">{{ t.chip }}</span>
+            </div>
+
+            <sc-if value="{{ t.notDone }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div role="group" aria-label="S kým" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #F0EFEA; border-radius: 999px; padding: 4px">
+                  <button type="button" aria-pressed="{{ t.samPressed }}" onClick="{{ t.setSam }}" style="{{ t.samStyle }}">Sám / sama</button>
+                  <button type="button" aria-pressed="{{ t.spoluPressed }}" onClick="{{ t.setSpolu }}" style="{{ t.spoluStyle }}">S kamarádem</button>
+                </div>
+                <sc-if value="{{ t.isSpolu }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+                    <span style="font-size: 13px; color: #6B7064">Pozvat:</span>
+                    <sc-for list="{{ t.friends }}" as="f" hint-placeholder-count="2">
+                      <button type="button" aria-pressed="{{ f.pressed }}" onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.name }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ t.invited }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin: 0; font-size: 13px; color: #4C5A2A">{{ t.invitedText }}</p>
+                </sc-if>
+                <button type="button" onClick="{{ t.action }}" style="height: 46px; border-radius: 999px; border: none; background: #5F7424; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">{{ t.actionLabel }}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ t.done }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+                <p style="margin: 0; font-size: 14px; color: #3F4E16; font-weight: 600">{{ t.doneText }}</p>
+                <button type="button" onClick="{{ t.again }}" style="height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap">Zapsat znovu</button>
+              </div>
+            </sc-if>
+          </section>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= PŘÁTELÉ ================= -->
+  <sc-if value="{{ isFriends }}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; overflow-y: auto; padding: 24px 20px 110px; display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <h1 style="margin: 0; font-size: 26px; font-weight: 700">Přátelé</h1>
+        <p style="margin: 4px 0 0; font-size: 14px; color: #6B7064">Kamarády přidáš jen přes pozvánku. Nikoho cizího tu nenajdeš.</p>
+      </div>
+      <section style="background: #E4E8C8; border-radius: 28px; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 700">Odpočívat spolu je víc</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3F4E16">Pošli kamarádovi osobní odkaz. Přátelé budete, až to potvrdíte oba.</p>
+        </div>
+        <button type="button" onClick="{{ shareLink }}" style="height: 56px; border-radius: 999px; border: none; background: #5F7424; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">Pozvat kamaráda odkazem</button>
+      </section>
+
+      <section style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; gap: 12px; align-items: center">
+        <div style="width: 44px; height: 44px; border-radius: 999px; background: #FCE6D6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; color: #B4501A">T</div>
+        <div style="flex: 1">
+          <p style="margin: 0; font-size: 14px; font-weight: 600">Tom ti poslal povzbuzení</p>
+          <p style="margin: 2px 0 0; font-size: 14px; color: #6B7064">„Dej si dnes pauzu.“ Nemusíš odpovídat.</p>
+        </div>
+      </section>
+
+      <h2 style="margin: 6px 0 0; font-size: 17px; font-weight: 700">Povzbudit jedním klepnutím</h2>
+      <sc-for list="{{ friends }}" as="f" hint-placeholder-count="3">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 40px; height: 40px; border-radius: 999px; background: #E4E8C8; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #3F4E16">{{ f.initial }}</div>
+            <p style="margin: 0; flex: 1; font-size: 15px; font-weight: 700">{{ f.name }}</p>
+            <button type="button" aria-label="Možnosti pro {{ f.name }}" onClick="{{ f.toggleMenu }}" style="width: 44px; height: 44px; border-radius: 999px; border: none; background: #F0EFEA; cursor: pointer; display: flex; align-items: center; justify-content: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#23301A" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+            </button>
+          </div>
+          <sc-if value="{{ f.canPing }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 8px">
+              <button type="button" onClick="{{ f.pingThink }}" style="flex: 1; height: 44px; border-radius: 999px; border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A; font-size: 13px; font-weight: 600; cursor: pointer">Myslím na tebe</button>
+              <button type="button" onClick="{{ f.pingPause }}" style="flex: 1; height: 44px; border-radius: 999px; border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A; font-size: 13px; font-weight: 600; cursor: pointer">Dej si pauzu</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ f.pinged }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: 13px; color: #3F4E16; font-weight: 600">Odesláno. {{ f.name }} ví, že na něj myslíš.</p>
+          </sc-if>
+          <sc-if value="{{ f.menuOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 8px">
+              <button type="button" onClick="{{ f.block }}" style="flex: 1; height: 44px; border-radius: 999px; border: none; background: #F0EFEA; color: #23301A; font-size: 13px; font-weight: 600; cursor: pointer">Zablokovat</button>
+              <button type="button" onClick="{{ f.report }}" style="flex: 1; height: 44px; border-radius: 999px; border: none; background: #F0EFEA; color: #23301A; font-size: 13px; font-weight: 600; cursor: pointer">Nahlásit</button>
+            </div>
+          </sc-if>
+        </section>
+      </sc-for>
+
+      <h2 style="margin: 6px 0 0; font-size: 17px; font-weight: 700">Co se kamarádům podařilo</h2>
+      <p style="margin: -8px 0 0; font-size: 13px; color: #6B7064">Jen splněné chvíle, které kamarádi sami sdíleli.</p>
+      <sc-for list="{{ feed }}" as="e" hint-placeholder-count="3">
+        <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center">
+          <p style="margin: 0; font-size: 14px"><b>{{ e.who }}</b> · {{ e.what }}</p>
+          <span style="font-size: 12px; color: #6B7064">{{ e.when }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- ================= ZAHRADA ================= -->
+  <sc-if value="{{ isGarden }}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; overflow-y: auto; padding: 24px 20px 110px; display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <h1 style="margin: 0; font-size: 26px; font-weight: 700">Tvoje zahrada</h1>
+        <p style="margin: 4px 0 0; font-size: 14px; color: #6B7064">Každá chvilka pro tebe nechá něco vyrůst. Nic tu nevadne.</p>
+      </div>
+
+      <sc-if value="{{ gameOff }}" hint-placeholder-val="{{ false }}">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 20px">
+          <p style="margin: 0; font-size: 15px; color: #4C5A2A">Herní prvky máš vypnuté. Zahrada na tebe počká přesně tak, jak je.</p>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ gameOn }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <section style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <p style="margin: 0; font-size: 17px; font-weight: 700">Úroveň {{ level }}</p>
+              <p style="margin: 0; font-size: 13px; color: #6B7064">{{ levelHint }}</p>
+            </div>
+            <div role="img" aria-label="Cesta k další úrovni" style="height: 10px; background: #EEF1DD; border-radius: 999px; overflow: hidden">
+              <div style="{{ levelBar }}"></div>
+            </div>
+          </section>
+
+          <section style="background: #DCE4B8; border-radius: 28px; padding: 16px 12px 12px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{ plots }}" as="p" hint-placeholder-count="8">
+              <div style="{{ p.style }}">
+                <svg width="72" height="72" viewBox="0 0 80 80" role="img" aria-label="{{ p.aria }}">
+                  <ellipse cx="40" cy="70" rx="30" ry="7" fill="#A9B676"></ellipse>
+                  <circle cx="40" cy="66" r="4" fill="#8B6B4A" opacity="{{ p.seedOp }}"></circle>
+                  <line x1="40" y1="68" x2="40" y2="{{ p.stemTop }}" stroke="#5F7424" stroke-width="3" stroke-linecap="round" opacity="{{ p.stemOp }}"></line>
+                  <ellipse cx="32" cy="{{ p.leaf1Y }}" rx="8" ry="4" fill="#7E9240" opacity="{{ p.leaf1Op }}"></ellipse>
+                  <ellipse cx="48" cy="{{ p.leaf2Y }}" rx="8" ry="4" fill="#8FA34A" opacity="{{ p.leaf2Op }}"></ellipse>
+                  <circle cx="40" cy="{{ p.stemTop }}" r="{{ p.flowerR }}" fill="{{ p.flower }}"></circle>
+                  <circle cx="40" cy="{{ p.stemTop }}" r="{{ p.centerR }}" fill="#FFF6D6"></circle>
+                  <circle cx="24" cy="{{ p.extraY }}" r="{{ p.extraR }}" fill="{{ p.flower }}"></circle>
+                  <circle cx="57" cy="{{ p.extraY }}" r="{{ p.extraR }}" fill="{{ p.flower }}"></circle>
+                </svg>
+                <p style="margin: 0; font-size: 12px; font-weight: 700; text-align: center">{{ p.name }}</p>
+                <p style="margin: 0; font-size: 11px; color: #3F4E16; text-align: center">{{ p.stage }}</p>
+              </div>
+            </sc-for>
+          </section>
+
+          <section style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+            <p style="margin: 0; font-size: 14px; font-weight: 700">Jak zahrada roste</p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #6B7064">Semínko → klíček → roste → kvete → kvete naplno. Každý druh odpočinku má svou rostlinu. Pauza ani vynechaný týden nic nevezmou.</p>
+            <button type="button" onClick="{{ goHome }}" style="margin-top: 6px; height: 46px; border-radius: 999px; border: none; background: #5F7424; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Vybrat chvilku</button>
+          </section>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ================= JÁ ================= -->
+  <sc-if value="{{ isMe }}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; overflow-y: auto; padding: 24px 20px 110px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <div style="width: 56px; height: 56px; border-radius: 999px; background: #E4E8C8; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #3F4E16">K</div>
+        <div>
+          <h1 style="margin: 0; font-size: 24px; font-weight: 700">Klára</h1>
+          <p style="margin: 2px 0 0; font-size: 13px; color: #6B7064">Přezdívku vidí jen tvoji přátelé.</p>
+        </div>
+      </div>
+
+      <a href="Nalada.dc.html" style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: #23301A">
+        <span><b style="font-size: 15px">Jak se dnes mám?</b><br><span style="font-size: 13px; color: #6B7064">Záznam nálady vidíš jen ty</span></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#23301A" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+
+      <section style="background: #FFFFFF; border-radius: 24px; padding: 6px 18px">
+        <sc-for list="{{ toggles }}" as="g" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
+            <div style="flex: 1">
+              <p style="margin: 0; font-size: 15px; font-weight: 600">{{ g.label }}</p>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #6B7064">{{ g.hint }}</p>
+            </div>
+            <button type="button" role="switch" aria-checked="{{ g.checked }}" aria-label="{{ g.label }}" onClick="{{ g.flip }}" style="{{ g.track }}">
+              <span style="{{ g.knob }}"></span>
+            </button>
+          </div>
+        </sc-for>
+      </section>
+
+      <sc-if value="{{ gameOn }}" hint-placeholder-val="{{ true }}">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+          <p style="margin: 0; font-size: 15px; font-weight: 700">Odznaky za péči</p>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{ badges }}" as="b" hint-placeholder-count="6">
+              <div style="{{ b.style }}">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="{{ b.ink }}" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="10" r="6"></circle><path d="M8.5 15l-1.5 6 5-2.5 5 2.5-1.5-6"></path></svg>
+                <p style="margin: 0; font-size: 11px; font-weight: 700; text-align: center">{{ b.name }}</p>
+                <p style="margin: 0; font-size: 10px; color: #6B7064; text-align: center">{{ b.state }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <a href="Pomoc.dc.html" style="height: 50px; border-radius: 999px; border: 1.5px solid #CFD3C4; color: #23301A; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Potřebuješ pomoc hned?</a>
+
+      <figure hidden style="display: none; margin: 4px 0 0; flex-shrink: 0; border-radius: 28px; overflow: hidden; background: #E4E8C8">
+        <svg width="350" height="200" viewBox="0 0 350 200" role="img" aria-label="Ilustrace rozkvetlé zahrady" style="display: block; width: 100%; height: 200px">
+          <circle cx="292" cy="46" r="22" fill="#F6E7A1"></circle>
+          <circle cx="292" cy="46" r="32" fill="#F6E7A1" opacity="0.35"></circle>
+          <ellipse cx="70" cy="40" rx="26" ry="9" fill="#FFFFFF" opacity="0.8"></ellipse>
+          <ellipse cx="92" cy="34" rx="18" ry="8" fill="#FFFFFF" opacity="0.8"></ellipse>
+          <path d="M0 130 C60 100 120 104 180 122 C240 140 300 112 350 104 L350 200 L0 200 Z" fill="#C9D29C"></path>
+          <path d="M0 158 C70 138 150 142 220 156 C280 168 320 150 350 146 L350 200 L0 200 Z" fill="#A9B676"></path>
+          <path d="M70 150 V96" stroke="#5F7424" stroke-width="7" stroke-linecap="round"></path>
+          <circle cx="70" cy="78" r="30" fill="#6E8B2E"></circle>
+          <circle cx="48" cy="94" r="20" fill="#8FA34A"></circle>
+          <circle cx="94" cy="96" r="18" fill="#7E9240"></circle>
+          <circle cx="62" cy="70" r="4" fill="#E8742A"></circle>
+          <circle cx="84" cy="84" r="4" fill="#E8742A"></circle>
+          <path d="M150 168 V112" stroke="#5F7424" stroke-width="3.5" stroke-linecap="round"></path>
+          <ellipse cx="140" cy="140" rx="10" ry="5" fill="#7E9240"></ellipse>
+          <circle cx="150" cy="104" r="16" fill="#F2994A"></circle>
+          <circle cx="150" cy="104" r="7" fill="#8B6B4A"></circle>
+          <path d="M196 172 V128 M206 172 V122 M216 172 V130" stroke="#5F7424" stroke-width="2.5" stroke-linecap="round"></path>
+          <ellipse cx="196" cy="124" rx="4" ry="9" fill="#B48ACB"></ellipse>
+          <ellipse cx="206" cy="117" rx="4" ry="10" fill="#9B8FD1"></ellipse>
+          <ellipse cx="216" cy="126" rx="4" ry="9" fill="#B48ACB"></ellipse>
+          <path d="M262 174 V140" stroke="#5F7424" stroke-width="3" stroke-linecap="round"></path>
+          <ellipse cx="272" cy="156" rx="9" ry="4.5" fill="#8FA34A"></ellipse>
+          <circle cx="262" cy="134" r="11" fill="#FFFFFF"></circle>
+          <circle cx="262" cy="134" r="4.5" fill="#F2C94C"></circle>
+          <path d="M310 176 V150" stroke="#5F7424" stroke-width="3" stroke-linecap="round"></path>
+          <circle cx="310" cy="144" r="9" fill="#E8742A"></circle>
+          <circle cx="310" cy="144" r="3.5" fill="#FFF6D6"></circle>
+          <circle cx="118" cy="174" r="6" fill="#F2C94C"></circle>
+          <circle cx="236" cy="182" r="5" fill="#FFFFFF"></circle>
+          <circle cx="30" cy="176" r="5" fill="#B48ACB"></circle>
+          <circle cx="336" cy="184" r="5" fill="#F2C94C"></circle>
+          <path d="M236 82 q6 -8 12 0 q6 -8 12 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        <figcaption style="padding: 12px 18px 16px; font-size: 13px; color: #3F4E16">Tvoje zahrada roste s každou chvilkou pro tebe.</figcaption>
+      </figure>
+    </div>
+  </sc-if>
+
+  <!-- ================= OZNÁMENÍ ================= -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 96px; background: #23301A; color: #FFFFFF; border-radius: 18px; padding: 12px 8px 12px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 28px rgba(35,48,26,0.25)">
+      <p style="margin: 0; flex: 1; font-size: 14px; line-height: 1.4">{{ toast }}</p>
+      <button type="button" aria-label="Zavřít oznámení" onClick="{{ closeToast }}" style="width: 40px; height: 40px; border-radius: 999px; border: none; background: transparent; color: #FFFFFF; font-size: 18px; cursor: pointer">×</button>
+    </div>
+  </sc-if>
+
+  <!-- ================= SPODNÍ LIŠTA ================= -->
+  <nav aria-label="Hlavní navigace" style="position: absolute; left: 16px; right: 16px; bottom: 16px; height: 68px; background: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 28px rgba(35,48,26,0.14); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center">
+    <button type="button" aria-current="{{ cur.domu }}" onClick="{{ goHome }}" style="{{ tabStyle.domu }}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ tabInk.domu }}" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Domů</button>
+    <button type="button" aria-current="{{ cur.pratele }}" onClick="{{ goFriends }}" style="{{ tabStyle.pratele }}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ tabInk.pratele }}" stroke-width="1.9" aria-hidden="true"><circle cx="9" cy="9" r="3.5"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2 1-4 4-4"></path></svg>Přátelé</button>
+    <div style="display: flex; justify-content: center">
+      <button type="button" aria-label="Vybrat chvilku" onClick="{{ goHome }}" style="width: 56px; height: 56px; margin-top: -30px; border-radius: 999px; border: none; background: #5F7424; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(95,116,36,0.35); cursor: pointer">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      </button>
+    </div>
+    <button type="button" aria-current="{{ cur.zahrada }}" onClick="{{ goGarden }}" style="{{ tabStyle.zahrada }}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ tabInk.zahrada }}" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 21V11M12 11c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"></path></svg>Zahrada</button>
+    <button type="button" aria-current="{{ cur.ja }}" onClick="{{ goMe }}" style="{{ tabStyle.ja }}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ tabInk.ja }}" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path></svg>Já</button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var CATS = [
+  { id: 'PROCHAZKA', title: 'Procházka venku', hint: 'Dvacet minut na čerstvém vzduchu', plant: 'Dub', flower: '#6E8B2E' },
+  { id: 'CTENI', title: 'Čtení pro radost', hint: 'Pár stránek knihy, žádné zprávy', plant: 'Kopretina', flower: '#F2C94C' },
+  { id: 'PAUZA', title: 'Pauza na deset minut', hint: 'Jen sedět, dýchat a nic nedělat', plant: 'Kapradí', flower: '#7FB77E' },
+  { id: 'SPANEK', title: 'Spánek navíc', hint: 'Jít dnes spát o půl hodiny dřív', plant: 'Měsíční květ', flower: '#9B8FD1' },
+  { id: 'BEZ_TELEFONU', title: 'Večer bez telefonu', hint: 'Telefon odložit od osmi večer', plant: 'Levandule', flower: '#B48ACB' },
+  { id: 'POHYB', title: 'Protažení', hint: 'Pár minut jógy nebo protažení', plant: 'Šípek', flower: '#E8742A' },
+  { id: 'TVORENI', title: 'Něco vytvořit', hint: 'Kreslení, vaření, hudba, cokoli', plant: 'Slunečnice', flower: '#F2994A' },
+  { id: 'JINE', title: 'Čaj v klidu', hint: 'Hrnek čaje bez spěchu a obrazovky', plant: 'Heřmánek', flower: '#F6E7A1' }
+];
+var FRIENDS = ['Tom', 'Ema', 'Jakub'];
+var HISTORY = { PROCHAZKA: 2, CTENI: 1, PAUZA: 1 };
+var STAGES = ['Semínko', 'Klíček', 'Roste', 'Kvete', 'Kvete naplno'];
+var BASE_POINTS = 40;
+
+function levelPoints(n) { return n <= 1 ? 0 : Math.round(50 * Math.pow(n - 1, 1.4)); }
+function levelFor(p) { var l = 1; while (levelPoints(l + 1) <= p) l++; return l; }
+function points(counted, joint) { return BASE_POINTS + 10 * Math.min(counted, 2) + (joint ? 5 : 0); }
+function moments(n) { return n === 1 ? '1 chvilka' : (n >= 2 && n <= 4 ? n + ' chvilky' : n + ' chvil'); }
+function seg(on) {
+  return 'height: 38px; border-radius: 999px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; ' +
+    (on ? 'background: #23301A; color: #FFFFFF;' : 'background: transparent; color: #23301A;');
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'domu', today: {}, mode: {}, friendFor: {}, invited: {}, counted: 0, joint: false,
+      lastGrown: null, invite: null, pinged: {}, menuFor: null, blocked: {},
+      gameOn: true, quiet: true, shareBadges: false, toast: null
+    };
+  }
+
+  complete(cat) {
+    var s = this.state;
+    var c = CATS.find(function (x) { return x.id === cat; });
+    var today = Object.assign({}, s.today); today[cat] = (today[cat] || 0) + 1;
+    var together = s.mode[cat] === 'spolu' && s.invited[cat];
+    var counted = s.counted + 1;
+    var joint = s.joint || !!together;
+    var before = levelFor(points(s.counted, s.joint));
+    var after = levelFor(points(counted, joint));
+    var invited = Object.assign({}, s.invited); invited[cat] = false;
+    var msg;
+    if (!s.gameOn) msg = 'Chvilka pro tebe je zapsaná.';
+    else if (after > before) msg = 'Nová úroveň ' + after + '! V zahradě roste: ' + c.plant + '.';
+    else if (counted === 2) msg = 'Na dnešek máš hotovo. Užij si zbytek dne. Zahrada roste: ' + c.plant + '.';
+    else msg = (together ? 'Společná chvilka zapsaná. ' : 'Chvilka je zapsaná. ') + 'V zahradě roste: ' + c.plant + '.';
+    this.setState({ today: today, counted: counted, joint: joint, invited: invited, lastGrown: cat, toast: msg });
+  }
+
+  renderVals() {
+    var s = this.state;
+    var self = this;
+    var set = function (patch) { return function () { self.setState(patch); }; };
+    var count = function (id) { return (HISTORY[id] || 0) + (s.today[id] || 0); };
+    var pts = points(s.counted, s.joint);
+    var level = levelFor(pts);
+    var lo = levelPoints(level), hi = levelPoints(level + 1);
+    var pct = Math.round(100 * (pts - lo) / (hi - lo));
+
+    var tasks = CATS.map(function (c) {
+      var spolu = s.mode[c.id] === 'spolu';
+      var friend = s.friendFor[c.id] || 'Tom';
+      var invited = !!s.invited[c.id];
+      var done = (s.today[c.id] || 0) > 0;
+      var setMode = function (m) { return function () {
+        var mode = Object.assign({}, s.mode); mode[c.id] = m;
+        var inv = Object.assign({}, s.invited); inv[c.id] = false;
+        self.setState({ mode: mode, invited: inv });
+      }; };
+      return {
+        title: c.title, hint: c.hint, flower: c.flower,
+        chip: spolu ? 'Spolu' : 'Jen já',
+        cardStyle: 'background: #FFFFFF; border-radius: 24px; padding: 16px; box-shadow: 0 2px 12px rgba(35,48,26,0.06); display: flex; flex-direction: column; gap: 12px;' + (done ? ' outline: 2px solid #C9D29C;' : ''),
+        notDone: !done, done: done,
+        doneText: 'Hotovo · roste ' + c.plant,
+        isSpolu: spolu, invited: invited,
+        invitedText: 'Pozvánka odeslána: ' + friend + '. Odmítnout jde jedním klepnutím, bez vysvětlování.',
+        samPressed: spolu ? 'false' : 'true', spoluPressed: spolu ? 'true' : 'false',
+        samStyle: seg(!spolu), spoluStyle: seg(spolu),
+        setSam: setMode('sam'), setSpolu: setMode('spolu'),
+        friends: FRIENDS.filter(function (n) { return !s.blocked[n]; }).map(function (n) {
+          var on = n === friend;
+          return {
+            name: n, pressed: on ? 'true' : 'false',
+            style: 'height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; ' +
+              (on ? 'border: 2px solid #5F7424; background: #EEF1DD; color: #23301A;' : 'border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A;'),
+            pick: function () { var ff = Object.assign({}, s.friendFor); ff[c.id] = n; var inv = Object.assign({}, s.invited); inv[c.id] = false; self.setState({ friendFor: ff, invited: inv }); }
+          };
+        }),
+        actionLabel: !spolu ? 'Hotovo' : (invited ? 'Splněno spolu s ' + friend : 'Pozvat: ' + friend),
+        action: !spolu || invited
+          ? function () { self.complete(c.id); }
+          : function () { var inv = Object.assign({}, s.invited); inv[c.id] = true; self.setState({ invited: inv, toast: 'Pozvánka odeslána: ' + friend + '. Teď ne jde říct jedním klepnutím.' }); },
+        again: function () { self.complete(c.id); }
+      };
+    });
+
+    var plots = CATS.map(function (c) {
+      var n = count(c.id);
+      var st = Math.min(n, 4);
+      var top = [66, 52, 40, 28, 24][st];
+      return {
+        name: c.plant, stage: STAGES[st] + ' · ' + moments(n),
+        aria: c.plant + ': ' + STAGES[st],
+        flower: c.flower,
+        style: 'background: rgba(255,255,255,0.55); border-radius: 18px; padding: 4px 2px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px;' +
+          (s.lastGrown === c.id ? ' outline: 3px solid #5F7424;' : ''),
+        seedOp: st === 0 ? 1 : 0,
+        stemOp: st === 0 ? 0 : 1,
+        stemTop: top,
+        leaf1Y: top + 16, leaf1Op: st >= 1 ? 1 : 0,
+        leaf2Y: top + 9, leaf2Op: st >= 2 ? 1 : 0,
+        flowerR: st >= 3 ? (st === 4 ? 12 : 9) : (st === 2 ? 4 : 0),
+        centerR: st >= 3 ? 3.5 : 0,
+        extraY: top + 26, extraR: st === 4 ? 6 : 0
+      };
+    });
+
+    var friends = FRIENDS.filter(function (n) { return !s.blocked[n]; }).map(function (n) {
+      var ping = function () { var p = Object.assign({}, s.pinged); p[n] = true; self.setState({ pinged: p, toast: 'Povzbuzení odesláno. ' + n + ' nemusí odpovídat.' }); };
+      return {
+        name: n, initial: n.charAt(0),
+        canPing: !s.pinged[n], pinged: !!s.pinged[n],
+        pingThink: ping, pingPause: ping,
+        menuOpen: s.menuFor === n,
+        toggleMenu: set({ menuFor: s.menuFor === n ? null : n }),
+        block: function () { var b = Object.assign({}, s.blocked); b[n] = true; self.setState({ blocked: b, menuFor: null, toast: n + ' je zablokovaný. Nedostane o tom žádné oznámení.' }); },
+        report: set({ menuFor: null, toast: 'Díky. Nahlášení si přečte člověk z našeho týmu.' })
+      };
+    });
+
+    var feed = [
+      { who: 'Ema', what: 'Čtení pro radost', when: 'dnes' },
+      { who: 'Tom', what: 'Procházka venku', when: 'dnes' },
+      { who: 'Jakub', what: 'Večer bez telefonu', when: 'včera' }
+    ].filter(function (e) { return !s.blocked[e.who]; });
+
+    var sw = function (on) {
+      return {
+        track: 'width: 52px; height: 32px; border-radius: 999px; border: none; padding: 3px; cursor: pointer; display: flex; ' +
+          (on ? 'background: #5F7424; justify-content: flex-end;' : 'background: #CFD3C4; justify-content: flex-start;'),
+        knob: 'width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; display: block;',
+        checked: on ? 'true' : 'false'
+      };
+    };
+    var toggles = [
+      Object.assign({ label: 'Herní prvky', hint: 'Zahrada, úrovně, odznaky. Vypnutí ostatní nevidí.', flip: set({ gameOn: !s.gameOn }) }, sw(s.gameOn)),
+      Object.assign({ label: 'Noční klid 22:00–8:00', hint: 'V noci žádné notifikace', flip: set({ quiet: !s.quiet }) }, sw(s.quiet)),
+      Object.assign({ label: 'Sdílet odznaky s přáteli', hint: 'Ve výchozím stavu vypnuto', flip: set({ shareBadges: !s.shareBadges }) }, sw(s.shareBadges))
+    ];
+
+    var doneCats = CATS.filter(function (c) { return count(c.id) > 0; }).length;
+    var badgeList = [
+      { name: 'První chvilka', on: true },
+      { name: 'Návrat', on: false },
+      { name: 'Dobrý kamarád', on: Object.keys(s.pinged).length > 0 },
+      { name: 'Bez obrazovky', on: (s.today.BEZ_TELEFONU || 0) > 0 },
+      { name: 'Spolu', on: s.joint },
+      { name: 'Pestrost', on: doneCats >= 5 }
+    ].map(function (b) {
+      return {
+        name: b.name, state: b.on ? 'Získáno' : 'Čeká na tebe', ink: b.on ? '#5F7424' : '#9A9E92',
+        style: 'border-radius: 18px; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; ' + (b.on ? 'background: #EEF1DD;' : 'background: #F6F5F1;')
+      };
+    });
+
+    var tabs = ['domu', 'pratele', 'zahrada', 'ja'];
+    var tabStyle = {}, tabInk = {}, cur = {};
+    tabs.forEach(function (t) {
+      var on = s.tab === t;
+      tabInk[t] = on ? '#5F7424' : '#6B7064';
+      cur[t] = on ? 'page' : 'false';
+      tabStyle[t] = 'height: 60px; border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; ' +
+        (on ? 'font-weight: 700; color: #5F7424;' : 'font-weight: 500; color: #6B7064;');
+    });
+
+    var walks = 7 + (s.today.PROCHAZKA || 0);
+    return {
+      isHome: s.tab === 'domu', isFriends: s.tab === 'pratele', isGarden: s.tab === 'zahrada', isMe: s.tab === 'ja',
+      goHome: set({ tab: 'domu' }), goFriends: set({ tab: 'pratele' }), goGarden: set({ tab: 'zahrada' }), goMe: set({ tab: 'ja', menuFor: null }),
+      tabStyle: tabStyle, tabInk: tabInk, cur: cur,
+      gameOn: s.gameOn, gameOff: !s.gameOn,
+      level: level,
+      levelHint: s.counted >= 2 ? 'Na dnešek máš hotovo' : 'Zahrada roste s každou chvilkou',
+      levelBar: 'width: ' + pct + '%; height: 10px; background: #5F7424; border-radius: 999px;',
+      goalText: walks >= 10 ? 'Spolu jste to dali! ' + walks + ' z 10 procházek' : 'Spolu ' + walks + ' z 10 procházek',
+      goalBar: 'width: ' + Math.min(100, walks * 10) + '%; height: 12px; background: #5F7424; border-radius: 999px;',
+      inviteOpen: s.invite === null, inviteAnswered: s.invite !== null,
+      inviteText: s.invite === 'join' ? 'Super, užijte si to spolu.' : 'V pohodě. Nic vysvětlovat nemusíš.',
+      join: set({ invite: 'join' }), decline: set({ invite: 'decline' }),
+      tasks: tasks, plots: plots, friends: friends, feed: feed, toggles: toggles, badges: badgeList,
+      shareLink: set({ toast: 'Odkaz pro kamaráda je zkopírovaný. Platí 3 dny a jen pro jednoho člověka.' }),
+      hasToast: !!s.toast, toast: s.toast || '', closeToast: set({ toast: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

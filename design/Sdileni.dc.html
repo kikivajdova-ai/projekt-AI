@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Náhled sdílení</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#5F7424}a:hover{color:#3F4E16}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8A8E82; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #23301A; display: flex; flex-direction: column; justify-content: flex-end">
+  <div style="flex: 1; padding: 24px 20px">
+    <a href="Main.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 999px; background: rgba(255,255,255,0.9); color: #23301A; font-size: 14px; font-weight: 600; text-decoration: none">Zpět domů</a>
+  </div>
+  <section aria-label="Náhled sdílení" style="background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="width: 40px; height: 5px; border-radius: 999px; background: #D9DBD2; align-self: center"></div>
+
+    <sc-if value="{{ previewing }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 700">Takhle to uvidí ostatní</h1>
+          <p style="margin: 4px 0 0; font-size: 15px; color: #6B7064">Uvidí tvoji přátelé.</p>
+        </div>
+
+        <div style="background: #E4E8C8; border-radius: 24px; padding: 16px; display: flex; align-items: center; gap: 12px">
+          <div style="width: 44px; height: 44px; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #5F7424">K</div>
+          <div style="flex: 1">
+            <p style="margin: 0; font-size: 15px; font-weight: 600">Klára · Večer bez telefonu</p>
+            <p style="margin: 2px 0 0; font-size: 13px; color: #4C5A2A">dnes</p>
+          </div>
+          <span style="font-size: 12px; font-weight: 600; background: #FFFFFF; padding: 6px 10px; border-radius: 999px">Přátelé</span>
+        </div>
+
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #4C5A2A">
+          <li>✓ Jen druh chvilky a den</li>
+          <li>✓ Nálada ani poznámky se nikdy nesdílí</li>
+          <li>✓ Sdílení jde kdykoli zrušit, zmizí všem hned</li>
+        </ul>
+
+        <button type="button" onClick="{{ share }}" style="height: 54px; border-radius: 999px; border: none; background: #5F7424; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">Sdílet s přáteli</button>
+        <a href="Main.dc.html" style="height: 54px; border-radius: 999px; border: 1.5px solid #CFD3C4; color: #23301A; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Nechat jen pro mě</a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ shared }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 8px 0" aria-live="polite">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 700">Sdíleno s přáteli</h1>
+        <p style="margin: 0; font-size: 15px; color: #6B7064">Tvoji přátelé teď uvidí „Večer bez telefonu“. Kdykoli to můžeš vrátit na „Jen já“.</p>
+        <button type="button" onClick="{{ unshare }}" style="height: 54px; border-radius: 999px; border: 1.5px solid #CFD3C4; background: #FFFFFF; color: #23301A; font-size: 16px; font-weight: 600; cursor: pointer">Zrušit sdílení</button>
+      </div>
+    </sc-if>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { shared: false };
+  }
+  renderVals() {
+    return {
+      previewing: !this.state.shared,
+      shared: this.state.shared,
+      share: () => this.setState({ shared: true }),
+      unshare: () => this.setState({ shared: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
