@@ -247,7 +247,7 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Až chvilku zvládneš, klepni na Hotovo a v zahradě ti něco vyroste. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a v zahradě ti něco vyroste. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
@@ -349,7 +349,7 @@ function customCard(c) {
 
 function customCreateCard() {
   return `<section class="card tint">
-    <div><h3>Vlastní chvilka</h3><p class="green-text small">Napiš, co ti dělá dobře, třeba „Koupel“ nebo „Hra s kočkou“. Objeví se tu jako další karta. Název uvidíš jen ty.</p></div>
+    <div><h3>Vlastní chvilka</h3><p class="green-text small">Napiš, při čem si nejlíp odpočineš, třeba „Koupel“ nebo „Hra s kočkou“. Objeví se tu jako další karta. Název uvidíš jen ty.</p></div>
     <form data-form="custom" class="stack">
       <div class="field"><label for="f-custom">Název chvilky</label><input id="f-custom" name="title" maxlength="60" required placeholder="Např. Hrnek čaje v klidu"></div>
       <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Vytvořit chvilku</button>
@@ -444,7 +444,7 @@ function goalSection(group, friends) {
   return `<section class="card" id="cil">
     <div class="row between"><div><p class="label">Společná výzva týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
     <p class="muted small">Ve skupině: ${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}. Vidíte jen společný součet.</p>
-    ${reachedCount ? `<p class="small green-text" style="font-weight:600">Tento týden jste spolu zvládli ${reachedCount === 1 ? '1 výzvu' : reachedCount < 5 ? `${reachedCount} výzvy` : `${reachedCount} výzev`}. Skvělé!</p>` : ''}
+    ${reachedCount ? `<p class="small green-text" style="font-weight:600">Společně splněné výzvy tento týden: ${reachedCount}. Krása!</p>` : ''}
     ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím nemáte žádnou výzvu. Klidně si ji dejte, nebo jen tak odpočívejte.</p>')}
     ${form}
     ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
