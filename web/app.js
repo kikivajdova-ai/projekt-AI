@@ -15,6 +15,15 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch { /* nevadí */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* nevadí */ } },
 };
+/** Kolečko s fotkou (jen bezpečný data URL obrázek), jinak první písmeno přezdívky. */
+const SAFE_IMG = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+function avatar(name, fotka, cls = '', style = '') {
+  const pic = typeof fotka === 'string' && SAFE_IMG.test(fotka) ? `<img src="${fotka}" alt="">` : esc((name || '?').charAt(0));
+  return `<div class="avatar${cls ? ` ${cls}` : ''}${pic.startsWith('<img') ? ' has-photo' : ''}"${style ? ` style="${style}"` : ''}>${pic}</div>`;
+}
+const fotoOf = (id) => S.friends.find((f) => f.id === id)?.fotka || null;
+const fotoByName = (name) => S.friends.find((f) => f.jmeno === name)?.fotka || null;
+
 const moments = (n) => (n === 1 ? '1 chvilka' : n >= 2 && n <= 4 ? `${n} chvilky` : `${n} chvilek`);
 
 const ICON = {
@@ -375,15 +384,15 @@ function friendsView() {
     </section>
     ${goalSection(group, friends)}
     </div><div class="col">
-    ${pending.map((f) => `<section class="card"><div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">Chce se s tebou spřátelit.</p></div></div>
+    ${pending.map((f) => `<section class="card"><div class="row">${avatar(f.jmeno, f.fotka)}<div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">Chce se s tebou spřátelit.</p></div></div>
       <div class="btn-row"><button class="btn ghost" data-a="removeFriend" data-id="${esc(f.id)}">Teď ne</button><button class="btn" data-a="confirmFriend" data-id="${esc(f.id)}">Potvrdit</button></div></section>`).join('')}
     ${S.groupInvites.map((g) => `<section class="card"><p class="label">${esc(g.odKoho)} tě zve do skupiny</p><h3>${esc(g.skupina)}</h3>
       <div class="btn-row"><button class="btn ghost" data-a="answerGroup" data-id="${esc(g.id)}" data-v="0">Teď ne</button><button class="btn" data-a="answerGroup" data-id="${esc(g.id)}" data-v="1">Přidat se</button></div></section>`).join('')}
-    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“</p></div></div></section>`).join('')}
+    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row">${avatar(p.odKoho, fotoByName(p.odKoho), 'warm')}<div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“</p></div></div></section>`).join('')}
     <h2 style="margin-top:6px">Povzbuď kamaráda</h2>
     ${friends.length ? '' : '<p class="muted">Zatím tu nemáš přidané žádné kamarády. Jakmile přijmou tvůj odkaz, uvidíš je tady.</p>'}
     ${friends.map((f) => `<section class="card">
-      <div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><h3 class="grow">${esc(f.jmeno)}</h3>
+      <div class="row">${avatar(f.jmeno, f.fotka)}<h3 class="grow">${esc(f.jmeno)}</h3>
         <button class="icon-btn soft" aria-label="Možnosti pro ${esc(f.jmeno)}" aria-expanded="${S.menuFor === f.id}" data-a="menu" data-id="${esc(f.id)}">${ICON.dots}</button></div>
       ${S.pinged[f.id]
         ? `<p class="small green-text" style="font-weight:600">Odesláno.</p>`
@@ -817,7 +826,15 @@ function meView() {
   const recent = S.moments.filter((m) => m.status === 'SPLNENO').slice(0, 6);
   const name = S.me?.profil?.prezdivka || '';
   return `<div class="screen">
-    <div class="row"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(name.charAt(0))}</div><div><h1 style="font-size:24px">${esc(name)}</h1><p class="muted small">Přezdívku vidí jen tví přátelé.</p></div></div>
+    <div class="row profile-head">
+      <label class="avatar-edit" aria-label="${S.me?.profil?.fotka ? 'Změnit profilovou fotku' : 'Nahrát profilovou fotku'}">
+        ${avatar(name, S.me?.profil?.fotka, 'big')}
+        <span class="avatar-badge" aria-hidden="true">${ICON.plus.replace('width="26" height="26"', 'width="14" height="14"')}</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" data-avatar class="sr-only">
+      </label>
+      <div class="grow"><h1 style="font-size:24px">${esc(name)}</h1><p class="muted small">Přezdívku a fotku vidí jen tví přátelé.</p>
+        ${S.me?.profil?.fotka ? '<button class="btn ghost small-btn" style="margin-top:6px" data-a="removeAvatar">Odebrat fotku</button>' : '<p class="small green-text" style="margin-top:4px">Klepni na kolečko a nahraj si fotku.</p>'}</div>
+    </div>
     <div class="two-col"><div class="col">
     <button class="card" style="text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between" data-a="openMood">
       <span><b>Jak se dnes máš?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
@@ -1061,6 +1078,7 @@ const actions = {
         : 'Od teď přátelé uvidí každou novou chvilku. Kteroukoli můžeš v Moje chvilky vrátit na „Jen já“.';
     }
   },
+  async removeAvatar() { S.me = await api.deleteAvatar(); S.toast = 'Fotka je odebraná.'; },
   openMood() { S.overlay = 'nalada'; S.mood = null; S.moodResult = null; },
   async consentHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', true); },
   async revokeHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', false); S.toast = 'Souhlas je odvolaný. Další náladu už neukládáme.'; },
@@ -1177,6 +1195,34 @@ root.addEventListener('submit', (ev) => {
       await boot();
     });
   }
+});
+
+// Profilová fotka: v prohlížeči ji zmenšíme na čtverec 256 px (JPEG), nic velkého se neposílá.
+root.addEventListener('change', (ev) => {
+  const input = ev.target.closest('input[data-avatar]');
+  if (!input || !input.files?.[0]) return;
+  const file = input.files[0];
+  guard(async () => {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Vyber prosím fotku ve formátu JPG, PNG nebo WebP.');
+    if (file.size > 15 * 1024 * 1024) throw new Error('Fotka je moc velká. Vyber prosím menší.');
+    const img = await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const el = new Image();
+      el.onload = () => { URL.revokeObjectURL(url); resolve(el); };
+      el.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Fotku se nepodařilo načíst. Zkus jinou.')); };
+      el.src = url;
+    });
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 256, 256);
+    ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 256, 256);
+    let data = canvas.toDataURL('image/jpeg', 0.85);
+    if (data.length > 200000) data = canvas.toDataURL('image/jpeg', 0.6);
+    S.me = await api.setAvatar(data);
+    S.toast = 'Fotka je nahraná. Uvidí ji jen tví přátelé.';
+  });
 });
 
 window.addEventListener('demo-update', async (e) => { S.invites = await api.restInvites(); toast(e.detail); });

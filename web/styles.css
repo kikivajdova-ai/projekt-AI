@@ -298,3 +298,14 @@ h3 { font-size: 15px; font-weight: 700; }
   .phone { grid-template-columns: 288px minmax(0, 1fr); }
   .home-body { grid-template-columns: minmax(0, 1fr) 360px; }
 }
+
+/* profilová fotka */
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar.big { width: 64px; height: 64px; font-size: 24px; }
+.avatar-edit { position: relative; cursor: pointer; border-radius: 999px; flex-shrink: 0; }
+.avatar-edit:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
+.avatar-badge { position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 999px; background: var(--primary); display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
+.avatar-badge svg path, .avatar-badge svg line { stroke: #fff; }
+.profile-head { align-items: center; gap: 14px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

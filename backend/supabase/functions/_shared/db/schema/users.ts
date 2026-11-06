@@ -119,6 +119,35 @@ export const consents = pgTable(
 );
 
 /**
+ * Profilová fotka: malý čtverec (max. ~150 kB), uložený jako data URL (jpeg/png/webp, nikdy SVG).
+ * Vidí ji jen autor a jeho potvrzení přátelé (a ne ti, kdo se navzájem zablokovali).
+ */
+export const avatars = pgTable(
+  'avatars',
+  {
+    userId: uuid('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    image: text('image').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('avatars_image_format', sql`${t.image} ~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$' and length(${t.image}) <= 220000`),
+    pgPolicy('avatars: autor spravuje svou', {
+      for: 'all',
+      to: appUser,
+      using: sql`${t.userId} = ${uid}`,
+      withCheck: sql`${t.userId} = ${uid}`,
+    }),
+    pgPolicy('avatars: přátelé vidí', {
+      for: 'select',
+      to: appUser,
+      using: sql`private.are_friends(${t.userId}) and not private.is_blocked_with(${t.userId})`,
+    }),
+  ],
+);
+
+/**
  * Nálada a stres = údaje o zdraví. Nejpřísnější tabulka v databázi:
  *  - čte a zapisuje JEN vlastník, žádná výjimka pro přátele, skupiny ani app_system,
  *  - nemá sloupec viditelnosti, takže nejde sdílet ani omylem,
@@ -158,3 +187,4 @@ export const wellbeingCheckins = pgTable(
     }),
   ],
 );
+

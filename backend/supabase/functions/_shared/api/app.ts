@@ -22,6 +22,7 @@ import * as account from '../services/account.ts';
 import * as moments from '../services/activities.ts';
 import * as checkins from '../services/checkins.ts';
 import * as custom from '../services/customActivities.ts';
+import * as avatar from '../services/avatars.ts';
 import * as personalGoal from '../services/personalGoal.ts';
 import * as friends from '../services/friends.ts';
 import * as game from '../services/game.ts';
@@ -70,6 +71,7 @@ const schemas = {
     customActivityId: id.optional(),
   }),
   customActivity: z.strictObject({ title: z.string().trim().min(1).max(60) }),
+  avatar: z.strictObject({ image: z.string().max(220000) }),
   personalGoal: z.strictObject({ category: z.enum(ACTIVITY_CATEGORY).nullable(), target: z.number().int().min(1).max(50) }),
   complete: z.strictObject({ goalIds: z.array(id).max(10).optional() }),
   shareTarget: z.strictObject({ visibility: z.enum(VISIBILITY), crewId: id.optional() }),
@@ -98,6 +100,7 @@ async function body<T extends z.ZodType>(req: Request, schema: T): Promise<z.inf
   let raw: unknown;
   try {
     const text = await req.text();
+    if (text.length > 250_000) throw new AppError(413, 'MOC_VELKE', 'Požadavek je moc velký.');
     raw = text.trim() === '' ? {} : JSON.parse(text);
   } catch {
     throw new AppError(400, 'SPATNY_VSTUP', 'Požadavek nejde přečíst.');
@@ -153,6 +156,14 @@ export function createApp() {
   // --- profil, nastavení, souhlasy, GDPR ---
   app.post('/me', async (c) => c.json(await account.createProfile(uid(c), await body(c.req.raw, schemas.profile))));
   app.get('/me', async (c) => c.json(await account.getMe(uid(c))));
+  app.put('/me/avatar', async (c) => {
+    await avatar.setAvatar(uid(c), (await body(c.req.raw, schemas.avatar)).image);
+    return c.json(await account.getMe(uid(c)));
+  });
+  app.delete('/me/avatar', async (c) => {
+    await avatar.deleteAvatar(uid(c));
+    return c.json(await account.getMe(uid(c)));
+  });
   app.patch('/me/profile', async (c) => {
     await account.updateDisplayName(uid(c), (await body(c.req.raw, schemas.displayName)).displayName);
     return c.json(await account.getMe(uid(c)));

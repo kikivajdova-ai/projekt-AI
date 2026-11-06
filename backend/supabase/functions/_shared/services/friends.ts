@@ -3,15 +3,7 @@
 
 import { and, count, eq, gt, gte, isNull, or, sql } from 'drizzle-orm';
 import { asSystem, asUser } from '../db/client.ts';
-import {
-  blocks,
-  friendInvites,
-  friendships,
-  groupInvitations,
-  reports,
-  restInvitations,
-  users,
-} from '../db/schema/index.ts';
+import { avatars, blocks, friendInvites, friendships, groupInvitations, reports, restInvitations, users } from '../db/schema/index.ts';
 import { LIMITS } from '../domain/config.ts';
 import type { ReportReason } from '../domain/enums.ts';
 import { generateInviteToken, looksLikeInviteToken, sha256Hex } from '../domain/tokens.ts';
@@ -183,9 +175,12 @@ export async function listFriends(userId: string) {
     for (const f of rows) {
       const otherId = f.userA === userId ? f.userB : f.userA;
       const [other] = await tx.select({ name: users.displayName }).from(users).where(eq(users.id, otherId));
+      // RLS pustí fotku jen potvrzeným přátelům; u čekajících žádostí tu bude null.
+      const [pic] = await tx.select({ image: avatars.image }).from(avatars).where(eq(avatars.userId, otherId));
       result.push({
         id: otherId,
         jmeno: other?.name ?? '',
+        fotka: pic?.image ?? null,
         stav:
           f.status === 'PRIJATO' ? 'PRATELE' : f.requestedBy === userId ? 'CEKA_NA_NI_NEJ' : 'CEKA_NA_TEBE',
       });

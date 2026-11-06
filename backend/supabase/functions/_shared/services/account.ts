@@ -12,6 +12,7 @@ import {
   consents,
   friendInvites,
   friendships,
+  avatars,
   customActivities,
   groupGoalContributions,
   personalGoals,
@@ -46,8 +47,9 @@ export async function getMe(userId: string) {
     const [me] = await tx.select().from(users).where(eq(users.id, userId));
     if (!me) return { profil: null };
     const own = await tx.select().from(consents).where(eq(consents.userId, userId));
+    const [pic] = await tx.select({ image: avatars.image }).from(avatars).where(eq(avatars.userId, userId));
     return {
-      profil: { id: me.id, prezdivka: me.displayName },
+      profil: { id: me.id, prezdivka: me.displayName, fotka: pic?.image ?? null },
       nastaveni: await loadSettings(tx, userId),
       souhlasy: own.map((c) => ({ typ: c.type, platny: c.revokedAt === null })),
     };
@@ -102,6 +104,7 @@ export async function exportData(userId: string) {
     nalada: await tx.select().from(wellbeingCheckins).where(eq(wellbeingCheckins.userId, userId)),
     chvile: await tx.select().from(activities).where(eq(activities.userId, userId)),
     vlastniChvilky: await tx.select().from(customActivities).where(eq(customActivities.userId, userId)),
+    profilovaFotka: await tx.select().from(avatars).where(eq(avatars.userId, userId)),
     osobniCile: await tx.select().from(personalGoals).where(eq(personalGoals.userId, userId)),
     odznaky: await tx.select().from(userBadges).where(eq(userBadges.userId, userId)),
     pratelstvi: await tx

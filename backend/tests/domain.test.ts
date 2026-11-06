@@ -274,3 +274,17 @@ test('soukromá chvíle se nikdy nedostane do sdíleného výstupu', () => {
 test('addDays přes konec měsíce', () => {
   assert.equal(addDays('2026-10-31', 1), '2026-11-01');
 });
+
+import { validateAvatar } from '../supabase/functions/_shared/domain/avatar.ts';
+
+test('profilová fotka: jen skutečný malý JPEG/PNG/WebP', () => {
+  const png = 'data:image/png;base64,' + Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]).toString('base64');
+  assert.equal(validateAvatar(png), png);
+  // tvrdí PNG, ale data jsou SVG
+  const fake = 'data:image/png;base64,' + Buffer.from('<svg onload=alert(1)>').toString('base64');
+  assert.throws(() => validateAvatar(fake));
+  assert.throws(() => validateAvatar('data:image/svg+xml;base64,PHN2Zz4='));
+  assert.throws(() => validateAvatar('javascript:alert(1)'));
+  const big = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(160_000)]).toString('base64');
+  assert.throws(() => validateAvatar(big));
+});
