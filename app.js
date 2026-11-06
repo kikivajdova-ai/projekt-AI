@@ -15,7 +15,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch { /* nevadí */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* nevadí */ } },
 };
-const moments = (n) => (n === 1 ? '1 chvilka' : n >= 2 && n <= 4 ? `${n} chvilky` : `${n} chvil`);
+const moments = (n) => (n === 1 ? '1 chvilka' : n >= 2 && n <= 4 ? `${n} chvilky` : `${n} chvilek`);
 
 const ICON = {
   heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23301A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
@@ -171,6 +171,7 @@ function authView() {
     <div class="auth-form">
     <h1>Odpočívat spolu</h1>
     <p class="muted">Odpočinek místo výkonu. Spolu s kamarády, bez tlaku a srovnávání.</p>
+    <p class="small green-text" style="line-height:1.5">Vybíráš si malé chvilky odpočinku, třeba procházku nebo večer bez telefonu. Za každou ti vyroste kousek zahrady. S kamarády si můžete dát společnou výzvu.</p>
     <div class="seg" role="group" aria-label="Přihlášení nebo registrace">
       <button type="button" aria-pressed="${!reg}" data-a="authMode" data-v="login">Přihlásit se</button>
       <button type="button" aria-pressed="${reg}" data-a="authMode" data-v="register">Nový účet</button>
@@ -179,7 +180,7 @@ function authView() {
     ${S.authInfo ? `<p class="card tint" style="padding:14px 16px" role="status">${esc(S.authInfo)}</p>` : ''}
     ${S.needsConfirm ? `<button class="btn ghost" type="button" data-a="resend">Poslat potvrzovací e-mail znovu</button>` : ''}
     <form data-form="auth" class="stack" novalidate>
-      ${reg ? `<div class="field"><label for="f-name">Přezdívka (uvidí ji jen tvoji přátelé)</label><input id="f-name" name="name" maxlength="40" required autocomplete="nickname"></div>` : ''}
+      ${reg ? `<div class="field"><label for="f-name">Přezdívka (uvidí ji jen tví přátelé)</label><input id="f-name" name="name" maxlength="40" required autocomplete="nickname"></div>` : ''}
       <div class="field"><label for="f-email">E-mail</label><input id="f-email" name="email" type="email" required autocomplete="email"></div>
       <div class="field"><label for="f-pass">Heslo${reg ? ' (aspoň 10 znaků)' : ''}</label><input id="f-pass" name="password" type="password" minlength="${reg ? 10 : 1}" required autocomplete="${reg ? 'new-password' : 'current-password'}"></div>
       ${reg ? `<label class="check"><input type="checkbox" name="terms" required> <span>Souhlasím s podmínkami a zásadami ochrany soukromí.</span></label>` : ''}
@@ -193,7 +194,7 @@ function authView() {
 function onboardingView() {
   return `<div class="screen" style="padding-bottom:28px">
     <h1>Jak ti máme říkat?</h1>
-    <p class="muted">Přezdívku uvidí jen kamarádi, které si sám/sama pozveš.</p>
+    <p class="muted">Přezdívku uvidí jen kamarádi, které si sem pozveš.</p>
     <form data-form="profile" class="stack">
       <div class="field"><label for="f-nick">Přezdívka</label><input id="f-nick" name="name" maxlength="40" required></div>
       <button class="btn big" type="submit">Pokračovat</button>
@@ -226,7 +227,7 @@ function homeView() {
   const inviteCard = incoming
     ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve odpočinout si spolu</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
         ${S.inviteAnswered[incoming.id]
-          ? `<p class="small green-text" aria-live="polite">${S.inviteAnswered[incoming.id] === 'PRIDAM_SE' ? 'Super, užijte si to spolu. Až to bude, zapiš to jako společnou chvilku.' : 'V pohodě. Nic vysvětlovat nemusíš.'}</p>`
+          ? `<p class="small green-text" aria-live="polite">${S.inviteAnswered[incoming.id] === 'PRIDAM_SE' ? 'Super, užijte si to spolu. Až to bude, zapiš si to na kartě chvilky.' : 'V pohodě. Nic vysvětlovat nemusíš, kamarád se dozví jen „teď ne“.'}</p>`
           : `<div class="btn-row"><button class="btn ghost" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="TED_NE">Teď ne</button><button class="btn" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="PRIDAM_SE">Přidám se</button></div>`}
       </section>`
     : '';
@@ -234,7 +235,7 @@ function homeView() {
   return `<div class="screen home">
     <header class="hero">
       <div class="hero-top">
-        ${g.hraZapnuta ? `<button class="btn soft small-btn" style="background:#fff;color:var(--ink-green)" data-a="tab" data-v="zahrada">Úroveň ${esc(g.uroven)} · Zahrada</button>` : `<p class="label green-text">${new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>`}
+        ${g.hraZapnuta ? `<button class="btn soft small-btn" style="background:#fff;color:var(--ink-green)" data-a="tab" data-v="zahrada">Úroveň ${esc(g.uroven)} · Moje zahrada</button>` : `<p class="label green-text">${new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>`}
       </div>
       <h1>Ahoj, ${esc(name)}</h1>
       <p class="green-text" style="font-size:16px">Jak si dnes odpočineš?</p>
@@ -246,7 +247,7 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Každá splněná chvilka nechá něco vyrůst v zahradě. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Až chvilku zvládneš, klepni na Hotovo a v zahradě ti něco vyroste. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
@@ -267,18 +268,18 @@ function taskCard(c) {
     body = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>
       <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Odpočinout si spolu</span></button>`;
   } else if (!friends.length) {
-    body = `<p class="small muted">Zatím nemáš kamarády. Pozvi je v záložce Přátelé.</p>
+    body = `<p class="small muted">Zatím tu nemáš žádné kamarády. Pozvat je můžeš v záložce Přátelé.</p>
       <button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zpět</button>`;
   } else if (!sent) {
-    body = `<p class="small green-text">Koho pozveš? Kamarád může jedním klepnutím odmítnout, bez vysvětlování.</p>
+    body = `<p class="small green-text">Koho pozveš? Kamarád může jedním klepnutím říct „teď ne“, bez vysvětlování.</p>
       <div class="pills">${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>
       <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="inviteFor" data-cat="${c.id}">Pozvat: ${esc(friend?.jmeno)}</button></div>`;
   } else if (sent.prijato) {
     body = `<p class="small green-text" style="font-weight:600">${esc(friend?.jmeno)} se přidá. Užijte si to spolu.</p>
       <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Hotovo spolu s ${esc(friend?.jmeno)}</button>`;
   } else {
-    body = `<p class="small green-text">Pozvánka odeslána: ${esc(friend?.jmeno)}. Odpověď uvidíš tady.</p>
-      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Hotovo i bez toho</button></div>`;
+    body = `<p class="small green-text">Pozvánka odeslána (${esc(friend?.jmeno)}). Odpověď uvidíš tady.</p>
+      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Hotovo i bez kamaráda</button></div>`;
   }
   // Po splnění se karta vrátí do původní podoby, ať jde chvilku kdykoli zapsat znovu.
   return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">${head}<div class="stack">${body}</div></section>`;
@@ -348,7 +349,7 @@ function customCard(c) {
 
 function customCreateCard() {
   return `<section class="card tint">
-    <div><h3>Vytvořit si vlastní chvilku</h3><p class="green-text small">Napiš, co ti dělá dobře, třeba „Koupel“ nebo „Hra s kočkou“. Název uvidíš jen ty.</p></div>
+    <div><h3>Vlastní chvilka</h3><p class="green-text small">Napiš, co ti dělá dobře, třeba „Koupel“ nebo „Hra s kočkou“. Objeví se tu jako další karta. Název uvidíš jen ty.</p></div>
     <form data-form="custom" class="stack">
       <div class="field"><label for="f-custom">Název chvilky</label><input id="f-custom" name="title" maxlength="60" required placeholder="Např. Hrnek čaje v klidu"></div>
       <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Vytvořit chvilku</button>
@@ -373,18 +374,19 @@ function friendsView() {
     </section>
     ${goalSection(group, friends)}
     </div><div class="col">
-    ${pending.map((f) => `<section class="card"><div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">chce být tvůj kamarád/kamarádka</p></div></div>
+    ${pending.map((f) => `<section class="card"><div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">Chce se s tebou spřátelit.</p></div></div>
       <div class="btn-row"><button class="btn ghost" data-a="removeFriend" data-id="${esc(f.id)}">Teď ne</button><button class="btn" data-a="confirmFriend" data-id="${esc(f.id)}">Potvrdit</button></div></section>`).join('')}
     ${S.groupInvites.map((g) => `<section class="card"><p class="label">${esc(g.odKoho)} tě zve do skupiny</p><h3>${esc(g.skupina)}</h3>
       <div class="btn-row"><button class="btn ghost" data-a="answerGroup" data-id="${esc(g.id)}" data-v="0">Teď ne</button><button class="btn" data-a="answerGroup" data-id="${esc(g.id)}" data-v="1">Přidat se</button></div></section>`).join('')}
-    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>${esc(p.odKoho)} ti poslal(a) povzbuzení</h3><p class="muted small">„${esc(p.text)}“ Nemusíš odpovídat.</p></div></div></section>`).join('')}
+    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“ Nemusíš odpovídat.</p></div></div></section>`).join('')}
     <h2 style="margin-top:6px">Povzbudit jedním klepnutím</h2>
+    <p class="muted small" style="margin-top:-8px">Kamarád dostane krátký vzkaz. Odpovídat nemusí.</p>
     ${friends.length ? '' : '<p class="muted">Až budeš mít kamarády, uvidíš je tady.</p>'}
     ${friends.map((f) => `<section class="card">
       <div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><h3 class="grow">${esc(f.jmeno)}</h3>
         <button class="icon-btn soft" aria-label="Možnosti pro ${esc(f.jmeno)}" aria-expanded="${S.menuFor === f.id}" data-a="menu" data-id="${esc(f.id)}">${ICON.dots}</button></div>
       ${S.pinged[f.id]
-        ? `<p class="small green-text" style="font-weight:600">Odesláno. ${esc(f.jmeno)} ví, že na něj/ni myslíš.</p>`
+        ? `<p class="small green-text" style="font-weight:600">Odesláno. Hezké, že na sebe myslíte.</p>`
         : `<div class="btn-row"><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="MYSLIM_NA_TEBE">Myslím na tebe</button><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="DEJ_SI_PAUZU">Dej si pauzu</button></div>`}
       ${S.menuFor === f.id ? `<div class="stack">
         ${group && !api.demo ? `<button class="btn soft small-btn" data-a="inviteToGroup" data-id="${esc(f.id)}">Pozvat do skupiny ${esc(group.nazev)}</button>` : ''}
@@ -393,7 +395,7 @@ function friendsView() {
     </section>`).join('')}
     ${waiting.length ? `<p class="muted small">Čeká na potvrzení: ${waiting.map((w) => esc(w.jmeno)).join(', ')}</p>` : ''}
     <h2 style="margin-top:6px">Co se kamarádům podařilo</h2>
-    <p class="muted small" style="margin-top:-8px">Jen splněné chvíle, které kamarádi sami sdíleli.</p>
+    <p class="muted small" style="margin-top:-8px">Jen splněné chvilky, které kamarádi sami nasdíleli.</p>
     ${S.feed.length ? S.feed.map((e) => `<div class="feed-item"><p><b>${esc(e.authorName)}</b> · ${esc(e.label)}</p><span class="small muted">${e.day === todayStr() ? 'dnes' : esc(new Date(e.day + 'T12:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }))}</span></div>`).join('') : '<p class="muted">Zatím tu nic není.</p>'}
     </div></div>
   </div>`;
@@ -424,7 +426,7 @@ function goalSection(group, friends) {
     return `<div class="stack goal-item" style="gap:10px">
       <div class="row"><div class="task-icon">${taskIcon(g.category)}</div><div class="grow"><h3>${esc(c.title || g.category)}</h3><p class="small${g.reached ? ' green-text' : ' muted'}" style="font-weight:600">${esc(g.text)}</p></div></div>
       <div class="bar" role="img" aria-label="${esc(g.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
-      <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Přidat další chvilku' : 'Splnit chvilku do výzvy'}</button>
+      <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Zapsat další chvilku' : 'Zapsat chvilku do výzvy'}</button>
     </div>`;
   };
   const form = S.goalForm && free.length
@@ -781,7 +783,7 @@ function gardenScene(total, grewIndex, level = 1, crop = false) {
 function gardenView() {
   const g = S.game || {};
   if (!g.hraZapnuta) {
-    return `<div class="screen"><div><h1>Tvoje zahrada</h1></div><section class="card"><p class="green-text">Herní prvky máš vypnuté. Zahrada na tebe počká přesně tak, jak je.</p></section></div>`;
+    return `<div class="screen"><div><h1>Tvoje zahrada</h1></div><section class="card"><p class="green-text">Zahradu a úrovně máš vypnuté. Zahrada na tebe počká přesně taková, jaká je. Zapnout je můžeš v záložce Já.</p></section></div>`;
   }
   const lo = levelPoints(g.uroven);
   const pct = Math.max(4, Math.round((100 * (g.body - lo)) / (g.dalsiUrovenPri - lo)));
@@ -802,7 +804,7 @@ function gardenView() {
         <p class="muted small">Každá chvilka nechá něco vyrůst. S novou úrovní se zahrada promění, rostliny zůstávají.</p>
         ${GARDEN_LEVELS.map((L, i) => { const n = i + 1; const now = Math.min(g.uroven, GARDEN_LEVELS.length) === n; const open = g.uroven >= n;
           return `<div class="row level-row${now ? ' now' : ''}"><div class="level-thumb">${open ? gardenScene(total, -1, n, true) : ''}</div>
-            <div class="grow"><p style="font-weight:600">${esc(L.name)}</p><p class="muted small">${now ? 'Tvoje zahrada teď' : open ? 'Už jsi tu byl(a)' : `Od úrovně ${n}`}</p></div>${now ? '<span class="chip group">Teď</span>' : ''}</div>`; }).join('')}
+            <div class="grow"><p style="font-weight:600">${esc(L.name)}</p><p class="muted small">${now ? 'Tvoje zahrada teď' : open ? 'Tuhle podobu už máš za sebou' : `Od úrovně ${n}`}</p></div>${now ? '<span class="chip group">Teď</span>' : ''}</div>`; }).join('')}
       </section>
     </div>
   </div>`;
@@ -816,23 +818,23 @@ function meView() {
   const recent = S.moments.filter((m) => m.status === 'SPLNENO').slice(0, 6);
   const name = S.me?.profil?.prezdivka || '';
   return `<div class="screen">
-    <div class="row"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(name.charAt(0))}</div><div><h1 style="font-size:24px">${esc(name)}</h1><p class="muted small">Přezdívku vidí jen tvoji přátelé.</p></div></div>
+    <div class="row"><div class="avatar" style="width:56px;height:56px;font-size:22px">${esc(name.charAt(0))}</div><div><h1 style="font-size:24px">${esc(name)}</h1><p class="muted small">Přezdívku vidí jen tví přátelé.</p></div></div>
     <div class="two-col"><div class="col">
     <button class="card" style="text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between" data-a="openMood">
-      <span><b>Jak se dnes mám?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
+      <span><b>Jak se dnes máš?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
     <section class="card" style="padding:6px 18px;gap:0">
-      ${toggle('gameEnabled', 'Herní prvky', 'Zahrada a úrovně. Vypnutí ostatní nevidí.')}
+      ${toggle('gameEnabled', 'Zahrada a úrovně', 'Když vypneš, nikdo to neuvidí')}
       ${toggle('quietHoursEnabled', `Noční klid ${esc(st.quietStart || '22:00')}–${esc(st.quietEnd || '08:00')}`, 'V noci žádné notifikace')}
       ${toggle('receivePings', 'Přijímat povzbuzení', 'Když vypneš, odesílatel se to nedozví')}
-      ${toggle('receiveRestInvites', 'Přijímat pozvánky Odpočinout si spolu', 'Když vypneš, odesílatel se to nedozví')}
-      <div class="setting"><div class="grow"><p style="font-weight:600">Započítávat chvilky do společné výzvy</p><p class="muted small">Skupina vidí jen společný součet, nikdy ne to, kdo co udělal</p></div>
+      ${toggle('receiveRestInvites', 'Přijímat pozvánky k odpočinku', 'Když vypneš, odesílatel se to nedozví')}
+      <div class="setting"><div class="grow"><p style="font-weight:600">Započítávat chvilky do společné výzvy</p><p class="muted small">Skupina vidí jen společný součet, nikdy kdo co udělal</p></div>
         <button type="button" class="switch" role="switch" aria-checked="${autoChallenge()}" aria-label="Započítávat chvilky do společné výzvy" data-a="toggleAutoChallenge"><span></span></button></div>
     </section>
     </div><div class="col">
-    <section class="card"><h3>Moje chvilky</h3><p class="muted small">Nová chvilka je vždy „Jen já“. Sdílet můžeš po náhledu.</p>
+    <section class="card"><h3>Moje chvilky</h3><p class="muted small">Každou chvilku vidíš nejdřív jen ty. Sdílet ji můžeš, až uvidíš náhled.</p>
       ${recent.length ? recent.map((m) => `<div class="row between"><div class="grow"><p style="font-size:14px;font-weight:600">${esc(m.customActivityId ? m.label : CAT[m.category]?.title || m.label)}</p><p class="muted small">${m.day === todayStr() ? 'dnes' : esc(m.day)}</p></div>
         <span class="chip${m.visibility === 'JEN_JA' ? '' : ' group'}">${m.visibility === 'JEN_JA' ? 'Jen já' : m.visibility === 'PRATELE' ? 'Přátelé' : 'Skupina'}</span>
-        ${m.visibility === 'JEN_JA' ? `<button class="btn ghost small-btn" data-a="openShare" data-id="${esc(m.id)}">Sdílet</button>` : `<button class="btn ghost small-btn" data-a="unshare" data-id="${esc(m.id)}">Zrušit</button>`}</div>`).join('') : '<p class="muted small">Zatím žádné.</p>'}
+        ${m.visibility === 'JEN_JA' ? `<button class="btn ghost small-btn" data-a="openShare" data-id="${esc(m.id)}">Sdílet</button>` : `<button class="btn ghost small-btn" data-a="unshare" data-id="${esc(m.id)}">Zrušit sdílení</button>`}</div>`).join('') : '<p class="muted small">Zatím žádné.</p>'}
     </section>
     <section class="card"><h3>Moje data</h3>
       <button class="btn soft" data-a="export">Stáhnout moje data</button>
@@ -875,7 +877,7 @@ function shareView() {
     <div class="sheet-top"><div class="only-narrow">${art}</div><div class="only-wide">${g.hraZapnuta ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven) : gardenHero()}</div><button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
     <section class="sheet" aria-label="Náhled sdílení">
       <div class="handle"></div>
-      <h1 style="font-size:22px">S kým to sdílet?</h1>
+      <h1 style="font-size:22px">S kým chvilku sdílet?</h1>
       <div class="pills"><button class="pill" aria-pressed="${S.shareTarget === 'PRATELE'}" data-a="shareTarget" data-v="PRATELE">Přátelé</button>
         ${group ? `<button class="pill" aria-pressed="${S.shareTarget === 'CHILL_CREW'}" data-a="shareTarget" data-v="CHILL_CREW">Skupina ${esc(group.nazev)}</button>` : ''}</div>
       ${p ? `<h2>Takhle to uvidí ostatní</h2><p class="muted">${esc(p.publikum)}</p>
@@ -883,7 +885,7 @@ function shareView() {
           <div class="grow"><p style="font-weight:600">${esc(p.nahled?.authorName)} · ${esc(p.nahled?.label)}</p><p class="green-text small">${p.nahled?.day === todayStr() ? 'dnes' : esc(p.nahled?.day)}</p></div>
           <span class="chip" style="background:#fff">${S.shareTarget === 'PRATELE' ? 'Přátelé' : 'Skupina'}</span></div>
         <p class="green-text small">✓ Jen druh chvilky a den · ✓ Nálada se nikdy nesdílí · ✓ Sdílení jde kdykoli zrušit</p>
-        <button class="btn big" data-a="doShare">Sdílet</button>` : '<p class="muted">Vyber, kdo to má vidět. Pak ti ukážeme náhled.</p>'}
+        <button class="btn big" data-a="doShare">Sdílet</button>` : '<p class="muted">Vyber, kdo ji má vidět. Pak ti ukážeme, jak přesně to uvidí.</p>'}
       <button class="btn ghost big" data-a="closeOverlay">Nechat jen pro mě</button>
     </section>
   </div>`;
@@ -894,7 +896,7 @@ function inviteAcceptView() {
   return `<div class="screen" style="padding-bottom:28px">
     <div style="margin:-24px -20px 0;height:200px;position:relative;overflow:hidden;background:var(--tint)">${gardenHero()}</div>
     ${p.error ? `<h1>Pozvánka už neplatí</h1><p class="muted">Požádej kamaráda o nový odkaz.</p><button class="btn big" data-a="closeInvite">Pokračovat</button>`
-      : `<h1>${esc(p.odKoho || '')} tě zve mezi přátele</h1><p class="muted">Když přijmeš, budete hned přátelé. Uvidíte jen to, co si sami nasdílíte.</p>
+      : `<h1>${esc(p.odKoho || '')} tě zve mezi přátele</h1><p class="muted">Když přijmeš, budete hned přátelé. Navzájem uvidíte jen to, co si sami nasdílíte.</p>
          <div class="btn-row"><button class="btn ghost big" data-a="closeInvite">Teď ne</button><button class="btn big" data-a="acceptInvite">Přijmout</button></div>`}
   </div>`;
 }
@@ -983,7 +985,7 @@ const actions = {
   async removeCustom(d) {
     await api.deleteCustomActivity(d.id);
     S.custom = await api.customActivities();
-    S.toast = 'Chvilka je odebraná. Co už jsi zapsal(a), v zahradě zůstává.';
+    S.toast = 'Chvilka je odebraná. Co už je zapsané, v zahradě zůstává.';
   },
   async answerRest(d) {
     await api.answerRestInvite(d.id, d.v);
@@ -1002,7 +1004,7 @@ const actions = {
   async weeklySave() {
     const r = await api.setWeeklyGoal(S.wCat, S.wTarget);
     S.weekly = r.cil; S.weeklyForm = false;
-    S.toast = 'Cíl na tento týden je nastavený. Každá splněná chvilka se do něj započítá sama.';
+    S.toast = 'Cíl na tento týden je nastavený. Chvilky, které k němu patří, se započítají samy.';
   },
   async weeklyDelete() { await api.deleteWeeklyGoal(); S.weekly = null; S.weeklyForm = false; S.toast = 'Tento týden bez cíle. I to je v pořádku.'; },
   goalOpen() { S.goalForm = true; S.goalTarget = 10; S.goalCat = null; },
@@ -1035,14 +1037,14 @@ const actions = {
   async removeFriend(d) { await api.removeFriend(d.id); S.friends = await api.friends(); S.menuFor = null; },
   async answerGroup(d) { await api.answerGroupInvite(d.id, d.v === '1'); S.groupInvites = await api.groupInvitations(); S.groups = await api.groups(); },
   menu(d) { S.menuFor = S.menuFor === d.id ? null : d.id; },
-  async ping(d) { await api.sendPing(d.id, d.v); S.pinged[d.id] = true; S.game = await api.game(); S.toast = 'Povzbuzení odesláno. Nemusí odpovídat.'; },
+  async ping(d) { await api.sendPing(d.id, d.v); S.pinged[d.id] = true; S.game = await api.game(); S.toast = 'Povzbuzení odesláno.'; },
   async inviteToGroup(d) { await api.inviteToGroup(S.groups[0].id, d.id); S.menuFor = null; S.toast = 'Pozvánka do skupiny odeslána. Až ji kamarád přijme, uvidí vaši výzvu.'; },
   async block(d) {
     const f = S.friends.find((x) => x.id === d.id);
     await api.block(d.id);
     S.menuFor = null;
     await loadAll();
-    S.toast = `${f?.jmeno || 'Kamarád'} je zablokovaný/á. Nedostane o tom žádné oznámení.`;
+    S.toast = `Zablokováno. ${f?.jmeno || 'Kamarád'} se o tom nedozví.`;
   },
   async report(d) {
     const r = await api.report({ reportedUserId: d.id, reason: 'OBTEZOVANI', contextType: 'profile', alsoBlock: true });
@@ -1149,7 +1151,7 @@ root.addEventListener('submit', (ev) => {
       if (!title) return;
       await api.createCustomActivity(title);
       S.custom = await api.customActivities();
-      S.toast = `Vlastní chvilka „${title}“ je na seznamu.`;
+      S.toast = `Hotovo, chvilka „${title}“ je mezi tvými kartami.`;
     });
   }
   if (form.dataset.form === 'group') {
