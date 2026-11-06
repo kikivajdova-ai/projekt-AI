@@ -1,0 +1,30 @@
+name: odpocivat_spolu
+description: Odpočívat spolu – gamifikovaná wellbeing aplikace (Flutter klient).
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Přihlášení e-mailem a heslem (Supabase Auth). Tokeny ukládá do zabezpečeného úložiště.
+  supabase_flutter: ^2.9.0
+  # Push notifikace (FCM) a jejich zobrazení s nastavením soukromí na zamčené obrazovce
+  firebase_core: ^3.15.0
+  firebase_messaging: ^15.2.0
+  flutter_local_notifications: ^19.0.0
+  # Volání krizových linek (tel:)
+  url_launcher: ^6.3.1
+  http: ^1.4.0
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

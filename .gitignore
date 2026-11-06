@@ -1,0 +1,28 @@
+# Tajemství: NIKDY do Gitu
+.env
+.env.*
+!.env.example
+**/supabase/functions/.env
+*.pem
+*service-account*.json
+google-services.json
+GoogleService-Info.plist
+
+# Závislosti a buildy
+node_modules/
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+coverage/
+
+# Supabase lokální stav
+backend/supabase/.branches/
+backend/supabase/.temp/
+
+# Systém a editory
+.DS_Store
+.idea/
+.vscode/
+*.log

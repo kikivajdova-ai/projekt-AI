@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "drizzle-orm": "npm:drizzle-orm@0.44.7",
+    "drizzle-orm/": "npm:/drizzle-orm@0.44.7/",
+    "hono": "npm:hono@4.10.4",
+    "hono/": "npm:/hono@4.10.4/",
+    "jose": "npm:jose@6.1.0",
+    "postgres": "npm:postgres@3.4.7",
+    "zod": "npm:zod@4.1.12"
+  }
+}

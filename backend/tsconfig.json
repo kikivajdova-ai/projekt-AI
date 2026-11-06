@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["supabase/functions/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
+  "exclude": ["supabase/functions/api/index.ts", "supabase/functions/dispatch/index.ts"]
+}
