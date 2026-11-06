@@ -80,7 +80,7 @@ function celebrate(title, cat, res, extra = '') {
     title,
     cat,
     text: game ? 'Tvoje zahrada je zase o kousek krásnější.' : 'Chvilka pro tebe je zapsaná.',
-    extra: [extra, note].filter(Boolean).join(' '),
+    extra: [extra, note, S.me?.nastaveni?.autoShareFriends ? 'Přátelé ji uvidí.' : ''].filter(Boolean).join(' '),
   };
 }
 
@@ -825,12 +825,13 @@ function meView() {
       ${toggle('gameEnabled', 'Zahrada a úrovně', 'Když vypneš, nikdo to neuvidí')}
       ${toggle('quietHoursEnabled', `Noční klid ${esc(st.quietStart || '22:00')}–${esc(st.quietEnd || '08:00')}`, 'V noci žádné notifikace')}
       ${toggle('receivePings', 'Přijímat povzbuzení', 'Když vypneš, odesílatel se to nedozví')}
+      ${toggle('autoShareFriends', 'Automaticky sdílet chvilky s přáteli', 'Přátelé uvidí jen druh chvilky a den. Názvy vlastních chvilek ani nálada se nesdílí.')}
       ${toggle('receiveRestInvites', 'Přijímat pozvánky k odpočinku', 'Když vypneš, odesílatel se to nedozví')}
       <div class="setting"><div class="grow"><p style="font-weight:600">Započítávat chvilky do společné výzvy</p><p class="muted small">Skupina vidí jen společný součet, nikdy kdo co udělal</p></div>
         <button type="button" class="switch" role="switch" aria-checked="${autoChallenge()}" aria-label="Započítávat chvilky do společné výzvy" data-a="toggleAutoChallenge"><span></span></button></div>
     </section>
     </div><div class="col">
-    <section class="card"><h3>Moje chvilky</h3><p class="muted small">Každou chvilku vidíš nejdřív jen ty. Sdílet ji můžeš, až uvidíš náhled.</p>
+    <section class="card"><h3>Moje chvilky</h3><p class="muted small">${st.autoShareFriends ? 'Nové chvilky se automaticky ukazují přátelům. Kteroukoli můžeš vrátit na „Jen já“.' : 'Každou chvilku vidíš nejdřív jen ty. Sdílet ji můžeš, až uvidíš náhled.'}</p>
       ${recent.length ? recent.map((m) => `<div class="row between"><div class="grow"><p style="font-size:14px;font-weight:600">${esc(m.customActivityId ? m.label : CAT[m.category]?.title || m.label)}</p><p class="muted small">${m.day === todayStr() ? 'dnes' : esc(m.day)}</p></div>
         <span class="chip${m.visibility === 'JEN_JA' ? '' : ' group'}">${m.visibility === 'JEN_JA' ? 'Jen já' : m.visibility === 'PRATELE' ? 'Přátelé' : 'Skupina'}</span>
         ${m.visibility === 'JEN_JA' ? `<button class="btn ghost small-btn" data-a="openShare" data-id="${esc(m.id)}">Sdílet</button>` : `<button class="btn ghost small-btn" data-a="unshare" data-id="${esc(m.id)}">Zrušit sdílení</button>`}</div>`).join('') : '<p class="muted small">Zatím žádné.</p>'}
@@ -1055,6 +1056,10 @@ const actions = {
     const cur = !!S.me.nastaveni[d.v];
     S.me = await api.settings({ [d.v]: !cur });
     S.game = await api.game();
+    if (d.v === 'autoShareFriends') {
+      S.toast = cur ? 'Hotovo. Nové chvilky uvidíš zase jen ty, dokud je nenasdílíš.'
+        : 'Od teď přátelé uvidí každou novou chvilku. Kteroukoli můžeš v Moje chvilky vrátit na „Jen já“.';
+    }
   },
   openMood() { S.overlay = 'nalada'; S.mood = null; S.moodResult = null; },
   async consentHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', true); },
