@@ -88,6 +88,8 @@ class SupabaseApi {
     return this.call('POST', '/me', { displayName, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone });
   }
   settings(patch) { return this.call('PATCH', '/me/settings', patch); }
+  setAvatar(image) { return this.call('PUT', '/me/avatar', { image }); }
+  deleteAvatar() { return this.call('DELETE', '/me/avatar'); }
   consent(type, granted) { return this.call('POST', '/me/consents', { type, granted }); }
   exportData() { return this.call('GET', '/me/export'); }
   deleteAccount() { return this.call('DELETE', '/me'); }
@@ -211,13 +213,15 @@ class DemoApi {
     await this.wait();
     if (!this.s.profile) return { profil: null };
     return {
-      profil: { id: 'me', prezdivka: this.s.profile },
+      profil: { id: 'me', prezdivka: this.s.profile, fotka: this.s.avatar || null },
       nastaveni: this.s.settings,
       souhlasy: Object.entries(this.s.consents).map(([typ, platny]) => ({ typ, platny })),
     };
   }
   async createProfile(name) { this.s.profile = name.trim().slice(0, 40); this.save(); return this.me(); }
   async settings(patch) { Object.assign(this.s.settings, patch); this.save(); return this.me(); }
+  async setAvatar(image) { this.s.avatar = image; this.save(); return this.me(); }
+  async deleteAvatar() { this.s.avatar = null; this.save(); return this.me(); }
   async consent(type, granted) { this.s.consents[type] = granted; this.save(); return this.me(); }
   async exportData() { return JSON.parse(JSON.stringify(this.s)); }
   async deleteAccount() { this.reset(); this.save(); this.emit(); return { smazano: true }; }
