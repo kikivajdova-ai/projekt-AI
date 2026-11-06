@@ -30,28 +30,22 @@ const ICON = {
   },
 };
 
-function taskIcon(color) {
-  return `<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 25V13" stroke="#5F7424" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="10" cy="17" rx="4" ry="2.4" fill="#7E9240"/><circle cx="14" cy="10" r="5" fill="${color}"/></svg>`;
+// Rostlina, která ke druhu chvilky patří (ikona na kartě a květina v okénku Skvělá práce).
+const CAT_PLANT = { PROCHAZKA: 'tree', CTENI: 'daisy', PAUZA: 'tulip', SPANEK: 'lavender', BEZ_TELEFONU: 'sunflower', POHYB: 'dot', TVORENI: 'sunflower:oranzova', JINE: 'tulip:zluty' };
+const PLANT_BOX = { tree: '110 110 740 720', sunflower: '190 150 580 680', 'sunflower:oranzova': '190 150 580 680' };
+function plantArt(cat) {
+  const key = CAT_PLANT[cat] || 'tulip';
+  return { art: window.FLOWER_ART?.[key]?.[2] || window.FLOWER_ART?.[key.split(':')[0]]?.[2] || '', box: PLANT_BOX[key] || '200 190 560 640' };
+}
+function taskIcon(cat) {
+  const { art, box } = plantArt(cat);
+  return `<svg width="34" height="34" viewBox="${box}" aria-hidden="true">${art}</svg>`;
 }
 
-const GARDEN_SCENE = `<svg viewBox="0 0 390 280" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Ilustrace rozkvetlé zahrady">
-  <circle cx="312" cy="92" r="26" fill="#F6E7A1"/><circle cx="312" cy="92" r="40" fill="#F6E7A1" opacity="0.35"/>
-  <ellipse cx="92" cy="96" rx="30" ry="10" fill="#FFFFFF" opacity="0.8"/><ellipse cx="118" cy="88" rx="20" ry="9" fill="#FFFFFF" opacity="0.8"/>
-  <path d="M246 132 q7 -9 14 0 q7 -9 14 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"/>
-  <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 280 L0 280 Z" fill="#C9D29C"/>
-  <path d="M0 226 C80 204 166 208 244 222 C310 234 356 216 390 212 L390 280 L0 280 Z" fill="#A9B676"/>
-  <path d="M78 222 V154" stroke="#5F7424" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="78" cy="132" r="34" fill="#6E8B2E"/><circle cx="52" cy="152" r="22" fill="#8FA34A"/><circle cx="104" cy="154" r="20" fill="#7E9240"/>
-  <circle cx="68" cy="122" r="4.5" fill="#E8742A"/><circle cx="94" cy="140" r="4.5" fill="#E8742A"/>
-  <path d="M168 240 V174" stroke="#5F7424" stroke-width="4" stroke-linecap="round"/><ellipse cx="156" cy="206" rx="11" ry="5.5" fill="#7E9240"/>
-  <circle cx="168" cy="166" r="18" fill="#F2994A"/><circle cx="168" cy="166" r="8" fill="#8B6B4A"/>
-  <path d="M218 244 V194 M229 244 V186 M240 244 V196" stroke="#5F7424" stroke-width="2.8" stroke-linecap="round"/>
-  <ellipse cx="218" cy="189" rx="4.5" ry="10" fill="#B48ACB"/><ellipse cx="229" cy="180" rx="4.5" ry="11" fill="#9B8FD1"/><ellipse cx="240" cy="191" rx="4.5" ry="10" fill="#B48ACB"/>
-  <path d="M292 248 V208" stroke="#5F7424" stroke-width="3" stroke-linecap="round"/><ellipse cx="303" cy="226" rx="10" ry="5" fill="#8FA34A"/>
-  <circle cx="292" cy="201" r="12" fill="#FFFFFF"/><circle cx="292" cy="201" r="5" fill="#F2C94C"/>
-  <path d="M346 252 V222" stroke="#5F7424" stroke-width="3" stroke-linecap="round"/><circle cx="346" cy="215" r="10" fill="#E8742A"/><circle cx="346" cy="215" r="4" fill="#FFF6D6"/>
-  <circle cx="130" cy="250" r="6" fill="#F2C94C"/><circle cx="262" cy="258" r="5" fill="#FFFFFF"/><circle cx="30" cy="252" r="5" fill="#B48ACB"/><circle cx="372" cy="262" r="5" fill="#F2C94C"/>
-</svg>`;
+// Obecná ilustrace rozkvetlé zahrady (přihlášení, hlavička, sdílení bez hry). Stejný styl jako zahrada.
+function gardenHero(level = 1) {
+  return gardenScene(GARDEN_STEPS + 18, -1, level, true).replace('role="img" aria-label="Tvoje zahrada: ', 'role="img" aria-label="Ilustrace rozkvetlé zahrady: ');
+}
 
 // ---------- stav aplikace ----------
 const S = {
@@ -84,7 +78,7 @@ function celebrate(title, cat, res, extra = '') {
   S.levelSeen = level;
   S.celebrate = {
     title,
-    flower: c.flower,
+    cat,
     text: game ? 'Tvoje zahrada zase o kousek vyrostla.' : 'Chvilka pro tebe je zapsaná.',
     extra: [extra, note].filter(Boolean).join(' '),
   };
@@ -96,17 +90,11 @@ function celebrateView() {
   return `<div class="modal-layer">
     <div class="modal-backdrop" data-a="closeCelebrate"></div>
     <div class="modal${c === lastCelebrate ? ' static' : ''}" role="dialog" aria-modal="true" aria-labelledby="cel-title">
-      <svg class="grow-flower" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
-        <ellipse cx="60" cy="106" rx="34" ry="8" fill="#C9D29C"/>
-        <path class="gf-stem" d="M60 104 C60 88 58 74 60 52" fill="none" stroke="#5F7424" stroke-width="5" stroke-linecap="round"/>
-        <g class="gf-leaf gf-leaf-l"><ellipse cx="50" cy="86" rx="11" ry="5.5" fill="#7E9240" transform="rotate(-30 50 86)"/></g>
-        <g class="gf-leaf gf-leaf-r"><ellipse cx="70" cy="74" rx="11" ry="5.5" fill="#8FA34A" transform="rotate(30 70 74)"/></g>
-        <g class="gf-bloom">
-          ${[0, 60, 120, 180, 240, 300].map((a) => `<ellipse cx="60" cy="34" rx="8" ry="14" fill="${esc(c.flower)}" transform="rotate(${a} 60 46)"/>`).join('')}
-          <circle cx="60" cy="46" r="8" fill="#FFF6D6"/>
-        </g>
-        <g class="gf-spark" fill="#F2C94C"><circle cx="24" cy="30" r="3"/><circle cx="98" cy="24" r="2.5"/><circle cx="102" cy="60" r="3"/><circle cx="18" cy="64" r="2.5"/></g>
-      </svg>
+      ${(() => { const { art, box } = plantArt(c.cat); return `<svg class="grow-flower" width="150" height="150" viewBox="${box}" aria-hidden="true">
+        <ellipse cx="480" cy="812" rx="210" ry="34" fill="#DDE8C8"/>
+        <g class="gf-plant">${art}</g>
+        <g class="gf-spark" fill="#F7D36A"><circle cx="230" cy="330" r="16"/><circle cx="730" cy="280" r="13"/><circle cx="760" cy="520" r="15"/><circle cx="200" cy="560" r="12"/><circle cx="640" cy="180" r="10" fill="#F49AB6"/><circle cx="300" cy="200" r="9" fill="#8CC6D2"/></g>
+      </svg>`; })()}
       <h2 id="cel-title">Skvělá práce!</h2>
       <p style="font-weight:600">${esc(c.title)}</p>
       <p class="green-text">${esc(c.text)}</p>
@@ -178,7 +166,7 @@ function view() {
 function authView() {
   const reg = S.authMode === 'register';
   return `<div class="screen auth" style="padding-bottom:28px">
-    <div class="auth-art"><div class="only-narrow">${GARDEN_SCENE.replace('<svg ', '<svg style="position:absolute;inset:0;width:100%;height:100%" ')}</div>
+    <div class="auth-art"><div class="only-narrow">${gardenHero()}</div>
       <div class="only-wide">${gardenScene(44, -1, 5)}</div></div>
     <div class="auth-form">
     <h1>Odpočívat spolu</h1>
@@ -250,7 +238,7 @@ function homeView() {
       </div>
       <h1>Ahoj, ${esc(name)}</h1>
       <p class="green-text" style="font-size:16px">Jak si dnes odpočineš?</p>
-      <div class="hero-art" aria-hidden="true">${GARDEN_SCENE}</div>
+      <div class="hero-art" aria-hidden="true">${gardenHero()}</div>
     </header>
     <div class="home-body">
       <div class="home-side">
@@ -273,7 +261,7 @@ function taskCard(c) {
   const friendId = S.friendFor[c.id] || friends[0]?.id;
   const friend = friends.find((f) => f.id === friendId);
   const sent = sentFor(c.id);
-  const head = `<div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip${spolu ? ' group' : ''}">${spolu ? 'Spolu' : 'Jen já'}</span></div>`;
+  const head = `<div class="row"><div class="task-icon">${taskIcon(c.id)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip${spolu ? ' group' : ''}">${spolu ? 'Spolu' : 'Jen já'}</span></div>`;
   let body;
   if (!spolu) {
     body = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>
@@ -353,7 +341,7 @@ function weeklyCard() {
 function customCard(c) {
   const j = CAT.JINE;
   return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">
-    <div class="row"><div class="task-icon">${taskIcon(j.flower)}</div><div class="grow"><h3>${esc(c.nazev)}</h3><p class="muted small">Tvoje vlastní chvilka</p></div><span class="chip">Jen já</span></div>
+    <div class="row"><div class="task-icon">${taskIcon('JINE')}</div><div class="grow"><h3>${esc(c.nazev)}</h3><p class="muted small">Tvoje vlastní chvilka</p></div><span class="chip">Jen já</span></div>
     <div class="btn-row"><button class="btn ghost" data-a="removeCustom" data-id="${esc(c.id)}" aria-label="Odebrat chvilku ${esc(c.nazev)}">Odebrat</button><button class="btn" data-a="completeCustom" data-id="${esc(c.id)}">Hotovo</button></div>
   </section>`;
 }
@@ -434,7 +422,7 @@ function goalSection(group, friends) {
     const c = CAT[g.category] || {};
     const pct = Math.min(100, Math.round((100 * g.together) / g.target));
     return `<div class="stack goal-item" style="gap:10px">
-      <div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${esc(c.title || g.category)}</h3><p class="small${g.reached ? ' green-text' : ' muted'}" style="font-weight:600">${esc(g.text)}</p></div></div>
+      <div class="row"><div class="task-icon">${taskIcon(g.category)}</div><div class="grow"><h3>${esc(c.title || g.category)}</h3><p class="small${g.reached ? ' green-text' : ' muted'}" style="font-weight:600">${esc(g.text)}</p></div></div>
       <div class="bar" role="img" aria-label="${esc(g.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
       <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Přidat další chvilku' : 'Splnit chvilku do výzvy'}</button>
     </div>`;
@@ -491,9 +479,14 @@ function sprout(x, y) {
 
 // Ručně kreslené návrhy květin (web/kvetiny/*.svg -> flowers.js). Plátno 960×960, rostlina stojí v (480, 805).
 // Měřítko = jak velká je rostlina v zahradě. Druhy bez návrhu se kreslí jednoduchými tvary níže.
-const FLOWER_SCALE = { tulip: 0.085, daisy: 0.085 };
+const FLOWER_SCALE = { tulip: 0.085, daisy: 0.085, sunflower: 0.1, lavender: 0.095, tree: 0.18, dot: 0.058 };
 // Barevné varianty: barva rostliny v zahradě -> návrh dané varianty (např. tulipan-zluty-*.svg).
-const FLOWER_VARIANT = { tulip: { '#F2C94C': 'zluty' } };
+const FLOWER_VARIANT = {
+  tulip: { '#F2C94C': 'zluty' },
+  sunflower: { '#F2994A': 'oranzova' },
+  lavender: { '#9B8FD1': 'modra' },
+  dot: { '#F2C94C': 'zluty', '#F6E7A1': 'zluty', '#B48ACB': 'fialovy', '#FFFFFF': 'bily' },
+};
 function designedPlant(p, stage) {
   const variant = FLOWER_VARIANT[p.kind]?.[p.color];
   const art = (variant && window.FLOWER_ART?.[`${p.kind}:${variant}`]?.[stage - 1]) || window.FLOWER_ART?.[p.kind]?.[stage - 1];
@@ -582,87 +575,188 @@ function gardenItems(total) {
 
 // Každá úroveň má vlastní podobu zahrady. Rostliny zůstávají a rostou dál, mění se kulisa.
 // Souřadnice: celé SVG 390×760; krajina (back/front) je ve skupině posunuté o 360 dolů.
-const cloud = (x, y, k = 1, o = 0.85) => `<ellipse cx="${x}" cy="${y}" rx="${34 * k}" ry="${11 * k}" fill="#FFFFFF" opacity="${o}"/><ellipse cx="${x + 30 * k}" cy="${y - 9 * k}" rx="${22 * k}" ry="${10 * k}" fill="#FFFFFF" opacity="${o}"/>`;
-const birds = '<path d="M240 400 q7 -9 14 0 q7 -9 14 0 M272 380 q5 -6 10 0 q5 -6 10 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"/>';
-const appleTree = (x, y, k) => `<path d="M${x} ${y} V${y - 30 * k}" stroke="#7A5A3C" stroke-width="${5 * k}" stroke-linecap="round"/><circle cx="${x}" cy="${y - 42 * k}" r="${20 * k}" fill="#7E9240"/><circle cx="${x - 7 * k}" cy="${y - 46 * k}" r="${3 * k}" fill="#D9534F"/><circle cx="${x + 8 * k}" cy="${y - 38 * k}" r="${3 * k}" fill="#D9534F"/><circle cx="${x + 2 * k}" cy="${y - 52 * k}" r="${3 * k}" fill="#D9534F"/>`;
+// ---------- krajina zahrady (plochý vektorový styl: vrstvené kopce, dvoubarevné mraky) ----------
+// Souřadnice: celé SVG 390×760; krajina je ve skupině posunuté o 360 dolů (0–400).
+// Rostliny stojí od y≈222 níž, kopce jsou tvarované tak, aby na nich seděly.
+const INK = '#2B3A4A';
+
+/** Mrak s rovným spodkem a stínem na pravé straně (jako na referenční ilustraci). */
+function cloud(x, y, w, light, shade) {
+  const h = w * 0.42;
+  const body = `M${x} ${y} H${x + w} C${x + w + 2} ${y - h * 0.38} ${x + w * 0.86} ${y - h * 0.62} ${x + w * 0.72} ${y - h * 0.5}
+    C${x + w * 0.66} ${y - h * 1.08} ${x + w * 0.3} ${y - h * 1.1} ${x + w * 0.32} ${y - h * 0.55}
+    C${x + w * 0.16} ${y - h * 0.72} ${x - 2} ${y - h * 0.4} ${x} ${y} Z`;
+  const shadow = `M${x + w * 0.5} ${y} H${x + w} C${x + w + 2} ${y - h * 0.38} ${x + w * 0.86} ${y - h * 0.62} ${x + w * 0.72} ${y - h * 0.5}
+    C${x + w * 0.74} ${y - h * 0.22} ${x + w * 0.62} ${y - h * 0.06} ${x + w * 0.5} ${y} Z`;
+  return `<path d="${body}" fill="${light}"/><path d="${shadow}" fill="${shade}"/>`;
+}
+const birdsAt = (pts, color = INK) => pts.map(([x, y, k]) => `<path d="M${x} ${y} q${5 * k} ${-6 * k} ${10 * k} ${-1 * k} q${5 * k} ${-5 * k} ${10 * k} ${1 * k}" fill="none" stroke="${color}" stroke-width="${2.2 * k}" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+
+/** Kopec s jemně světlejším hřebenem (stejná křivka posunutá o pár bodů výš). */
+function hill(d, fill, rim) {
+  return `${rim ? `<path d="${d}" fill="${rim}" transform="translate(0 -3.5)"/>` : ''}<path d="${d}" fill="${fill}"/>`;
+}
+const H = {
+  far1: 'M0 150 C50 124 110 118 176 136 C238 152 300 116 390 124 V400 H0 Z',
+  far2: 'M0 166 C64 146 140 148 206 160 C276 172 326 144 390 148 V400 H0 Z',
+  far3: 'M0 182 C76 166 144 170 204 178 C270 188 330 166 390 170 V400 H0 Z',
+  mid: 'M0 198 C56 178 118 180 168 192 C228 206 300 178 390 188 V400 H0 Z',
+  back: 'M0 214 C80 196 160 200 230 212 C300 224 350 206 390 204 V400 H0 Z',
+  front: 'M0 238 C90 222 170 228 250 238 C320 246 360 234 390 232 V400 H0 Z',
+  fore: 'M0 300 C90 288 200 294 280 300 C330 304 370 298 390 296 V400 H0 Z',
+};
+
+/** Stromeček „lízátko“ s kmínkem a větvičkami (jako na referenční krajině). */
+function lolli(x, y, r, crown, hi, trunk = '#6B5A45') {
+  return `<path d="M${x} ${y} V${y - r * 1.9}" stroke="${trunk}" stroke-width="${Math.max(1.6, r * 0.18)}" stroke-linecap="round"/>
+    <path d="M${x} ${y - r * 1.1} l${-r * 0.45} ${-r * 0.45} M${x} ${y - r * 1.35} l${r * 0.42} ${-r * 0.4}" stroke="${trunk}" stroke-width="${Math.max(1.2, r * 0.12)}" stroke-linecap="round"/>
+    <circle cx="${x}" cy="${y - r * 2}" r="${r}" fill="${crown}"/>
+    <path d="M${x - r} ${y - r * 2} A${r} ${r} 0 0 1 ${x + r * 0.2} ${y - r * 2.98} A${r * 1.1} ${r * 1.1} 0 0 0 ${x - r} ${y - r * 2} Z" fill="${hi}"/>
+    <path d="M${x - r * 0.7} ${y - r * 2.1} l${r * 0.7} ${r * 0.55} l${r * 0.55} ${-r * 0.6} M${x} ${y - r * 1.55} V${y - r * 2.5}" stroke="${trunk}" stroke-width="${Math.max(1, r * 0.08)}" stroke-linecap="round" fill="none" opacity="0.6"/>`;
+}
+/** Jehličnan z několika zaoblených pater. */
+function pine(x, y, h, c1, c2) {
+  const w = h * 0.42;
+  let s = `<path d="M${x} ${y} V${y - h * 0.18}" stroke="#5B4A38" stroke-width="${h * 0.06}" stroke-linecap="round"/>`;
+  for (let i = 0; i < 3; i++) {
+    const top = y - h * (0.55 + i * 0.2), base = y - h * (0.14 + i * 0.22), ww = w * (1 - i * 0.24);
+    s += `<path d="M${x} ${top - h * 0.12} C${x + ww * 0.3} ${top} ${x + ww * 0.8} ${base - h * 0.08} ${x + ww} ${base} Q${x} ${base + h * 0.06} ${x - ww} ${base} C${x - ww * 0.8} ${base - h * 0.08} ${x - ww * 0.3} ${top} ${x} ${top - h * 0.12} Z" fill="${i % 2 ? c2 : c1}"/>`;
+    s += `<path d="M${x} ${top - h * 0.12} C${x + ww * 0.3} ${top} ${x + ww * 0.8} ${base - h * 0.08} ${x + ww} ${base} Q${x + ww * 0.5} ${base + h * 0.04} ${x} ${base + h * 0.03} Z" fill="#000" opacity="0.12"/>`;
+  }
+  return s;
+}
+/** Keřík s květy (vrstvené kruhy, tečky jako na referenci). */
+function bush(x, y, r, c1, c2, dots) {
+  return `<circle cx="${x - r * 0.7}" cy="${y - r * 0.5}" r="${r * 0.75}" fill="${c2}"/><circle cx="${x + r * 0.6}" cy="${y - r * 0.45}" r="${r * 0.7}" fill="${c2}"/>
+    <circle cx="${x}" cy="${y - r * 0.8}" r="${r}" fill="${c1}"/>
+    <path d="M${x - r} ${y - r * 0.8} A${r} ${r} 0 0 1 ${x + r * 0.1} ${y - r * 1.8} A${r * 1.1} ${r * 1.1} 0 0 0 ${x - r} ${y - r * 0.8} Z" fill="#FFFFFF" opacity="0.18"/>
+    ${dots ? [[-0.5, -1.1], [0.3, -1.3], [0.6, -0.7], [-0.2, -0.6], [-0.9, -0.4]].map(([a, b]) => `<circle cx="${x + a * r}" cy="${y + b * r}" r="${r * 0.1}" fill="${dots}"/>`).join('') : ''}`;
+}
+function appleTree(x, y, k) {
+  return `<path d="M${x - 3 * k} ${y} C${x - 2 * k} ${y - 14 * k} ${x - 2 * k} ${y - 24 * k} ${x - 1.5 * k} ${y - 32 * k} L${x + 1.5 * k} ${y - 32 * k} C${x + 2 * k} ${y - 24 * k} ${x + 2 * k} ${y - 14 * k} ${x + 3 * k} ${y} Z" fill="#7A5A40"/>
+    <circle cx="${x}" cy="${y - 44 * k}" r="${20 * k}" fill="#5E8A4E"/><circle cx="${x - 12 * k}" cy="${y - 36 * k}" r="${12 * k}" fill="#7EA65A"/><circle cx="${x + 12 * k}" cy="${y - 37 * k}" r="${11 * k}" fill="#4F7B57"/>
+    <path d="M${x - 20 * k} ${y - 44 * k} A${20 * k} ${20 * k} 0 0 1 ${x + 4 * k} ${y - 64 * k} A${22 * k} ${22 * k} 0 0 0 ${x - 20 * k} ${y - 44 * k} Z" fill="#A3C474"/>
+    ${[[-8, -50], [7, -44], [-2, -36], [12, -54], [-14, -40]].map(([a, b]) => `<circle cx="${x + a * k}" cy="${y + b * k}" r="${2.6 * k}" fill="#E8665A"/>`).join('')}`;
+}
+const stars = (pts) => pts.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#FFF6E0"/>`).join('');
 
 const GARDEN_LEVELS = [
   {
     name: 'Jarní louka',
-    sky: ['#F4F1DE', '#E9EDD3'], hills: ['#C9D29C', '#A9B676', '#9AAA66'],
-    sky2: (t) => `<circle cx="312" cy="300" r="30" fill="#F6E7A1"/><circle cx="312" cy="300" r="48" fill="#F6E7A1" opacity="0.35"/>${cloud(92, 300)}${cloud(206, 252, 0.7, 0.7)}${t >= 20 ? birds : ''}`,
-    back: () => '', front: () => '',
+    sky: ['#DDEBE3', '#EEF2E4', '#F7F1DE'],
+    sky2: (t) => `<circle cx="304" cy="292" r="30" fill="#F7D36A"/>
+      ${cloud(40, 300, 92, '#F6A58C', '#EE8F78')}${cloud(250, 252, 70, '#F6A58C', '#EE8F78')}${cloud(330, 340, 46, '#F8B9A3', '#F1A08A')}
+      ${t >= 20 ? birdsAt([[226, 392, 1.2], [262, 372, 0.9], [196, 410, 0.7]]) : birdsAt([[240, 388, 0.9]])}`,
+    far: [['#FAF1DA', '#FFFFFF'], ['#F7DCBF', '#FBE9D6'], ['#F3BFA2', '#F7D2BC']],
+    hills: { mid: ['#3F6B4E', '#4F7B57'], back: ['#86A85E', '#9DBD70'], front: ['#6F9A52', '#86AD62'], fore: ['#4F7B47', null] },
+    back: () => `${lolli(52, 196, 9, '#F7C9A1', '#FBDDBF')}${lolli(120, 186, 7, '#4F7B57', '#6F9A5B')}${lolli(300, 190, 8, '#F7C9A1', '#FBDDBF')}
+      ${lolli(356, 186, 6, '#4F7B57', '#6F9A5B')}${lolli(212, 200, 5, '#F7C9A1', '#FBDDBF')}
+      ${bush(18, 200, 9, '#3F6B4E', '#2F5B44')}${bush(166, 198, 8, '#3F6B4E', '#2F5B44')}`,
+    front: () => '',
   },
   {
     name: 'Zahrada u rybníčku',
-    sky: ['#E4F0F2', '#E6EED6'], hills: ['#C2D39A', '#A3B873', '#93A964'],
-    sky2: (t) => `<circle cx="70" cy="290" r="28" fill="#F8EBA8"/><circle cx="70" cy="290" r="44" fill="#F8EBA8" opacity="0.35"/>${cloud(200, 280)}${cloud(300, 330, 0.8)}${t >= 20 ? birds : ''}`,
-    back: () => `<ellipse cx="205" cy="206" rx="78" ry="15" fill="#8FC1C8"/><ellipse cx="205" cy="203" rx="66" ry="10" fill="#A9D3D8"/>
-      <ellipse cx="175" cy="205" rx="9" ry="3.5" fill="#6E8B2E"/><circle cx="178" cy="203" r="2.6" fill="#F6B8C8"/><ellipse cx="232" cy="208" rx="8" ry="3" fill="#7E9240"/>
-      <g><ellipse cx="208" cy="201" rx="8" ry="5" fill="#FFFFFF"/><circle cx="214" cy="195" r="4" fill="#FFFFFF"/><path d="M217 195 l4 1 -4 1z" fill="#F2994A"/></g>
-      <path d="M128 210 V186 M133 210 V190 M282 212 V188 M287 212 V192" stroke="#6E8B2E" stroke-width="2.4" stroke-linecap="round"/>
-      <ellipse cx="128" cy="184" rx="2.4" ry="6" fill="#8B6B4A"/><ellipse cx="282" cy="186" rx="2.4" ry="6" fill="#8B6B4A"/>`,
+    sky: ['#D6EAEC', '#E8F1EC', '#F4F2E2'],
+    sky2: (t) => `<circle cx="74" cy="282" r="28" fill="#F49AB6"/>
+      ${cloud(160, 274, 96, '#F7D36A', '#EFBF45')}${cloud(300, 330, 60, '#F7D36A', '#EFBF45')}
+      ${birdsAt([[250, 402, 1.1], [282, 386, 0.8]], '#3D7BB8')}${t >= 20 ? birdsAt([[120, 380, 0.8]], '#3D7BB8') : ''}`,
+    far: [['#F2F0DF', '#FFFFFF'], ['#CFE2D8', '#E0EEE6'], ['#B7D3C6', '#C9E0D4']],
+    hills: { mid: ['#3F6B4E', '#4F7B57'], back: ['#8DB062', '#A3C474'], front: ['#6F9A52', '#86AD62'], fore: ['#4F7B47', null] },
+    back: () => `<ellipse cx="205" cy="210" rx="86" ry="17" fill="#6FAFC0"/><ellipse cx="205" cy="207" rx="80" ry="13" fill="#8CC6D2"/><ellipse cx="190" cy="205" rx="44" ry="5" fill="#B5DDE5"/>
+      <path d="M160 211 h22 M214 203 h30 M236 213 h16" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>
+      <g><ellipse cx="172" cy="212" rx="10" ry="3.8" fill="#4F7B57"/><path d="M172 212 l10 -2 l-2 3z" fill="#8CC6D2"/><circle cx="174" cy="209" r="3" fill="#F49AB6"/><circle cx="174" cy="209" r="1.2" fill="#F7D36A"/></g>
+      <g><ellipse cx="240" cy="209" rx="8" ry="3" fill="#6F9A5B"/></g>
+      <g><ellipse cx="214" cy="203" rx="9" ry="5.5" fill="#FFFFFF"/><path d="M205 203 q4 -5 10 -2" fill="#E8E8DC"/><circle cx="221" cy="196" r="4.2" fill="#FFFFFF"/><path d="M225 196 l4.5 1.2 -4.5 1.4z" fill="#F2994A"/><circle cx="222" cy="195" r="0.9" fill="${INK}"/></g>
+      ${[[118, 214], [124, 216], [130, 214], [282, 214], [289, 216]].map(([x, y], i) => `<path d="M${x} ${y} Q${x + (i % 2 ? 2 : -2)} ${y - 14} ${x} ${y - 26}" stroke="#4F7B47" stroke-width="2" fill="none" stroke-linecap="round"/>${i % 2 ? '' : `<rect x="${x - 2.4}" y="${y - 34}" width="4.8" height="11" rx="2.4" fill="#8A6447"/>`}`).join('')}
+      ${lolli(40, 192, 9, '#F7C9A1', '#FBDDBF')}${lolli(350, 188, 8, '#4F7B57', '#6F9A5B')}${bush(320, 198, 8, '#3F6B4E', '#2F5B44', '#F49AB6')}`,
     front: () => '',
   },
   {
     name: 'Ovocný sad',
-    sky: ['#F8EED8', '#EDE9CF'], hills: ['#CBD09A', '#ADB673', '#9EA864'],
-    sky2: (t) => `<circle cx="300" cy="320" r="30" fill="#F6D98B"/><circle cx="300" cy="320" r="48" fill="#F6D98B" opacity="0.3"/>${cloud(70, 270)}${t >= 20 ? birds : ''}`,
-    back: () => `${appleTree(140, 182, 0.9)}${appleTree(262, 196, 0.8)}${appleTree(350, 172, 0.95)}
-      <g stroke="#A27C56" stroke-width="3" stroke-linecap="round"><path d="M0 214 L390 206"/><path d="M0 226 L390 218"/>
-      ${Array.from({ length: 14 }, (_, i) => `<path d="M${8 + i * 29} ${222 - i * 0.6} V${206 - i * 0.6}"/>`).join('')}</g>
-      <g><rect x="296" y="196" width="44" height="6" rx="2" fill="#B88B5E"/><rect x="298" y="186" width="40" height="5" rx="2" fill="#B88B5E"/><path d="M300 202 V212 M336 202 V212" stroke="#8A6544" stroke-width="3"/></g>`,
+    sky: ['#F6E9CC', '#F9F0DC', '#FBF4E4'],
+    sky2: (t) => `<circle cx="300" cy="310" r="30" fill="#F49AB6"/>
+      ${cloud(40, 270, 90, '#F7D36A', '#EFBF45')}${cloud(220, 230, 64, '#F7D36A', '#EFBF45')}
+      ${t >= 20 ? birdsAt([[150, 380, 1], [180, 366, 0.8]]) : ''}`,
+    far: [['#FBF1D6', '#FFFFFF'], ['#F2D9B0', '#F8E7CA'], ['#DDCB97', '#E8D8AA']],
+    hills: { mid: ['#4F7B57', '#5E8A5B'], back: ['#97B566', '#AAC679'], front: ['#7BA255', '#8FB466'], fore: ['#567F47', null] },
+    back: () => `${pine(18, 196, 46, '#3F6B4E', '#4F7B57')}${pine(370, 192, 52, '#3F6B4E', '#4F7B57')}
+      ${appleTree(136, 186, 0.9)}${appleTree(258, 198, 0.8)}${appleTree(336, 178, 0.95)}
+      <g><path d="M0 216 L390 208" stroke="#B48A62" stroke-width="3.2" stroke-linecap="round"/><path d="M0 228 L390 220" stroke="#B48A62" stroke-width="3.2" stroke-linecap="round"/>
+      ${Array.from({ length: 14 }, (_, i) => { const x = 8 + i * 29, yy = 224 - i * 0.6; return `<path d="M${x - 2.5} ${yy} V${yy - 18} l2.5 -3 l2.5 3 V${yy} Z" fill="#C79C70"/><path d="M${x} ${yy} V${yy - 21} l2.5 3 V${yy} Z" fill="#A27C56"/>`; }).join('')}</g>
+      <g><rect x="294" y="196" width="46" height="6" rx="2" fill="#C79C70"/><rect x="296" y="186" width="42" height="5" rx="2" fill="#B48A62"/><path d="M299 202 V213 M335 202 V213" stroke="#8A6544" stroke-width="3" stroke-linecap="round"/></g>`,
     front: () => '',
   },
   {
     name: 'Večerní zahrada',
-    sky: ['#F3C6A5', '#E8D3C8'], hills: ['#AFBE8A', '#8FA06A', '#7F925C'], dusk: true,
-    sky2: () => `<circle cx="250" cy="520" r="36" fill="#F7A86B" opacity="0.9"/><circle cx="250" cy="520" r="60" fill="#F7A86B" opacity="0.25"/>
-      <path d="M312 250 a20 20 0 1 0 14 32 a16 16 0 1 1 -14 -32z" fill="#FFF3D6"/>
-      ${[[40, 230], [150, 210], [250, 280], [360, 230], [200, 330]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#FFF6D6"/>`).join('')}
-      <path d="M0 410 Q100 450 195 420 T390 410" fill="none" stroke="#5C4A3A" stroke-width="1.5"/>
-      ${[40, 95, 150, 205, 260, 315, 365].map((x, i) => { const y = [420, 434, 438, 423, 425, 430, 416][i]; return `<path d="M${x} ${y} V${y + 6}" stroke="#5C4A3A" stroke-width="1.2"/><circle cx="${x}" cy="${y + 12}" r="6" fill="#F6C65B"/><circle cx="${x}" cy="${y + 12}" r="11" fill="#F6C65B" opacity="0.3"/>`; }).join('')}`,
-    back: () => '',
+    sky: ['#B9A7CF', '#E9A7A6', '#F7C99F'], dusk: true,
+    sky2: () => `<circle cx="250" cy="512" r="40" fill="#F49AB6"/><circle cx="250" cy="512" r="58" fill="#F49AB6" opacity="0.25"/>
+      <path d="M318 244 a22 22 0 1 0 16 36 a18 18 0 1 1 -16 -36z" fill="#FFF3D6"/>
+      ${stars([[40, 230, 1.6], [150, 206, 1.3], [252, 276, 1.4], [360, 226, 1.7], [202, 330, 1.2], [92, 300, 1.1], [300, 330, 1]])}
+      ${cloud(36, 360, 80, '#F4B7A6', '#E89C90')}
+      <path d="M0 410 Q100 448 195 420 T390 410" fill="none" stroke="#5C4A5A" stroke-width="1.6"/>
+      ${[40, 95, 150, 205, 260, 315, 365].map((x, i) => { const y = [420, 433, 437, 423, 425, 430, 416][i]; return `<path d="M${x} ${y} V${y + 6}" stroke="#5C4A5A" stroke-width="1.2"/><circle cx="${x}" cy="${y + 13}" r="12" fill="#F7D36A" opacity="0.25"/><rect x="${x - 5}" y="${y + 6}" width="10" height="14" rx="4" fill="#F7D36A"/><rect x="${x - 5}" y="${y + 6}" width="5" height="14" rx="2.5" fill="#FBE59A"/>`; }).join('')}`,
+    far: [['#E9B9B4', '#F2CFC6'], ['#D39FA8', '#DEB3B8'], ['#A98FAE', '#B9A2BD']],
+    hills: { mid: ['#3B5A4E', '#466858'], back: ['#6F8E5E', '#7F9D6A'], front: ['#5C7C50', '#6A8A5A'], fore: ['#3F5C42', null] },
+    back: () => `${lolli(60, 196, 9, '#2F4B44', '#3B5A4E')}${lolli(318, 190, 8, '#2F4B44', '#3B5A4E')}${bush(170, 198, 9, '#2F4B44', '#273F3A')}`,
     front: () => `<g class="fireflies">${[[60, 150], [120, 120], [210, 140], [300, 110], [350, 160], [180, 100], [30, 190], [260, 180]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#FFF1A8"/><circle cx="${x}" cy="${y}" r="6" fill="#FFF1A8" opacity="0.3"/>`).join('')}</g>`,
   },
   {
     name: 'Kouzelná zahrada',
-    sky: ['#EAF1F6', '#EEF0DA'], hills: ['#C6D69C', '#A5BD74', '#95AE66'],
-    sky2: (t) => `<g opacity="0.75" fill="none" stroke-width="7">${['#E8742A', '#F2C94C', '#8FA34A', '#7FB7C9', '#9B8FD1'].map((c, i) => `<path d="M${20 + i * 7} 560 A${175 - i * 7} ${175 - i * 7} 0 0 1 ${370 - i * 7} 560" stroke="${c}"/>`).join('')}</g>
-      <circle cx="330" cy="260" r="24" fill="#F6E7A1"/>${cloud(40, 300, 0.9)}${cloud(250, 250, 0.7, 0.7)}${t >= 20 ? birds : ''}`,
-    back: () => `<g><rect x="296" y="148" width="58" height="40" rx="3" fill="#F4E9D8"/><path d="M290 150 L325 122 L360 150 Z" fill="#C46A4A"/>
-      <rect x="318" y="164" width="14" height="24" rx="2" fill="#8A6544"/><rect x="301" y="158" width="11" height="11" rx="2" fill="#A9D3D8"/><rect x="338" y="158" width="11" height="11" rx="2" fill="#A9D3D8"/>
-      <rect x="341" y="124" width="7" height="16" fill="#A0584A"/><circle cx="346" cy="114" r="5" fill="#FFFFFF" opacity="0.7"/><circle cx="352" cy="104" r="6.5" fill="#FFFFFF" opacity="0.55"/></g>
-      ${[[325, 196, 9], [312, 210, 10], [296, 226, 11], [276, 244, 12]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.42}" fill="#D9D3C2"/>`).join('')}`,
+    sky: ['#D8E9EE', '#EEF1E6', '#FBF2D8'],
+    sky2: (t) => `<g opacity="0.7" fill="none" stroke-width="7">${['#F6A58C', '#F7D36A', '#A9C97A', '#8CC6D2', '#B79BDD'].map((c, i) => `<path d="M${18 + i * 7} 580 A${177 - i * 7} ${177 - i * 7} 0 0 1 ${372 - i * 7} 580" stroke="${c}"/>`).join('')}</g>
+      <path d="M40 540 L120 400 Q126 390 132 400 L210 540 Z" fill="#C3DDE5"/><path d="M120 400 Q126 390 132 400 L150 432 L138 426 L126 440 L114 428 L104 436 Z" fill="#FFFFFF"/>
+      <path d="M150 540 L238 380 Q245 368 252 380 L340 540 Z" fill="#B2D2DC"/><path d="M238 380 Q245 368 252 380 L272 416 L258 410 L246 424 L232 412 L220 420 Z" fill="#FFFFFF"/>
+      <circle cx="196" cy="344" r="26" fill="#F49AB6"/>
+      ${cloud(30, 330, 80, '#F7D36A', '#EFBF45')}${cloud(266, 300, 72, '#F7D36A', '#EFBF45')}
+      ${birdsAt([[150, 410, 1], [176, 396, 0.8]], '#3D7BB8')}${t >= 20 ? birdsAt([[300, 420, 0.9]], '#3D7BB8') : ''}`,
+    far: [['#E3EEE4', '#F4F8F2'], ['#C9DDBE', '#D9E8CF'], ['#A9C995', '#BCD7A6']],
+    hills: { mid: ['#3F6B4E', '#4F7B57'], back: ['#8DB062', '#A3C474'], front: ['#6F9A52', '#86AD62'], fore: ['#4F7B47', null] },
+    back: () => `${pine(22, 198, 54, '#3F6B4E', '#4F7B57')}${pine(54, 194, 40, '#5E8A5B', '#6F9A5B')}${pine(250, 198, 36, '#3F6B4E', '#4F7B57')}
+      <g><rect x="296" y="148" width="58" height="42" rx="3" fill="#FBF1DE"/><rect x="325" y="148" width="29" height="42" fill="#EFE1C8"/>
+      <path d="M288 152 L325 120 L362 152 Z" fill="#E9806A"/><path d="M325 120 L362 152 L325 152 Z" fill="#D46A57"/>
+      <rect x="318" y="166" width="14" height="24" rx="2" fill="#8A6447"/><rect x="301" y="158" width="11" height="11" rx="2" fill="#F7D36A"/><rect x="338" y="158" width="11" height="11" rx="2" fill="#F7D36A"/>
+      <rect x="340" y="124" width="7" height="18" fill="#B06A55"/><circle cx="345" cy="114" r="5" fill="#FFFFFF" opacity="0.8"/><circle cx="351" cy="103" r="6.5" fill="#FFFFFF" opacity="0.6"/></g>
+      <path d="M325 190 C300 206 330 220 296 236 C270 248 300 262 270 274" fill="none" stroke="#FFF8E8" stroke-width="10" stroke-linecap="round"/>
+      ${bush(372, 200, 9, '#3F6B4E', '#2F5B44', '#F7D36A')}${bush(200, 202, 8, '#4F7B57', '#3F6B4E', '#F49AB6')}`,
     front: () => '',
   },
 ];
 
 function gardenLevel(level) { return GARDEN_LEVELS[Math.max(0, Math.min(GARDEN_LEVELS.length, level || 1) - 1)]; }
 
+/** Motýl ve stylu ilustrací (dvě dvoubarevná křídla). */
+function butterfly(x, y, c) {
+  return `<g class="butterfly"><path d="M${x} ${y} C${x - 12} ${y - 14} ${x - 16} ${y - 2} ${x - 6} ${y + 4} Z" fill="${c}"/><path d="M${x} ${y} C${x + 12} ${y - 14} ${x + 16} ${y - 2} ${x + 6} ${y + 4} Z" fill="${c}" opacity="0.8"/>
+    <path d="M${x} ${y} C${x - 8} ${y + 2} ${x - 8} ${y + 10} ${x - 2} ${y + 9} Z" fill="#F7D36A"/><path d="M${x} ${y} C${x + 8} ${y + 2} ${x + 8} ${y + 10} ${x + 2} ${y + 9} Z" fill="#F7D36A" opacity="0.8"/>
+    <path d="M${x} ${y - 5} V${y + 8}" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/></g>`;
+}
+
 function gardenScene(total, grewIndex, level = 1, crop = false) {
   const L = gardenLevel(level);
   const { items, butterflies } = gardenItems(total);
   items.sort((a, b) => a.p.y - b.p.y);
   const label = `${L.name}. ${items.length ? `${items.length} ${items.length === 1 ? 'rostlina' : items.length < 5 ? 'rostliny' : 'rostlin'}` : 'Zatím jen krajina, první chvilka zasadí semínko'}`;
+  const h = L.hills;
   // crop = výřez jen s krajinou a rostlinami (pro menší ilustrace, třeba u sdílení)
   return `<svg class="big-garden${L.dusk ? ' dusk' : ''}" viewBox="${crop ? '0 380 390 300' : '0 0 390 760'}" preserveAspectRatio="${crop ? 'xMidYMid' : 'xMidYMax'} slice" role="img" aria-label="Tvoje zahrada: ${label}">
-    <defs><linearGradient id="sky-${level}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.sky[0]}"/><stop offset="0.7" stop-color="${L.sky[1]}"/></linearGradient></defs>
+    <defs><linearGradient id="sky-${level}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.sky[0]}"/><stop offset="0.45" stop-color="${L.sky[1]}"/><stop offset="0.75" stop-color="${L.sky[2]}"/></linearGradient></defs>
     <rect width="390" height="760" fill="url(#sky-${level})"/>
     ${L.sky2(total)}
     <g transform="translate(0 360)">
-      <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 400 L0 400 Z" fill="${L.hills[0]}"/>
+      ${hill(H.far1, L.far[0][0], L.far[0][1])}${hill(H.far2, L.far[1][0], L.far[1][1])}${hill(H.far3, L.far[2][0], L.far[2][1])}
+      ${hill(H.mid, h.mid[0], h.mid[1])}
       ${L.back(total)}
-      <path d="M0 226 C80 204 166 208 244 222 C310 234 356 216 390 212 L390 400 L0 400 Z" fill="${L.hills[1]}"/>
-      <path d="M0 300 C90 286 200 292 280 300 C330 305 370 298 390 296 L390 400 L0 400 Z" fill="${L.hills[2]}" opacity="0.55"/>
+      ${hill(H.back, h.back[0], h.back[1])}
+      ${hill(H.front, h.front[0], h.front[1])}
+      <path d="${H.fore}" fill="${h.fore[0]}" opacity="0.45"/>
       ${items.map(({ p, i, stage, small }) => {
         const plant = `<g class="gp${i === grewIndex ? ' grew' : ''}" style="transform-origin:${p.x}px ${p.y}px">${gardenPlant(p, stage)}</g>`;
         return small ? `<g transform="translate(${p.x} ${p.y}) scale(0.7) translate(${-p.x} ${-p.y})">${plant}</g>` : plant;
       }).join('')}
       ${L.front(total)}
     </g>
-    ${Array.from({ length: butterflies }, (_, b) => { const x = 60 + seeded(b + 500) * 270; const y = 420 + seeded(b + 700) * 120; const c = EXTRA_COLORS[(b + 2) % EXTRA_COLORS.length];
-      return `<g class="butterfly" style="animation-delay:${(b * 0.7).toFixed(1)}s"><ellipse cx="${x}" cy="${y}" rx="7" ry="5" fill="${c === '#FFFFFF' ? '#B48ACB' : c}" transform="rotate(-20 ${x} ${y})"/><ellipse cx="${x + 10}" cy="${y}" rx="7" ry="5" fill="#9B8FD1" transform="rotate(20 ${x + 10} ${y})"/><path d="M${x + 5} ${y - 5} V${y + 6}" stroke="#23301A" stroke-width="1.6" stroke-linecap="round"/></g>`; }).join('')}
+    ${Array.from({ length: butterflies }, (_, b) => { const x = 60 + seeded(b + 500) * 270; const y = 420 + seeded(b + 700) * 120;
+      return butterfly(x, y, ['#F49AB6', '#8CC6D2', '#B79BDD', '#F6A58C', '#F7D36A'][b % 5]); }).join('')}
   </svg>`;
 }
 
@@ -758,9 +852,9 @@ function shareView() {
   const g = S.game || {};
   const art = g.hraZapnuta
     ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven, true)
-    : GARDEN_SCENE;
+    : gardenHero();
   return `<div class="sheet-wrap">
-    <div class="sheet-top"><div class="only-narrow">${art}</div><div class="only-wide">${g.hraZapnuta ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven) : GARDEN_SCENE}</div><button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
+    <div class="sheet-top"><div class="only-narrow">${art}</div><div class="only-wide">${g.hraZapnuta ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven) : gardenHero()}</div><button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
     <section class="sheet" aria-label="Náhled sdílení">
       <div class="handle"></div>
       <h1 style="font-size:22px">S kým to sdílet?</h1>
@@ -780,7 +874,7 @@ function shareView() {
 function inviteAcceptView() {
   const p = S.invitePreview || {};
   return `<div class="screen" style="padding-bottom:28px">
-    <div style="margin:-24px -20px 0;height:200px;position:relative;overflow:hidden;background:var(--tint)">${GARDEN_SCENE.replace('<svg ', '<svg style="position:absolute;inset:0;width:100%;height:100%" ')}</div>
+    <div style="margin:-24px -20px 0;height:200px;position:relative;overflow:hidden;background:var(--tint)">${gardenHero()}</div>
     ${p.error ? `<h1>Pozvánka už neplatí</h1><p class="muted">Požádej kamaráda o nový odkaz.</p><button class="btn big" data-a="closeInvite">Pokračovat</button>`
       : `<h1>${esc(p.odKoho || '')} tě zve mezi přátele</h1><p class="muted">Když přijmeš, budete hned přátelé. Uvidíte jen to, co si sami nasdílíte.</p>
          <div class="btn-row"><button class="btn ghost big" data-a="closeInvite">Teď ne</button><button class="btn big" data-a="acceptInvite">Přijmout</button></div>`}

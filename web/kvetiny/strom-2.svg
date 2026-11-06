@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960" width="960" height="960">
+<title>Strom – poupě</title>
+<path d="M466 805 C470 720 472 640 474 560 L486 560 C488 640 490 720 494 805 Z" fill="#8A6447"/><path d="M480 805 C482 720 484 640 486 560 L486 560 C488 640 490 720 494 805 Z" fill="#6E4D35"/><path d="M478 640 C460 610 440 592 424 586" fill="none" stroke="#8A6447" stroke-width="9" stroke-linecap="round"/><path d="M482 610 C500 590 520 578 538 574" fill="none" stroke="#8A6447" stroke-width="8" stroke-linecap="round"/><circle cx="480" cy="470" r="128" fill="#6F9A5B"/><circle cx="404" cy="540" r="70" fill="#8DB062"/><circle cx="560" cy="530" r="64" fill="#5E8A4E"/><path d="M352 470 A128 128 0 0 1 560 370 A140 140 0 0 0 352 470 Z" fill="#A9C97A"/><path d="M480 598 A128 128 0 0 0 608 470 A120 120 0 0 1 480 598 Z" fill="#4F7B57" opacity=".55"/>
+</svg>
