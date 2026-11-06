@@ -367,7 +367,7 @@ function friendsView() {
     <div><h1>Přátelé</h1><p class="muted">Jen lidé, které si sem pozveš.</p></div>
     <div class="two-col"><div class="col">
     <section class="card tint">
-      <div class="stack" style="gap:6px"><h2>Pozvi kamaráda</h2><p class="green-text small" style="line-height:1.5">Pošli mu odkaz. Jakmile ho přijme, jste přátelé.</p></div>
+      <div class="stack" style="gap:6px"><h2>Pozvi kamaráda</h2><p class="green-text small" style="line-height:1.5">Pošli mu odkaz. Jakmile ho přijme, jste přátelé a můžete spolu odpočívat a navzájem se podporovat.</p></div>
       ${S.inviteLink
         ? `<div class="field"><label for="f-link">Platí 3 dny pro jednoho člověka</label><input id="f-link" readonly value="${esc(S.inviteLink)}"></div>
            <div class="btn-row"><button class="btn" data-a="copyLink">Zkopírovat</button>${navigator.share ? '<button class="btn ghost" data-a="shareLink">Poslat…</button>' : ''}</div>`
