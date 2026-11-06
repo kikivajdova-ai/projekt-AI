@@ -491,19 +491,15 @@ function sprout(x, y) {
 
 // Ručně kreslené návrhy květin (web/kvetiny/*.svg -> flowers.js). Plátno 960×960, rostlina stojí v (480, 805).
 // Měřítko = jak velká je rostlina v zahradě. Druhy bez návrhu se kreslí jednoduchými tvary níže.
-const FLOWER_SCALE = { tulip: 0.085 };
-// Barevné varianty stejného návrhu (např. žlutý tulipán vedle růžového).
-const FLOWER_TINT = {
-  tulip: { '#F2C94C': { '#E07A66': '#E9B83A', '#F0A08C': '#F6D46B', '#C9604F': '#C9952A', '#F7C2B2': '#FBE7A6' } },
-};
+const FLOWER_SCALE = { tulip: 0.085, daisy: 0.085 };
+// Barevné varianty: barva rostliny v zahradě -> návrh dané varianty (např. tulipan-zluty-*.svg).
+const FLOWER_VARIANT = { tulip: { '#F2C94C': 'zluty' } };
 function designedPlant(p, stage) {
-  const art = window.FLOWER_ART?.[p.kind]?.[stage - 1];
+  const variant = FLOWER_VARIANT[p.kind]?.[p.color];
+  const art = (variant && window.FLOWER_ART?.[`${p.kind}:${variant}`]?.[stage - 1]) || window.FLOWER_ART?.[p.kind]?.[stage - 1];
   if (!art) return '';
-  let svg = art;
-  const tint = FLOWER_TINT[p.kind]?.[p.color];
-  if (tint) for (const [from, to] of Object.entries(tint)) svg = svg.split(from).join(to);
   const k = FLOWER_SCALE[p.kind] || 0.08;
-  return `<g transform="translate(${p.x} ${p.y}) scale(${k}) translate(-480 -805)">${svg}</g>`;
+  return `<g transform="translate(${p.x} ${p.y}) scale(${k}) translate(-480 -805)">${art}</g>`;
 }
 
 function gardenPlant(p, stage) {

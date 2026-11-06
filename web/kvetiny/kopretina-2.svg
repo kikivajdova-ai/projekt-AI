@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960" width="960" height="960">
+<title>Kopretina – poupě</title>
+<path id="stem" d="M480 800 C474 690 490 550 480 430" fill="none" stroke="#5C7A1F" stroke-width="10" stroke-linecap="round"/><g id='basal-leaves'><g transform="translate(474 805) rotate(-48)"><path d="M0 0 C-8.7 -51.0 -28.9 -76.5 -23.1 -108.4 C-14.4 -130.1 14.4 -130.1 23.1 -108.4 C28.9 -76.5 8.7 -51.0 0 0 Z" fill="#5C7A1F"/><path d="M0 0 C-8.7 -51.0 -28.9 -76.5 -23.1 -108.4 C-14.4 -127.5 -2.9 -126.2 0.0 -125.0 L0 0 Z" fill="#46591A"/></g><g transform="translate(486 805) rotate(50)"><path d="M0 0 C-8.7 -49.3 -28.9 -74.0 -23.1 -104.8 C-14.4 -125.7 14.4 -125.7 23.1 -104.8 C28.9 -74.0 8.7 -49.3 0 0 Z" fill="#7A962E"/><path d="M0 0 C-8.7 -49.3 -28.9 -74.0 -23.1 -104.8 C-14.4 -123.2 -2.9 -122.0 0.0 -120.8 L0 0 Z" fill="#5C7A1F"/></g><g transform="translate(476 805) rotate(-20)"><path d="M0 0 C-8.2 -59.5 -27.2 -89.2 -21.8 -126.4 C-13.6 -151.7 13.6 -151.7 21.8 -126.4 C27.2 -89.2 8.2 -59.5 0 0 Z" fill="#7A962E"/><path d="M0 0 C-8.2 -59.5 -27.2 -89.2 -21.8 -126.4 C-13.6 -148.8 -2.7 -147.3 0.0 -145.8 L0 0 Z" fill="#5C7A1F"/></g><g transform="translate(484 805) rotate(22)"><path d="M0 0 C-7.6 -56.1 -25.5 -84.1 -20.4 -119.2 C-12.8 -143.1 12.8 -143.1 20.4 -119.2 C25.5 -84.1 7.6 -56.1 0 0 Z" fill="#5C7A1F"/><path d="M0 0 C-7.6 -56.1 -25.5 -84.1 -20.4 -119.2 C-12.8 -140.2 -2.6 -138.8 0.0 -137.4 L0 0 Z" fill="#46591A"/></g></g><g id='stem-leaves'><g transform="translate(479 640) rotate(-38)"><path d="M0 0 C-13.0 -28.5 -13.0 -66.5 0 -95 C13.0 -66.5 13.0 -28.5 0 0 Z" fill="#5C7A1F"/><path d="M0 0 C-13.0 -28.5 -13.0 -66.5 0 -95 Z" fill="#46591A"/></g><g transform="translate(484 560) rotate(40)"><path d="M0 0 C-11.0 -24.0 -11.0 -56.0 0 -80 C11.0 -56.0 11.0 -24.0 0 0 Z" fill="#7A962E"/><path d="M0 0 C-11.0 -24.0 -11.0 -56.0 0 -80 Z" fill="#5C7A1F"/></g></g><g id="bud" transform="translate(480 450) scale(1.4) translate(-480 -450)">
+<ellipse cx="456" cy="395" rx="9" ry="20" fill="#E9E8D6" transform="rotate(-21.6 456 418)"/><ellipse cx="466" cy="395" rx="9" ry="20" fill="#FBFBF4" transform="rotate(-12.6 466 418)"/><ellipse cx="476" cy="395" rx="9" ry="20" fill="#E9E8D6" transform="rotate(-3.6 476 418)"/><ellipse cx="486" cy="395" rx="9" ry="20" fill="#FBFBF4" transform="rotate(5.4 486 418)"/><ellipse cx="496" cy="395" rx="9" ry="20" fill="#E9E8D6" transform="rotate(14.4 496 418)"/><ellipse cx="506" cy="395" rx="9" ry="20" fill="#FBFBF4" transform="rotate(23.400000000000002 506 418)"/>
+<circle cx="480" cy="408" r="14" fill="#EDBB3A"/>
+<path d="M444 412 C444 446 460 462 480 462 C500 462 516 446 516 412 C504 420 492 422 480 422 C468 422 456 420 444 412 Z" fill="#7A962E"/>
+<path d="M480 422 C492 422 504 420 516 412 C516 446 500 462 480 462 Z" fill="#5C7A1F"/>
+<path d="M454 428 L462 444 M472 430 L476 452 M490 430 L486 452 M506 428 L498 444" stroke="#46591A" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+</g>
+<g id="ground">
+<path d="M560 812 C620 772 730 776 790 836 Z" fill="#BFA083"/>
+<path d="M110 862 C190 806 330 792 480 796 C630 800 770 806 850 862 C690 884 280 886 110 862 Z" fill="#A9876A"/>
+<path d="M110 862 C280 878 690 878 850 862 C690 884 280 886 110 862 Z" fill="#96755A"/>
+<ellipse cx="300" cy="845" rx="9" ry="5" fill="#8C6C52"/><ellipse cx="640" cy="840" rx="7" ry="4" fill="#8C6C52"/>
+</g>
+</svg>

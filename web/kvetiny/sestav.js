@@ -1,5 +1,6 @@
 // Sestaví web/flowers.js z návrhů květin v této složce.
-// Pojmenování souborů: <druh>-<fáze>.svg, např. tulipan-1.svg, tulipan-2.svg, tulipan-3.svg.
+// Pojmenování souborů: <druh>-<fáze>.svg (tulipan-1.svg) nebo s barevnou variantou
+// <druh>-<varianta>-<fáze>.svg (tulipan-zluty-1.svg).
 // Každý návrh má plátno 960×960 a rostlina stojí na zemi v bodě (480, 805).
 // Spuštění (ve složce web):  node kvetiny/sestav.js
 const fs = require('fs');
@@ -10,19 +11,20 @@ const KIND = { tulipan: 'tulip', kopretina: 'daisy', slunecnice: 'sunflower', le
 
 const art = {};
 for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.svg')).sort()) {
-  const m = file.match(/^([a-z]+)-(\d)\.svg$/);
+  const m = file.match(/^([a-z]+)(?:-([a-z]+))?-(\d)\.svg$/);
   if (!m || !KIND[m[1]]) { console.warn('přeskakuji', file); continue; }
   const src = fs.readFileSync(path.join(dir, file), 'utf8');
   const inner = src
     .replace(/^[\s\S]*?<svg[^>]*>/, '')
     .replace(/<\/svg>\s*$/, '')
     .replace(/<title>[\s\S]*?<\/title>/g, '')
-    .replace(/\s+id="[^"]*"/g, '') // v zahradě je každá rostlina víckrát, id by se opakovala
+    .replace(/\s+id=("[^"]*"|'[^']*')/g, '') // v zahradě je každá rostlina víckrát, id by se opakovala
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/\s*\n\s*/g, '')
     .trim();
   if (/<script|on[a-z]+=|href=|<image/i.test(inner)) throw new Error(`${file}: návrh smí obsahovat jen tvary`);
-  (art[KIND[m[1]]] ||= [])[Number(m[2]) - 1] = inner;
+  const key = m[2] ? `${KIND[m[1]]}:${m[2]}` : KIND[m[1]];
+  (art[key] ||= [])[Number(m[3]) - 1] = inner;
 }
 
 const out = `// VYGENEROVÁNO z web/kvetiny/*.svg (node kvetiny/sestav.js). Neupravovat ručně.
