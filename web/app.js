@@ -17,10 +17,6 @@ const store = {
 };
 const moments = (n) => (n === 1 ? '1 chvilka' : n >= 2 && n <= 4 ? `${n} chvilky` : `${n} chvil`);
 const STAGES = ['Semínko', 'Klíček', 'Roste', 'Kvete', 'Kvete naplno'];
-const CRISIS = [
-  { name: 'Linka první psychické pomoci', desc: 'Když je ti psychicky těžko. Nonstop.', tel: '116123', show: '116 123' },
-  { name: 'Linka bezpečí', desc: 'Pro děti a studenty do 26 let. Nonstop.', tel: '116111', show: '116 111' },
-];
 
 const ICON = {
   heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23301A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
@@ -495,9 +491,7 @@ function moodView() {
          <button class="btn" data-a="consentHealth">Souhlasím</button></section>`
       : `<div class="moods" role="radiogroup" aria-label="Nálada">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${S.mood === n}" aria-label="${labels[n - 1]}" data-a="pickMood" data-v="${n}">${n}</button>`).join('')}</div>
          <div class="row between small muted"><span>Je to těžké</span><span>Je mi dobře</span></div>
-         ${S.moodResult === 'low' ? `<section class="card" aria-live="polite"><h2>Je nám líto, že je to teď těžké.</h2><p class="green-text" style="line-height:1.5">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít s někým mluvit, linky jsou zdarma a nonstop.</p>
-           ${CRISIS.map((c) => `<div class="row between"><div class="grow"><p style="font-weight:600">${c.name}</p><p class="muted small">${c.desc}</p></div><a class="btn small-btn" href="tel:${c.tel}">${c.show}</a></div>`).join('')}
-           <div class="row between"><div class="grow"><p style="font-weight:600">V ohrožení života</p></div><a class="btn dark small-btn" href="tel:155">155</a><a class="btn dark small-btn" href="tel:112">112</a></div></section>` : ''}
+         ${S.moodResult === 'low' ? `<section class="card" aria-live="polite"><h2>Je nám líto, že je to teď těžké.</h2><p class="green-text" style="line-height:1.5">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít, ozvi se někomu blízkému.</p></section>` : ''}
          ${S.moodResult === 'ok' ? `<section class="card" aria-live="polite"><p class="green-text">Díky, je to zapsané. Jen pro tebe.</p></section>` : ''}
          <button class="btn soft" data-a="revokeHealth">Odvolat souhlas s ukládáním nálady</button>`}
     <p class="muted small">U záznamu nálady nejsou body ani oslavy. Aplikace tvoje texty nečte ani nevyhodnocuje.</p>
