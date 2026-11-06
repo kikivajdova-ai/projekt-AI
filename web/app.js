@@ -32,7 +32,7 @@ const ICON = {
 
 // Rostlina, která ke druhu chvilky patří (ikona na kartě a květina v okénku Skvělá práce).
 const CAT_PLANT = { PROCHAZKA: 'tree', CTENI: 'daisy', PAUZA: 'tulip', SPANEK: 'lavender', BEZ_TELEFONU: 'sunflower', POHYB: 'dot', TVORENI: 'sunflower:oranzova', JINE: 'tulip:zluty' };
-const PLANT_BOX = { tree: '110 110 740 720', sunflower: '190 150 580 680', 'sunflower:oranzova': '190 150 580 680' };
+const PLANT_BOX = { tree: '110 110 740 720', sunflower: '170 110 620 720', 'sunflower:oranzova': '170 110 620 720' };
 function plantArt(cat) {
   const key = CAT_PLANT[cat] || 'tulip';
   return { art: window.FLOWER_ART?.[key]?.[2] || window.FLOWER_ART?.[key.split(':')[0]]?.[2] || '', box: PLANT_BOX[key] || '200 190 560 640' };
