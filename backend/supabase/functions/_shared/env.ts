@@ -25,8 +25,18 @@ export function appDbUrl(): string {
   if (full) return full;
   const password = requireEnv('APP_DB_PASSWORD');
   const url = new URL(requireEnv('SUPABASE_DB_URL'));
-  // pooler: uživatel "postgres.<ref>" -> "app_api.<ref>"; přímé připojení: "postgres" -> "app_api"
-  url.username = url.username.replace(/^postgres/, 'app_api');
+  // Přímá adresa db.<ref>.supabase.co je jen přes IPv6 a z Edge Functions občas odmítne
+  // spojení (ECONNREFUSED). Proto jdeme přes sdílený pooler v režimu transakcí (port 6543).
+  // Adresa pooleru není tajná; jde přepsat proměnnou APP_DB_POOLER_HOST.
+  const direct = url.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/);
+  if (direct) {
+    url.hostname = env('APP_DB_POOLER_HOST') ?? 'aws-1-eu-central-1.pooler.supabase.com';
+    url.port = '6543';
+    url.username = `app_api.${direct[1]}`;
+  } else {
+    // pooler: uživatel "postgres.<ref>" -> "app_api.<ref>"; jinak "postgres" -> "app_api"
+    url.username = url.username.replace(/^postgres/, 'app_api');
+  }
   url.password = password; // setter sám zakóduje speciální znaky
   return url.toString();
 }
