@@ -114,8 +114,8 @@ export async function createGoal(
         createdBy: userId,
       });
     } catch (e) {
-      if (isPermissionError(e)) throw forbidden('Cíl může založit jen člen skupiny.');
-      if (isUniqueViolation(e)) throw new AppError(409, 'CIL_EXISTUJE', 'Tenhle cíl už si tento týden máte. Vyber jiný druh odpočinku.');
+      if (isPermissionError(e)) throw forbidden('Výzvu může založit jen člen skupiny.');
+      if (isUniqueViolation(e)) throw new AppError(409, 'CIL_EXISTUJE', 'Tuhle výzvu už tento týden máte. Vyber jiný druh odpočinku.');
       throw e;
     }
   });
