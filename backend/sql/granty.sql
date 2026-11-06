@@ -62,6 +62,10 @@ grant select on public.activities to app_system;
 -- custom_activities: vlastní chvilky, jen autor (systém k nim přístup nemá)
 grant select, insert, delete on public.custom_activities to app_user;
 
+-- personal_goals: osobní cíl týdne, jen autor
+grant select, insert, delete on public.personal_goals to app_user;
+grant update (category, target_count) on public.personal_goals to app_user;
+
 -- groups a členství
 grant select, insert on public.groups to app_user;
 grant update (name) on public.groups to app_user;

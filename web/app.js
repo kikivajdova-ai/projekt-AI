@@ -87,6 +87,7 @@ const S = {
   shareFor: null, shareTarget: null, preview: null,
   confirmDelete: false, inviteAnswered: {},
   goalForm: false, goalCat: null, goalTarget: 10,
+  weekly: null, weeklyForm: false, wCat: null, wTarget: 5,
 };
 
 function toast(msg) { S.toast = msg; render(); }
@@ -100,11 +101,11 @@ async function guard(fn) {
 }
 
 async function loadAll() {
-  const [me, game, ms, friends, feed, pings, invites, groups, gi, custom] = await Promise.all([
+  const [me, game, ms, friends, feed, pings, invites, groups, gi, custom, wg] = await Promise.all([
     api.me(), api.game(), api.moments(), api.friends(), api.feed(), api.pings(), api.restInvites(), api.groups(), api.groupInvitations(),
-    api.customActivities(),
+    api.customActivities(), api.weeklyGoal(),
   ]);
-  Object.assign(S, { me, game, moments: ms, friends, feed, pings, invites, groups, groupInvites: gi, custom });
+  Object.assign(S, { me, game, moments: ms, friends, feed, pings, invites, groups, groupInvites: gi, custom, weekly: wg?.cil || null });
 }
 
 async function boot() {
@@ -205,8 +206,7 @@ function homeView() {
     ? `<section class="card"><div class="row between"><div><p class="label">Společný cíl tohoto týdne</p><h2>${esc(goal.group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
         <p style="font-size:15px">${esc(goal.goal.text)}</p>
         <div class="bar" role="img" aria-label="${esc(goal.goal.text)}"><span style="width:${Math.min(100, Math.round((100 * goal.goal.together) / goal.goal.target))}%"></span></div></section>`
-    : `<section class="card"><p class="label">Společný cíl tohoto týdne</p><h2>Odpočívejte spolu</h2><p class="muted">Dejte si s kamarády společný týdenní cíl, třeba 10 procházek. Uvidíte jen společný součet.</p>
-        <button class="btn" data-a="goToGoal">${S.groups.length ? 'Přidat společný cíl' : 'Založit skupinu a cíl'}</button></section>`;
+    : weeklyCard();
   const inviteCard = incoming
     ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
         ${S.inviteAnswered[incoming.id]
@@ -256,6 +256,39 @@ function taskCard(c, goal) {
       ${goalMatch ? `<label class="check small"><input type="checkbox" data-a="contribute" ${S.contribute ? 'checked' : ''}> <span>Započítat do cíle skupiny ${esc(goal.group.nazev)} (skupina uvidí jen společný součet)</span></label>` : ''}
       ${action}
     </div>
+  </section>`;
+}
+
+// Cíl tohoto týdne pro jednoho. Jakmile si s kamarády dáte společný cíl, ukáže se na jeho místě ten.
+function weeklyCard() {
+  const w = S.weekly;
+  if (S.weeklyForm) {
+    const cat = S.wCat || '';
+    const noun = cat ? CAT[cat].gen : (S.wTarget === 1 ? 'chvilky' : 'chvilek');
+    return `<section class="card"><p class="label">Cíl tohoto týdne</p><h2>Na co si dáš cíl?</h2>
+      <div class="pills"><button type="button" class="pill" aria-pressed="${!cat}" data-a="wCat" data-v="">Jakákoli chvilka</button>${PRESETS.map((c) => `<button type="button" class="pill" aria-pressed="${c.id === cat}" data-a="wCat" data-v="${c.id}">${esc(c.title)}</button>`).join('')}</div>
+      <p style="font-weight:600">Kolikrát za týden?</p>
+      <div class="row stepper"><button type="button" class="icon-btn soft" aria-label="Méně" data-a="wTarget" data-v="-1">−</button>
+        <span class="stepper-value" aria-live="polite">${S.wTarget}</span>
+        <button type="button" class="icon-btn soft" aria-label="Více" data-a="wTarget" data-v="1">+</button>
+        <span class="muted small grow">${esc(noun)} tento týden</span></div>
+      <p class="muted small">Když se to nepovede, nic se neděje. Příští týden začneš s čistým štítem.</p>
+      <div class="btn-row"><button class="btn ghost" data-a="weeklyCancel">Zrušit</button><button class="btn" data-a="weeklySave">Uložit cíl</button></div>
+      ${w ? '<button class="btn ghost small-btn" data-a="weeklyDelete">Tento týden bez cíle</button>' : ''}
+    </section>`;
+  }
+  if (w) {
+    const pct = Math.min(100, Math.round((100 * w.hotovo) / w.cil));
+    return `<section class="card"><div class="row between"><div><p class="label">Cíl tohoto týdne</p><h2>${esc(w.category ? CAT[w.category].title : 'Chvilky pro sebe')}</h2></div><span class="chip">Jen já</span></div>
+      <p style="font-size:15px"${w.splneno ? ' class="green-text"' : ''}>${esc(w.text)}</p>
+      <div class="bar" role="img" aria-label="${esc(w.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
+      <div class="row between"><button class="btn ghost small-btn" data-a="weeklyOpen">Upravit cíl</button><button class="btn ghost small-btn" data-a="goToGoal">Cíl s kamarády</button></div>
+    </section>`;
+  }
+  return `<section class="card"><p class="label">Cíl tohoto týdne</p><h2>Dej si cíl na tento týden</h2>
+    <p class="muted">Třeba 5 chvilek pro sebe nebo 3 procházky. Když se to nepovede, nic se neděje.</p>
+    <button class="btn" data-a="weeklyOpen">Nastavit cíl</button>
+    <button class="btn ghost small-btn" data-a="goToGoal">Nebo si dejte společný cíl s kamarády</button>
   </section>`;
 }
 
@@ -569,6 +602,16 @@ const actions = {
     if (S.groups.length) S.goalForm = true;
     S.scrollTo = 'cil';
   },
+  weeklyOpen() { S.weeklyForm = true; S.wCat = S.weekly?.category || null; S.wTarget = S.weekly?.cil || 5; },
+  weeklyCancel() { S.weeklyForm = false; },
+  wCat(d) { S.wCat = d.v || null; },
+  wTarget(d) { S.wTarget = Math.max(1, Math.min(50, S.wTarget + Number(d.v))); },
+  async weeklySave() {
+    const r = await api.setWeeklyGoal(S.wCat, S.wTarget);
+    S.weekly = r.cil; S.weeklyForm = false;
+    S.toast = 'Cíl na tento týden je nastavený. Každá splněná chvilka se do něj započítá sama.';
+  },
+  async weeklyDelete() { await api.deleteWeeklyGoal(); S.weekly = null; S.weeklyForm = false; S.toast = 'Tento týden bez cíle. I to je v pořádku.'; },
   goalOpen() { S.goalForm = true; S.goalTarget = 10; S.goalCat = null; },
   goalCancel() { S.goalForm = false; },
   goalCat(d) { S.goalCat = d.v; },

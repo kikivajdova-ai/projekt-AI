@@ -96,6 +96,9 @@ class SupabaseApi {
   moments() { return this.call('GET', '/activities'); }
   logMoment(m) { return this.call('POST', '/activities', { id: newId(), done: true, ...m }); }
   customActivities() { return this.call('GET', '/custom-activities'); }
+  weeklyGoal() { return this.call('GET', '/me/weekly-goal'); }
+  setWeeklyGoal(category, target) { return this.call('PUT', '/me/weekly-goal', { category, target }); }
+  deleteWeeklyGoal() { return this.call('DELETE', '/me/weekly-goal'); }
   createCustomActivity(title) { return this.call('POST', '/custom-activities', { title }); }
   deleteCustomActivity(id) { return this.call('DELETE', `/custom-activities/${id}`); }
   sharePreview(id, visibility, crewId) { return this.call('POST', `/activities/${id}/share-preview`, { visibility, ...(crewId ? { crewId } : {}) }); }
@@ -264,6 +267,19 @@ class DemoApi {
     return [...this.s.moments].reverse().map((m) => ({ id: m.id, category: m.category, customActivityId: m.customActivityId || null,
       label: m.customTitle || CAT[m.category].title, status: m.status, visibility: m.visibility, crewId: m.crewId || null, day: m.day }));
   }
+  async weeklyGoal() {
+    await this.wait();
+    const g = this.s.personalGoal;
+    const week = weekStart(dayStr(0));
+    if (!g || g.weekStart !== week) return { cil: null };
+    const done = this.s.moments.filter((m) => m.status === 'SPLNENO' && weekStart(m.day) === week && (!g.category || m.category === g.category)).length;
+    const noun = g.category ? CAT[g.category].gen : (g.target === 1 ? 'chvilky' : 'chvilek');
+    const reached = done >= g.target;
+    return { cil: { category: g.category, hotovo: done, cil: g.target, splneno: reached,
+      text: reached ? `Máš to! ${done} z ${g.target} ${noun} tento týden.` : `Tento týden ${done} z ${g.target} ${noun}` } };
+  }
+  async setWeeklyGoal(category, target) { this.s.personalGoal = { weekStart: weekStart(dayStr(0)), category, target }; this.save(); return this.weeklyGoal(); }
+  async deleteWeeklyGoal() { this.s.personalGoal = null; this.save(); }
   async customActivities() { await this.wait(); return (this.s.custom || []).map((c) => ({ id: c.id, nazev: c.nazev })); }
   async createCustomActivity(title) {
     this.s.custom = this.s.custom || [];

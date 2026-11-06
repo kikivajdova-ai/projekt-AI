@@ -14,6 +14,7 @@ import {
   friendships,
   customActivities,
   groupGoalContributions,
+  personalGoals,
   groupInvitations,
   groupMembers,
   pushTokens,
@@ -101,6 +102,7 @@ export async function exportData(userId: string) {
     nalada: await tx.select().from(wellbeingCheckins).where(eq(wellbeingCheckins.userId, userId)),
     chvile: await tx.select().from(activities).where(eq(activities.userId, userId)),
     vlastniChvilky: await tx.select().from(customActivities).where(eq(customActivities.userId, userId)),
+    osobniCile: await tx.select().from(personalGoals).where(eq(personalGoals.userId, userId)),
     odznaky: await tx.select().from(userBadges).where(eq(userBadges.userId, userId)),
     pratelstvi: await tx
       .select()

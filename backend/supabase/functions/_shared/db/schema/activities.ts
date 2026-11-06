@@ -8,7 +8,7 @@
 //  3. API: ke změně viditelnosti je potřeba podepsaný token z náhledu (viz services).
 
 import { sql } from 'drizzle-orm';
-import { check, date, index, pgPolicy, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { check, date, index, pgPolicy, pgTable, smallint, text, timestamp, unique, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import {
   activityCategoryEnum,
   activityStatusEnum,
@@ -135,6 +135,35 @@ export const activities = pgTable(
       for: 'select',
       to: appSystem,
       using: sql`true`,
+    }),
+  ],
+);
+
+/**
+ * Osobní cíl tohoto týdne (pro ty, kdo odpočívají sami). Jeden na týden, vidí ho jen autor.
+ * Kategorie null = jakákoli chvilka. Nesplněný cíl nic nebere a nikde se nepřipomíná.
+ */
+export const personalGoals = pgTable(
+  'personal_goals',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    weekStart: date('week_start', { mode: 'string' }).notNull(),
+    category: activityCategoryEnum('category'),
+    targetCount: smallint('target_count').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('personal_goals_one_per_week').on(t.userId, t.weekStart),
+    check('personal_goals_target_range', sql`${t.targetCount} between 1 and 50`),
+    check('personal_goals_week_is_monday', sql`extract(isodow from ${t.weekStart}) = 1`),
+    pgPolicy('personal_goals: jen autor', {
+      for: 'all',
+      to: appUser,
+      using: sql`${t.userId} = ${uid}`,
+      withCheck: sql`${t.userId} = ${uid}`,
     }),
   ],
 );

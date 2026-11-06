@@ -22,6 +22,7 @@ import * as account from '../services/account.ts';
 import * as moments from '../services/activities.ts';
 import * as checkins from '../services/checkins.ts';
 import * as custom from '../services/customActivities.ts';
+import * as personalGoal from '../services/personalGoal.ts';
 import * as friends from '../services/friends.ts';
 import * as game from '../services/game.ts';
 import * as groups from '../services/groups.ts';
@@ -68,6 +69,7 @@ const schemas = {
     customActivityId: id.optional(),
   }),
   customActivity: z.strictObject({ title: z.string().trim().min(1).max(60) }),
+  personalGoal: z.strictObject({ category: z.enum(ACTIVITY_CATEGORY).nullable(), target: z.number().int().min(1).max(50) }),
   complete: z.strictObject({ goalIds: z.array(id).max(10).optional() }),
   shareTarget: z.strictObject({ visibility: z.enum(VISIBILITY), crewId: id.optional() }),
   share: z.strictObject({
@@ -205,6 +207,16 @@ export function createApp() {
   // --- odpočinkové chvíle ---
   app.post('/activities', async (c) => c.json(await moments.logMoment(uid(c), await body(c.req.raw, schemas.moment)), 201));
   app.get('/activities', async (c) => c.json(await moments.listOwnMoments(uid(c))));
+
+  // --- osobní cíl tohoto týdne (vidí jen autor) ---
+  app.get('/me/weekly-goal', async (c) => c.json(await personalGoal.getPersonalGoal(uid(c))));
+  app.put('/me/weekly-goal', async (c) =>
+    c.json(await personalGoal.setPersonalGoal(uid(c), await body(c.req.raw, schemas.personalGoal))),
+  );
+  app.delete('/me/weekly-goal', async (c) => {
+    await personalGoal.deletePersonalGoal(uid(c));
+    return c.body(null, 204);
+  });
 
   // --- vlastní chvilky (název vidí jen autor) ---
   app.get('/custom-activities', async (c) => c.json(await custom.listCustomActivities(uid(c))));
