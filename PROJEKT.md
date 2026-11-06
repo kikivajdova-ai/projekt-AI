@@ -16,7 +16,7 @@ Klient: **Flutter**. Přihlášení: **e-mail + heslo** (jméno = přezdívka).
 
 Proč: pravidla RLS jsou u každé tabulky přímo ve schématu Drizzle, takže nevznikne tabulka
 bez ochrany. Logika je v TypeScriptu nezávislá na databázi; jen tenká vrstva
-(`migrations/20261106000000_zaklad.sql`, `sql/granty.sql`) je pro PostgreSQL, protože RLS
+(`migrations/20261106100740_zaklad.sql`, `sql/granty.sql`) je pro PostgreSQL, protože RLS
 je vlastnost databáze.
 
 Zamítnuto: **B) Supabase + Prisma** (RLS by bylo v ručním SQL odděleně od schématu),
@@ -81,6 +81,12 @@ Hotovo navíc: webová aplikace (`web/`) s designem z plátna, ukázkový režim
 
 Na řadě: Flutter verze se stejnými obrazovkami; `npm install` + typová kontrola služeb, vygenerovat a commitnout migrace, spustit `npm run db:test`, rozhodnout otevřené otázky (hlavně nezletilí).
 
+## Nasazení
+
+- Supabase projekt `odpocivat-spolu` (id `retguhfzlardzfhwtgmp`), region eu-central-1 (Frankfurt), založen 6. 11. 2026.
+- Migrace `zaklad`, `tabulky_a_rls`, `granty_a_katalog` nasazeny; Security Advisor bez nálezů.
+- Edge Function `api` se nasazuje z tohoto repozitáře přes pevný commit (viz `backend/supabase/functions/api/deploy-entry.ts`).
+
 ## Známá slabá místa
 
 Opraveno po nezávislé kontrole: opakované odeslání povzbuzení posílalo další notifikace;
@@ -106,7 +112,7 @@ Odloženo:
 | Odvolání souhlasu se zdravotními údaji nesmaže staré záznamy, jen zastaví nové | nízká | nezávislý kontrolor | nabídnout při odvolání smazání |
 | Token náhledu sdílení je UX pojistka, ne bezpečnostní hranice (klient může náhled zavolat sám) | nízká | nezávislý kontrolor | vědomě ponecháno; podstatné je, že nový záznam je vždy soukromý |
 | Pomocné funkce accepts_pings/shares_badges jde volat s libovolným id (prozradí nastavení) | nízká | nezávislý kontrolor | dostupné jen přes SQL jako app_user, ne přes API; vázat na přátelství |
-| Migrace z drizzle-kit nejsou v repozitáři, testy RLS běžely nad SQL z náhradního generátoru | střední | ověřeno | `npm run db:generate`, commitnout migrace, `npm run db:test` |
+| Úvodní migrace tabulek vznikla náhradním generátorem (drizzle-kit tu nešel nainstalovat); drizzle-kit zatím nemá svůj „snímek“ schématu, takže by první `drizzle-kit generate` chtěl vše vytvořit znovu | střední | ověřeno | před první změnou schématu spustit `npx drizzle-kit pull` / vytvořit baseline a vygenerovanou úvodní migraci zahodit |
 | Webová verze ukládá přihlašovací token do úložiště prohlížeče (localStorage) | nízká | můj úsudek | u Flutteru zabezpečené úložiště; na webu zvážit kratší relace |
 | Napojení webu na skutečné API zatím neběželo (bez Supabase projektu) | vysoká | neověřeno | projít `web/README.md`, krok B |
 | API ověřuje tokeny jen přes JWKS (asymetrické klíče) | nízká | můj úsudek | zapnout JWT Signing Keys v Supabase |

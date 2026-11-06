@@ -15,7 +15,7 @@ import {
 import { LIMITS } from '../domain/config.ts';
 import type { ReportReason } from '../domain/enums.ts';
 import { generateInviteToken, looksLikeInviteToken, sha256Hex } from '../domain/tokens.ts';
-import { requireEnv } from '../env.ts';
+import { inviteBaseUrl } from '../env.ts';
 import { AppError, notFound, tooMany } from '../errors.ts';
 import { enqueueNotification } from './notifications.ts';
 import { forwardReport } from './support.ts';
@@ -49,7 +49,7 @@ export async function createFriendInvite(userId: string) {
     await tx.insert(friendInvites).values({ id, inviterId: userId, tokenHash, expiresAt });
   });
   // Token existuje jen v tomto odkazu; v databázi je jen jeho otisk.
-  return { id, odkaz: `${requireEnv('APP_INVITE_BASE_URL')}/${token}`, platiDo: expiresAt };
+  return { id, odkaz: `${inviteBaseUrl()}/${token}`, platiDo: expiresAt };
 }
 
 export async function revokeFriendInvite(userId: string, inviteId: string) {

@@ -16,7 +16,7 @@ import {
 } from '../domain/enums.ts';
 import { MOOD_MAX, MOOD_MIN } from '../domain/config.ts';
 import { AppError } from '../errors.ts';
-import { env } from '../env.ts';
+import { appOrigins } from '../env.ts';
 import { requireUser, type AuthEnv } from './auth.ts';
 import * as account from '../services/account.ts';
 import * as moments from '../services/activities.ts';
@@ -113,7 +113,7 @@ export function createApp() {
   const app = new Hono<AuthEnv>().basePath('/api');
 
   // Mobilní aplikace CORS nepotřebuje; webu povolíme jen vlastní doménu (pokud je nastavená).
-  const allowedOrigin = env('ALLOWED_ORIGIN');
+  const allowedOrigin = appOrigins();
   // Webová aplikace: ALLOWED_ORIGIN = adresa, odkud běží (např. http://localhost:3000).
   // Víc adres jde oddělit čárkou. CORS musí být PŘED kontrolou přihlášení (preflight nemá token).
   if (allowedOrigin) {

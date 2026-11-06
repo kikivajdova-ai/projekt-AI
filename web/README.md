@@ -32,7 +32,6 @@ Ve složce `backend` (podrobnosti jsou v hlavním `README.md`):
 
 ```bash
 npm install                                  # stáhne knihovny
-npm run db:generate                          # vyrobí SQL migrace ze schématu
 npx supabase login                           # přihlášení v prohlížeči
 npx supabase link --project-ref <id>         # <id> najdeš v adrese projektu: supabase.com/dashboard/project/<id>
 npx supabase db push                         # vytvoří tabulky, pravidla RLS a role

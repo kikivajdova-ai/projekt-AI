@@ -10,7 +10,7 @@ import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from './schema/index.ts';
-import { requireEnv } from '../env.ts';
+import { appDbUrl } from '../env.ts';
 
 export type Database = PostgresJsDatabase<typeof schema>;
 export type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -23,7 +23,7 @@ function db(): Database {
   if (!database) {
     // APP_DB_URL = připojení jako app_api (NE postgres ani service_role).
     // prepare: false je nutné pro pooler Supabase v režimu transakcí (port 6543).
-    const client = postgres(requireEnv('APP_DB_URL'), { prepare: false, max: 5 });
+    const client = postgres(appDbUrl(), { prepare: false, max: 5 });
     database = drizzle(client, { schema });
   }
   return database;

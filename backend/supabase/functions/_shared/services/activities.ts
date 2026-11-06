@@ -15,7 +15,7 @@ import { CATEGORY_LABEL, GAME_TEXT } from '../domain/labels.ts';
 import { localDay } from '../domain/time.ts';
 import { signSharePreview, verifySharePreview } from '../domain/tokens.ts';
 import { describeAudience, toSharedMomentView } from '../domain/visibility.ts';
-import { requireEnv } from '../env.ts';
+import { sharePreviewSecret } from '../env.ts';
 import { AppError, forbidden, notFound } from '../errors.ts';
 import { awardBadges, badgeAwardText, getGameState } from './game.ts';
 import { loadSettings } from './settings.ts';
@@ -193,7 +193,7 @@ export async function sharePreview(userId: string, activityId: string, target: S
           });
 
     const previewToken = await signSharePreview(
-      requireEnv('SHARE_PREVIEW_SECRET'),
+      sharePreviewSecret(),
       { activityId, userId, visibility: target.visibility, crewId: target.crewId },
       LIMITS.sharePreviewTtlSeconds,
     );
@@ -209,7 +209,7 @@ export async function sharePreview(userId: string, activityId: string, target: S
 /** Sdílení až po náhledu: bez platného tokenu z náhledu se viditelnost nezmění. */
 export async function share(userId: string, activityId: string, target: ShareTarget & { previewToken: string }) {
   if (target.visibility === 'JEN_JA') return unshare(userId, activityId);
-  const ok = await verifySharePreview(requireEnv('SHARE_PREVIEW_SECRET'), target.previewToken, {
+  const ok = await verifySharePreview(sharePreviewSecret(), target.previewToken, {
     activityId,
     userId,
     visibility: target.visibility,

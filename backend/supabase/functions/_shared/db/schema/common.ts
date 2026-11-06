@@ -8,7 +8,7 @@
 //      app_user   = jedná za přihlášeného člověka; RLS pustí jen k jeho řádkům,
 //      app_system = úzce vymezené serverové úkoly (pozvánky, odznaky, součet skupiny).
 //  - Kdo se zapomene přepnout, nedostane nic (selže to „zavřeně“, ne „otevřeně“).
-//  - Pomocné funkce private.* jsou v migraci 20261106000000_zaklad.sql.
+//  - Pomocné funkce private.* jsou v migraci 20261106100740_zaklad.sql.
 
 import { sql } from 'drizzle-orm';
 import { pgEnum, pgRole } from 'drizzle-orm/pg-core';
