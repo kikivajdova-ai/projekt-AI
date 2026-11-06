@@ -61,7 +61,14 @@ def sunflower(stage, variant=''):
                + f'<path d="M462 372 C470 352 490 352 498 372 Z" fill="{p2}"/>')
         return stem('M480 800 C474 680 488 540 480 440', 14) + leaves + bud
     cx, cy = 480, 300
-    head = (ring(cx, cy, 20, 20, 58, 92, p1, 9) + ring(cx, cy, 20, 19, 56, 88, p2)
+    # Méně lístků a mírně nepravidelné, ať slunečnice nevypadá jako razítko.
+    import random
+    rnd = random.Random(11)
+    back = ''.join(f'<ellipse cx="{cx}" cy="{cy - 92 - rnd.uniform(-4, 6):.1f}" rx="21" ry="{rnd.uniform(52, 60):.1f}" fill="{p1}" '
+                   f'transform="rotate({360 * i / 5 + 36 + rnd.uniform(-5, 5):.1f} {cx} {cy})"/>' for i in range(5))
+    front = ''.join(f'<ellipse cx="{cx}" cy="{cy - 90 - rnd.uniform(-4, 8):.1f}" rx="{rnd.uniform(18, 22):.1f}" ry="{rnd.uniform(50, 60):.1f}" fill="{p2}" '
+                    f'transform="rotate({360 * i / 11 + rnd.uniform(-5, 5):.1f} {cx} {cy})"/>' for i in range(11))
+    head = (back + front
             + f'<circle cx="{cx}" cy="{cy}" r="66" fill="#7A4E2D"/>'
             f'<circle cx="{cx}" cy="{cy}" r="52" fill="#93613A"/>'
             f'<path d="M{cx+66} {cy} A66 66 0 0 1 {cx-46} {cy+47} A72 72 0 0 0 {cx+66} {cy} Z" fill="#5E3A20"/>'
