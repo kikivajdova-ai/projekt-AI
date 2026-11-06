@@ -53,11 +53,11 @@ function ownView(a: typeof activities.$inferSelect, customTitle?: string | null)
 export async function logMoment(userId: string, input: LogMomentInput) {
   const occurredAt = input.occurredAt ?? new Date();
   if (occurredAt.getTime() > Date.now() + 5 * 60_000) {
-    throw new AppError(400, 'BUDOUCNOST', 'Chvíli z budoucnosti zatím zapsat nejde.');
+    throw new AppError(400, 'BUDOUCNOST', 'Chvilku z budoucnosti zapsat nejde.');
   }
   // Zpětně jde zapsat nanejvýš 2 dny (zapomenutý včerejšek ano, „nafarmení“ minulého měsíce ne).
   if (occurredAt.getTime() < Date.now() - LIMITS.maxBackdateHours * 3_600_000) {
-    throw new AppError(400, 'MOC_STARE', 'Zapsat jde chvíle z posledních dvou dnů.');
+    throw new AppError(400, 'MOC_STARE', 'Zapsat jde jen chvilku z dneška nebo ze dvou předchozích dnů.');
   }
 
   const activity = await asUser(userId, async (tx) => {
@@ -79,7 +79,7 @@ export async function logMoment(userId: string, input: LogMomentInput) {
         .select({ status: restInvitations.status })
         .from(restInvitations)
         .where(eq(restInvitations.id, input.restInvitationId));
-      if (inv?.status !== 'PRIDAM_SE') throw notFound('Tuhle společnou chvíli jsme nenašli.');
+      if (inv?.status !== 'PRIDAM_SE') throw notFound('Tuhle společnou chvilku jsme nenašli.');
     }
 
     await insertOnce(() => tx
@@ -153,7 +153,7 @@ async function insertOnce(run: () => Promise<unknown>) {
   try {
     await run();
   } catch (e) {
-    if (isUniqueViolation(e)) throw new AppError(409, 'UZ_ZAPSANO', 'Tuhle společnou chvíli už máš zapsanou.');
+    if (isUniqueViolation(e)) throw new AppError(409, 'UZ_ZAPSANO', 'Tuhle společnou chvilku už máš zapsanou.');
     throw e;
   }
 }
@@ -221,7 +221,7 @@ export async function sharePreview(userId: string, activityId: string, target: S
     return {
       nahled,
       publikum: describeAudience(target.visibility, crewName),
-      poznamka: a.status === 'SPLNENO' ? null : 'Ostatní ji uvidí, až ji označíš jako splněnou.',
+      poznamka: a.status === 'SPLNENO' ? null : 'Ostatní ji uvidí, až ji označíš jako hotovou.',
       previewToken,
     };
   });

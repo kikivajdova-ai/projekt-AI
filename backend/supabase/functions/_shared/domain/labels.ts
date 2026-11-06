@@ -4,26 +4,26 @@
 import type { ActivityCategory, Visibility } from './enums.ts';
 
 export const CATEGORY_LABEL: Record<ActivityCategory, string> = {
-  PROCHAZKA: 'Procházka',
-  CTENI: 'Čtení',
-  PAUZA: 'Pauza',
+  PROCHAZKA: 'Procházka venku',
+  CTENI: 'Čtení pro radost',
+  PAUZA: 'Pauza na deset minut',
   SPANEK: 'Spánek navíc',
   BEZ_TELEFONU: 'Večer bez telefonu',
-  POHYB: 'Pohyb',
-  TVORENI: 'Tvoření',
-  JINE: 'Chvíle pro sebe',
+  POHYB: 'Protažení',
+  TVORENI: 'Něco vytvořit',
+  JINE: 'Chvilka pro sebe',
 };
 
 /** 2. pád množného čísla pro „Spolu 7 z 10 …“ (předložka „z“ vždy s 2. pádem). */
 export const CATEGORY_GENITIVE_PLURAL: Record<ActivityCategory, string> = {
   PROCHAZKA: 'procházek',
-  CTENI: 'chvil se čtením',
+  CTENI: 'chvilek se čtením',
   PAUZA: 'pauz',
-  SPANEK: 'chvil spánku navíc',
+  SPANEK: 'nocí se spánkem navíc',
   BEZ_TELEFONU: 'večerů bez telefonu',
-  POHYB: 'chvil pohybu',
-  TVORENI: 'chvil tvoření',
-  JINE: 'chvil pro sebe',
+  POHYB: 'protažení',
+  TVORENI: 'chvilek tvoření',
+  JINE: 'chvilek pro sebe',
 };
 
 export const VISIBILITY_LABEL: Record<Visibility, string> = {
@@ -36,5 +36,5 @@ export const GAME_TEXT = {
   dailyCap: 'Na dnešek máš hotovo. Užij si zbytek dne.',
   welcomeBack: 'Vítej zpátky. Tvoje zahrada na tebe počkala.',
   momentSaved: 'Chvilka pro tebe je zapsaná.',
-  support: 'Je nám líto, že je to teď těžké. Pomoc je na dosah.',
+  support: 'Je nám líto, že je to teď těžké. Když budeš chtít, ozvi se někomu blízkému.',
 } as const;

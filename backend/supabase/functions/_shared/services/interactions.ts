@@ -61,7 +61,7 @@ export async function sendPing(userId: string, input: { id: string; recipientId:
         and(eq(pings.senderId, userId), eq(pings.recipientId, input.recipientId), eq(pings.senderLocalDay, today)),
       );
     if (total >= LIMITS.pingsPerDayTotal || toFriend >= LIMITS.pingsPerDayToSameFriend) {
-      throw tooMany('Pro dnešek už jsi povzbuzení poslal(a) dost. Kamarád ví, že na něj myslíš.');
+      throw tooMany('Na dnešek je povzbuzení dost. Kamarád ví, že na něj myslíš.');
     }
 
     return insertSilently(tx, (sp) =>
@@ -125,7 +125,7 @@ export async function sendRestInvite(
       );
     } catch (e) {
       if (isUniqueViolation(e)) {
-        throw new AppError(409, 'DNES_UZ_POZVANO', 'Dnes už jsi tohohle kamaráda pozval(a). Zkus to zase zítra.');
+        throw new AppError(409, 'DNES_UZ_POZVANO', 'Tohohle kamaráda už dnes zveš. Zkus to zase zítra.');
       }
       throw e;
     }
@@ -163,7 +163,7 @@ export async function answerRestInvite(userId: string, invitationId: string, ans
 function senderStatusLabel(status: string, expired: boolean): string {
   if (status === 'PRIDAM_SE') return 'Přidá se';
   if (status === 'TED_NE') return 'Tentokrát to nevyjde';
-  return expired ? 'Pozvánka skončila' : 'Pozvánka odeslána';
+  return expired ? 'Pozvánka už vypršela' : 'Čeká na odpověď';
 }
 
 export async function listRestInvites(userId: string) {

@@ -17,7 +17,7 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     code: 'PRVNI_CHVILKA',
     name: 'První chvilka',
-    description: 'Za první odpočinkovou chvíli.',
+    description: 'Za první chvilku odpočinku.',
     awardText: 'Tvoje první chvilka. Tady začíná tvoje zahrada.',
   },
   {
@@ -30,7 +30,7 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
     code: 'DOBRY_KAMARAD',
     name: 'Dobrý kamarád',
     description: 'Za první povzbuzení kamaráda.',
-    awardText: 'Nový odznak: Dobrý kamarád. Někomu jsi udělal(a) radost.',
+    awardText: 'Nový odznak: Dobrý kamarád. Udělat někomu radost je krásné.',
   },
   {
     code: 'BEZ_TELEFONU',
@@ -41,7 +41,7 @@ export const BADGE_CATALOG: readonly BadgeDefinition[] = [
   {
     code: 'SPOLU',
     name: 'Spolu',
-    description: 'Za první společnou chvíli s kamarádem.',
+    description: 'Za první společnou chvilku s kamarádem.',
     awardText: 'Nový odznak: Spolu. Odpočívat spolu je víc.',
   },
   {

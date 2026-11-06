@@ -7,13 +7,13 @@
 
 const CATEGORIES = [
   { id: 'PROCHAZKA', title: 'Procházka venku', hint: 'Dvacet minut na čerstvém vzduchu', plant: 'Dub', flower: '#6E8B2E', gen: 'procházek' },
-  { id: 'CTENI', title: 'Čtení pro radost', hint: 'Pár stránek knihy, žádné zprávy', plant: 'Kopretina', flower: '#F2C94C', gen: 'chvil se čtením' },
+  { id: 'CTENI', title: 'Čtení pro radost', hint: 'Pár stránek knihy, žádné zprávy', plant: 'Kopretina', flower: '#F2C94C', gen: 'chvilek se čtením' },
   { id: 'PAUZA', title: 'Pauza na deset minut', hint: 'Jen sedět, dýchat a nic nedělat', plant: 'Kapradí', flower: '#7FB77E', gen: 'pauz' },
-  { id: 'SPANEK', title: 'Spánek navíc', hint: 'Jít dnes spát o půl hodiny dřív', plant: 'Měsíční květ', flower: '#9B8FD1', gen: 'chvil spánku navíc' },
-  { id: 'BEZ_TELEFONU', title: 'Večer bez telefonu', hint: 'Telefon odložit od osmi večer', plant: 'Levandule', flower: '#B48ACB', gen: 'večerů bez telefonu' },
-  { id: 'POHYB', title: 'Protažení', hint: 'Pár minut jógy nebo protažení', plant: 'Šípek', flower: '#E8742A', gen: 'chvil pohybu' },
-  { id: 'TVORENI', title: 'Něco vytvořit', hint: 'Kreslení, vaření, hudba, cokoli', plant: 'Slunečnice', flower: '#F2994A', gen: 'chvil tvoření' },
-  { id: 'JINE', title: 'Vlastní chvilka', hint: 'Tvoje vlastní chvilka pro sebe', plant: 'Heřmánek', flower: '#F6E7A1', gen: 'chvil pro sebe' },
+  { id: 'SPANEK', title: 'Spánek navíc', hint: 'Jít dnes spát o půl hodiny dřív', plant: 'Měsíční květ', flower: '#9B8FD1', gen: 'nocí se spánkem navíc' },
+  { id: 'BEZ_TELEFONU', title: 'Večer bez telefonu', hint: 'Od osmi večer odložit telefon', plant: 'Levandule', flower: '#B48ACB', gen: 'večerů bez telefonu' },
+  { id: 'POHYB', title: 'Protažení', hint: 'Pár minut jógy nebo lehkého cvičení', plant: 'Šípek', flower: '#E8742A', gen: 'protažení' },
+  { id: 'TVORENI', title: 'Něco vytvořit', hint: 'Kreslení, vaření, hudba, cokoli', plant: 'Slunečnice', flower: '#F2994A', gen: 'chvilek tvoření' },
+  { id: 'JINE', title: 'Vlastní chvilka', hint: 'Tvoje vlastní chvilka pro sebe', plant: 'Heřmánek', flower: '#F6E7A1', gen: 'chvilek pro sebe' },
 ];
 const CAT = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 /** Šest připravených chvilek na domovské obrazovce; další si člověk vytvoří sám (kategorie JINE). */
@@ -312,7 +312,7 @@ class DemoApi {
     const m = this.findMoment(id);
     return {
       // Název vlastní chvilky ostatní neuvidí (může být osobní), jen obecné „Chvíle pro sebe“.
-      nahled: { authorName: this.s.profile, label: m.category === 'JINE' ? 'Chvíle pro sebe' : CAT[m.category].title, day: m.day, visibility },
+      nahled: { authorName: this.s.profile, label: m.category === 'JINE' ? 'Chvilka pro sebe' : CAT[m.category].title, day: m.day, visibility },
       publikum: visibility === 'PRATELE' ? 'Uvidí tvoji přátelé.' : `Uvidí členové skupiny ${this.s.group.nazev}.`,
       poznamka: null,
       previewToken: `demo.${id}.${visibility}`,
@@ -338,7 +338,7 @@ class DemoApi {
   async sendPing(recipientId) { this.s.pingsSent.push({ to: recipientId, day: dayStr(0) }); this.save(); return { odeslano: true }; }
   async restInvites() {
     await this.wait();
-    const labels = { PRIDAM_SE: 'Přidá se', TED_NE: 'Tentokrát to nevyjde', CEKA: 'Pozvánka odeslána' };
+    const labels = { PRIDAM_SE: 'Přidá se', TED_NE: 'Tentokrát to nevyjde', CEKA: 'Čeká na odpověď' };
     return this.s.restInvites.filter((r) => !this.s.blocked.includes(r.kdoId)).map((r) => ({
       id: r.id, smer: r.smer, kdo: r.kdo, kdoId: r.kdoId, kategorie: r.kategorie, prijato: r.status === 'PRIDAM_SE',
       text: CAT[r.kategorie].title, muzesOdpovedet: r.smer === 'PRICHOZI' && r.status === 'CEKA',
