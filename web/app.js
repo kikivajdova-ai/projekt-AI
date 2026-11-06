@@ -268,7 +268,7 @@ function taskCard(c) {
     body = `<button class="btn" data-a="complete" data-cat="${c.id}">Zapsat chvilku</button>
       <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Přizvat kamaráda</span></button>`;
   } else if (!friends.length) {
-    body = `<p class="small muted">Zatím tu nemáš žádné kamarády. Pozvat je můžeš v záložce Přátelé.</p>
+    body = `<p class="small muted">Zatím tu nemáš přidané žádné kamarády. Přidáš je v záložce Přátelé.</p>
       <button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zpět</button>`;
   } else if (!sent) {
     body = `<p class="small green-text">Koho přizveš? Kamarád může jedním klepnutím říct „teď ne“, bez vysvětlování.</p>
@@ -381,7 +381,7 @@ function friendsView() {
       <div class="btn-row"><button class="btn ghost" data-a="answerGroup" data-id="${esc(g.id)}" data-v="0">Teď ne</button><button class="btn" data-a="answerGroup" data-id="${esc(g.id)}" data-v="1">Přidat se</button></div></section>`).join('')}
     ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“</p></div></div></section>`).join('')}
     <h2 style="margin-top:6px">Povzbuď kamaráda</h2>
-    ${friends.length ? '' : '<p class="muted">Až budeš mít kamarády, uvidíš je tady.</p>'}
+    ${friends.length ? '' : '<p class="muted">Zatím tu nemáš přidané žádné kamarády. Jakmile přijmou tvůj odkaz, uvidíš je tady.</p>'}
     ${friends.map((f) => `<section class="card">
       <div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><h3 class="grow">${esc(f.jmeno)}</h3>
         <button class="icon-btn soft" aria-label="Možnosti pro ${esc(f.jmeno)}" aria-expanded="${S.menuFor === f.id}" data-a="menu" data-id="${esc(f.id)}">${ICON.dots}</button></div>
