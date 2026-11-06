@@ -1068,6 +1068,8 @@ function render() {
   }
   if (!S.toast) lastToast = null;
   root.innerHTML = view();
+  // Třída místo :has() kvůli starším prohlížečům (rozvržení s boční navigací na počítači).
+  root.classList.toggle('has-sidebar', !!root.querySelector(':scope > .sidebar'));
   const next = root.querySelector('.screen');
   // Na stejné obrazovce zůstane posunutí, nová obrazovka začne nahoře.
   if (next && where === lastView) next.scrollTop = scroll;

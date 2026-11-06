@@ -233,9 +233,10 @@ h3 { font-size: 15px; font-weight: 700; }
 /* ---------- Počítač (od 1024 px): boční navigace, víc sloupců ---------- */
 @media (min-width: 1024px) {
   .phone { display: grid; grid-template-columns: 264px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .demo-banner { grid-column: 1 / -1; }
-  .phone > .screen, .phone > .sheet-wrap, .phone > .center { grid-column: 2; min-height: 0; }
-  .phone:not(:has(> .sidebar)) > .screen, .phone:not(:has(> .sidebar)) > .sheet-wrap, .phone:not(:has(> .sidebar)) > .center { grid-column: 1 / -1; }
+  /* Řádek 1 je jen pro ukázkový pruh; bez něj má nulovou výšku. Vše ostatní je v řádku 2. */
+  .demo-banner { grid-column: 1 / -1; grid-row: 1; }
+  .phone > .screen, .phone > .sheet-wrap, .phone > .center { grid-column: 2; grid-row: 2; min-height: 0; }
+  .phone:not(.has-sidebar) > .screen, .phone:not(.has-sidebar) > .sheet-wrap, .phone:not(.has-sidebar) > .center { grid-column: 1 / -1; }
   .tabbar, .only-narrow { display: none; }
   .only-wide { display: block; }
   .toast { left: auto; right: 28px; bottom: 28px; transform: none; width: 400px; }
@@ -293,7 +294,7 @@ h3 { font-size: 15px; font-weight: 700; }
   .sheet-top { position: relative; min-height: 560px; height: 100%; border-radius: var(--r-sheet) 0 0 var(--r-sheet); box-shadow: var(--shadow-float); }
   .sheet { margin: 0; border-radius: 0 var(--r-sheet) var(--r-sheet) 0; width: auto; box-shadow: var(--shadow-float); padding: 32px 32px 28px; justify-content: center; background: var(--surface); }
   .sheet .handle { display: none; }
-  .phone:not(:has(> .sidebar)) > .screen:not(.auth) { padding-inline: max(40px, calc((100% - 640px) / 2)); }
+  .phone:not(.has-sidebar) > .screen:not(.auth) { padding-inline: max(40px, calc((100% - 640px) / 2)); }
 
   /* okénko po splnění je na velké obrazovce o kousek větší */
   .modal { width: min(400px, 100%); padding: 32px 28px 26px; }
