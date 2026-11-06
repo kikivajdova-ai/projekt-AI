@@ -115,6 +115,7 @@ export async function createGoal(
       });
     } catch (e) {
       if (isPermissionError(e)) throw forbidden('Cíl může založit jen člen skupiny.');
+      if (isUniqueViolation(e)) throw new AppError(409, 'CIL_EXISTUJE', 'Tenhle cíl už si tento týden máte. Vyber jiný druh odpočinku.');
       throw e;
     }
   });
@@ -151,8 +152,15 @@ export async function listMyGroups(userId: string) {
       .from(groups)
       .innerJoin(groupMembers, and(eq(groupMembers.groupId, groups.id), eq(groupMembers.userId, userId)));
     const ids = rows.map((r) => r.id);
+    // Jen cíle tohoto týdne. Minulé týdny se nevyhodnocují ani nepřipomínají (žádný tlak).
+    const s = await loadSettings(tx, userId);
+    const thisWeek = weekStart(localDay(new Date(), s.timezone));
     const goals = ids.length
-      ? await tx.select({ id: groupGoals.id, groupId: groupGoals.groupId }).from(groupGoals).where(inArray(groupGoals.groupId, ids))
+      ? await tx
+          .select({ id: groupGoals.id, groupId: groupGoals.groupId })
+          .from(groupGoals)
+          .where(and(inArray(groupGoals.groupId, ids), eq(groupGoals.weekStart, thisWeek)))
+          .orderBy(groupGoals.createdAt)
       : [];
     const members = ids.length
       ? await tx

@@ -10,7 +10,7 @@ const BODY: Record<NotificationKind, string> = {
   POVZBUZENI: 'Máš nové povzbuzení.',
   POZVANKA_K_ODPOCINKU: 'Máš pozvánku k odpočinku.',
   ODPOVED_NA_POZVANKU: 'Máš odpověď na pozvánku.',
-  ZADOST_O_PRATELSTVI: 'Máš novou žádost o přátelství.',
+  ZADOST_O_PRATELSTVI: 'Někdo přijal tvoji pozvánku. Máte se v aplikaci.',
   POZVANKA_DO_SKUPINY: 'Máš pozvánku do skupiny.',
   ODZNAK: 'Máš nový odznak.',
 };

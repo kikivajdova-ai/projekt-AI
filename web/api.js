@@ -164,7 +164,7 @@ function demoSeed() {
       { id: 'x2', authorName: 'Tom', label: 'Procházka venku', day: dayStr(0), visibility: 'CHILL_CREW', authorId: 'f-tom' },
       { id: 'x3', authorName: 'Jakub', label: 'Večer bez telefonu', day: dayStr(-1), visibility: 'PRATELE', authorId: 'f-jakub' },
     ],
-    group: { id: 'g-chill', nazev: 'Chill crew', othersTogether: 7, goalId: 'goal-1', goalCategory: 'PROCHAZKA', target: 10, contributions: [] },
+    group: { id: 'g-chill', nazev: 'Chill crew', goals: [{ goalId: 'goal-1', category: 'PROCHAZKA', target: 10, othersTogether: 7, contributions: [] }] },
     badges: {},
   };
 }
@@ -175,6 +175,11 @@ class DemoApi {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null'); } catch { /* soukromé okno apod. */ }
     this.s = saved || demoSeed();
+    // starší uložená ukázka měla jen jeden cíl
+    const g = this.s.group;
+    if (g && !g.goals) {
+      g.goals = g.goalId ? [{ goalId: g.goalId, category: g.goalCategory, target: g.target, othersTogether: g.othersTogether || 0, contributions: g.contributions || [] }] : [];
+    }
     this.listeners = [];
   }
   save() { try { localStorage.setItem(DEMO_KEY, JSON.stringify(this.s)); } catch { /* nevadí */ } }
@@ -261,7 +266,9 @@ class DemoApi {
     const m = { id: newId(), category, status: 'SPLNENO', visibility: 'JEN_JA', day: dayStr(0), joint };
     this.s.moments.push(m);
     const counted = [];
-    if (goalIds.includes(this.s.group.goalId) && category === this.s.group.goalCategory) { this.s.group.contributions.push(m.id); counted.push(this.s.group.goalId); }
+    for (const goal of this.s.group?.goals || []) {
+      if (goalIds.includes(goal.goalId) && category === goal.category) { goal.contributions.push(m.id); counted.push(goal.goalId); }
+    }
     this.save();
     const hra = this.s.settings.gameEnabled ? this.computeGame() : { hraZapnuta: false };
     const levelUp = hra.hraZapnuta && hra.uroven > before;
@@ -287,7 +294,7 @@ class DemoApi {
   async feed() { await this.wait(); return this.s.feed.filter((f) => !this.s.blocked.includes(f.authorId)); }
   async createInvite() { return { id: newId(), odkaz: `${location.origin}${location.pathname}#/pozvanka/ukazkovy-odkaz-${Math.random().toString(36).slice(2, 10)}`, platiDo: new Date(Date.now() + 72 * 36e5).toISOString() }; }
   async previewInvite() { return { odKoho: 'Ukázkový kamarád' }; }
-  async acceptInvite() { return { stav: 'CEKA_NA_POTVRZENI' }; }
+  async acceptInvite() { return { stav: 'PRATELE' }; }
   async confirmFriend(id) { const f = this.s.friends.find((x) => x.id === id); if (f) f.stav = 'PRATELE'; this.save(); }
   async removeFriend(id) { this.s.friends = this.s.friends.filter((f) => f.id !== id); this.save(); }
   async block(id) { this.s.blocked.push(id); this.save(); }
@@ -317,17 +324,30 @@ class DemoApi {
   async groups() {
     await this.wait();
     const g = this.s.group;
-    const together = g.othersTogether + g.contributions.length;
-    const cat = CAT[g.goalCategory];
+    if (!g) return [];
     return [{
       id: g.id, nazev: g.nazev,
       clenove: [{ id: 'me', jmeno: this.s.profile }, { id: 'f-tom', jmeno: 'Tom' }, { id: 'f-ema', jmeno: 'Ema' }],
-      cile: [{ goalId: g.goalId, category: g.goalCategory, together, target: g.target, reached: together >= g.target,
-        text: together >= g.target ? `Spolu jste to dali! ${together} z ${g.target} ${cat.gen}.` : `Spolu ${together} z ${g.target} ${cat.gen}` }],
+      cile: g.goals.map((x) => {
+        const together = x.othersTogether + x.contributions.length;
+        const cat = CAT[x.category];
+        return { goalId: x.goalId, category: x.category, together, target: x.target, reached: together >= x.target,
+          text: together >= x.target ? `Spolu jste to dali! ${together} z ${x.target} ${cat.gen}.` : `Spolu ${together} z ${x.target} ${cat.gen}` };
+      }),
     }];
   }
-  async createGroup() { throw new ApiError(400, 'V ukázce už skupinu máš.'); }
-  async createGoal() { throw new ApiError(400, 'V ukázce už cíl máš.'); }
+  async createGroup(name) {
+    if (this.s.group) throw new ApiError(400, 'V ukázce už skupinu máš.');
+    this.s.group = { id: newId(), nazev: String(name || 'Chill crew').trim().slice(0, 40), goals: [] }; this.save();
+    return { id: this.s.group.id, nazev: this.s.group.nazev };
+  }
+  async createGoal(_groupId, category, target) {
+    const g = this.s.group;
+    if (g.goals.some((x) => x.category === category)) throw new ApiError(409, 'Tenhle cíl už si tento týden máte. Vyber jiný druh odpočinku.');
+    // Ukázka: kamarádi už mají pár chvilek za sebou, ať je vidět společný součet.
+    g.goals.push({ goalId: newId(), category, target, othersTogether: Math.min(2, target - 1), contributions: [] }); this.save();
+    return {};
+  }
   async inviteToGroup() { return { id: newId() }; }
   async groupInvitations() { return this.s.groupInviteAnswered ? [] : [{ id: 'gi-1', skupina: 'Knihomolové', odKoho: 'Ema' }]; }
   async answerGroupInvite() { this.s.groupInviteAnswered = true; this.save(); return {}; }

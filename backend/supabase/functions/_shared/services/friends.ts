@@ -94,7 +94,10 @@ export async function previewFriendInvite(userId: string, token: string) {
   return { odKoho: inv.name };
 }
 
-/** Přijetí pozvánky = MOJE ANO. Vznikne žádost, kterou musí potvrdit i autor pozvánky. */
+/**
+ * Přijetí pozvánky = druhé ANO. Autor řekl ANO tím, že osobní odkaz vytvořil a poslal,
+ * pozvaný tím, že ho přijal. Přátelství tedy vzniká hned, bez dalšího potvrzování.
+ */
 export async function acceptFriendInvite(userId: string, token: string) {
   if (!looksLikeInviteToken(token)) throw invalidInvite();
   const tokenHash = await sha256Hex(token);
@@ -123,15 +126,27 @@ export async function acceptFriendInvite(userId: string, token: string) {
       .update(friendInvites)
       .set({ usedAt: new Date(), usedBy: userId })
       .where(eq(friendInvites.id, inv.id));
-    await tx
-      .insert(friendships)
-      .values({ ...pair(inv.inviterId, userId), requestedBy: userId, status: 'CEKA' })
-      .onConflictDoNothing();
+    const now = new Date();
+    const [existing] = await tx
+      .select({ status: friendships.status })
+      .from(friendships)
+      .where(pairWhere(inv.inviterId, userId));
+    if (!existing) {
+      await tx
+        .insert(friendships)
+        .values({ ...pair(inv.inviterId, userId), requestedBy: userId, status: 'PRIJATO', acceptedAt: now });
+    } else if (existing.status === 'CEKA') {
+      // starší nepotvrzená žádost mezi stejnou dvojicí: pozvánka ji rovnou potvrdí
+      await tx
+        .update(friendships)
+        .set({ status: 'PRIJATO', acceptedAt: now })
+        .where(and(pairWhere(inv.inviterId, userId), eq(friendships.status, 'CEKA')));
+    }
     return inv.inviterId;
   });
 
   await enqueueNotification(inviterId, 'ZADOST_O_PRATELSTVI', userId);
-  return { stav: 'CEKA_NA_POTVRZENI' as const };
+  return { stav: 'PRATELE' as const };
 }
 
 /** Druhé ANO: potvrdí jen ten, kdo žádost dostal (hlídá to i RLS). */

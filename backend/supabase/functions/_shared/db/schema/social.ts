@@ -2,8 +2,9 @@
 //
 // Jak vzniká přátelství (oba souhlasí s KONKRÉTNÍM člověkem):
 //  1. Klára vytvoří pozvánku (friend_invites) a pošle odkaz Tomovi.
-//  2. Tom odkaz otevře, uvidí „Klára tě zve“ a potvrdí -> vznikne žádost (CEKA).
-//  3. Klára uvidí „Tom chce být tvůj kamarád“ a potvrdí -> PRIJATO.
+//  2. Tom odkaz otevře, uvidí „Klára tě zve“ a potvrdí -> PRIJATO, jsou přátelé.
+//     Klára už nic potvrzovat nemusí: svůj souhlas dala tím, že osobní odkaz poslala.
+//  (Stav CEKA zůstává jen kvůli starším žádostem; nové už nevznikají.)
 // Aplikace nemá jak poslat žádost bez pozvánky: role app_user nemá právo vložit
 // řádek do friendships (vkládá jen app_system po ověření tokenu).
 
@@ -103,10 +104,17 @@ export const friendships = pgTable(
       to: appUser,
       using: sql`${uid} in (${t.userA}, ${t.userB})`,
     }),
-    pgPolicy('friendships: systém zakládá žádost po ověření pozvánky', {
+    // Přijatá pozvánka = souhlas obou (autor odkaz poslal, pozvaný ho přijal) -> rovnou PRIJATO.
+    pgPolicy('friendships: systém zakládá po přijetí pozvánky', {
       for: 'insert',
       to: appSystem,
-      withCheck: sql`${t.status} = 'CEKA' and not private.is_blocked_pair(${t.userA}, ${t.userB})`,
+      withCheck: sql`${t.status} = 'PRIJATO' and ${t.acceptedAt} is not null and not private.is_blocked_pair(${t.userA}, ${t.userB})`,
+    }),
+    pgPolicy('friendships: systém potvrdí starší žádost', {
+      for: 'update',
+      to: appSystem,
+      using: sql`${t.status} = 'CEKA'`,
+      withCheck: sql`${t.status} = 'PRIJATO' and ${t.acceptedAt} is not null and not private.is_blocked_pair(${t.userA}, ${t.userB})`,
     }),
     pgPolicy('friendships: systém ověřuje existující vztah', {
       for: 'select',

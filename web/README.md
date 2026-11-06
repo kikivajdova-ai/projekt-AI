@@ -83,7 +83,8 @@ Pak znovu `npx serve -l 3000` ve složce `web` a otevři http://localhost:3000. 
 ### 6. Vyzkoušet s kamarádem
 1. Zaregistruj se, potvrď e-mail a přihlas se.
 2. **Přátelé → Pozvat kamaráda odkazem** → odkaz pošli (nebo ho otevři v anonymním okně a založ si druhý účet).
-3. Druhý účet pozvánku přijme, první ji potvrdí. Teď jde posílat povzbuzení a zvát na chvilky „S kamarádem“.
+3. Druhý účet pozvánku přijme a hned jste přátelé. Teď jde posílat povzbuzení a zvát na chvilky „S kamarádem“.
+4. **Přátelé → Společný cíl tohoto týdne**: založ skupinu, přidej cíl (druh odpočinku a počet chvilek) a plňte ho tlačítkem „Splnit chvilku do cíle“.
 
 ## Když něco nejde
 

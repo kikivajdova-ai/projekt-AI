@@ -44,6 +44,7 @@ grant update (used_at, used_by) on public.friend_invites to app_system;
 grant select, delete on public.friendships to app_user;
 grant update (status, accepted_at) on public.friendships to app_user;
 grant select, insert on public.friendships to app_system;
+grant update (status, accepted_at) on public.friendships to app_system;
 
 -- blocks
 grant select, insert, delete on public.blocks to app_user;
