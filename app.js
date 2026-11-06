@@ -225,7 +225,7 @@ function homeView() {
         <div class="bar" role="img" aria-label="${esc(goal.goal.text)}"><span style="width:${Math.min(100, Math.round((100 * goal.goal.together) / goal.goal.target))}%"></span></div></section>`
     : weeklyCard();
   const inviteCard = incoming
-    ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve odpočinout si spolu</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
+    ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve ke společnému odpočinku</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
         ${S.inviteAnswered[incoming.id]
           ? `<p class="small green-text" aria-live="polite">${S.inviteAnswered[incoming.id] === 'PRIDAM_SE' ? 'Super, užijte si to spolu. Až to bude, zapiš si to na kartě chvilky.' : 'V pohodě. Nic vysvětlovat nemusíš, kamarád se dozví jen „teď ne“.'}</p>`
           : `<div class="btn-row"><button class="btn ghost" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="TED_NE">Teď ne</button><button class="btn" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="PRIDAM_SE">Přidám se</button></div>`}
@@ -247,14 +247,14 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a tvoje zahrada zase o kousek rozkvete. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Když si chvilku dopřeješ, klepni na Hotovo a tvoje zahrada zase o kousek rozkvete. Chceš ji zažít s někým? Klepni na „Přizvat kamaráda“. Chybí ti tu něco? Úplně dole si vytvoříš vlastní.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
   </div>`;
 }
 
-// Karta chvilky: hlavně Hotovo. „Odpočinout si spolu“ je vedlejší volba (pozvánka jednomu kamarádovi).
+// Karta chvilky: hlavně Hotovo. „Přizvat kamaráda“ je vedlejší volba (pozvánka jednomu kamarádovi).
 // Do společné výzvy skupiny se chvilka započítá sama (dá se vypnout v Já).
 function taskCard(c) {
   const spolu = S.mode[c.id] === 'spolu';
@@ -266,17 +266,17 @@ function taskCard(c) {
   let body;
   if (!spolu) {
     body = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>
-      <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Odpočinout si spolu</span></button>`;
+      <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Přizvat kamaráda</span></button>`;
   } else if (!friends.length) {
     body = `<p class="small muted">Zatím tu nemáš žádné kamarády. Pozvat je můžeš v záložce Přátelé.</p>
       <button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zpět</button>`;
   } else if (!sent) {
-    body = `<p class="small green-text">Koho pozveš? Kamarád může jedním klepnutím říct „teď ne“, bez vysvětlování.</p>
+    body = `<p class="small green-text">Koho přizveš? Kamarád může jedním klepnutím říct „teď ne“, bez vysvětlování.</p>
       <div class="pills">${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>
-      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="inviteFor" data-cat="${c.id}">Pozvat: ${esc(friend?.jmeno)}</button></div>`;
+      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="inviteFor" data-cat="${c.id}">Přizvat: ${esc(friend?.jmeno)}</button></div>`;
   } else if (sent.prijato) {
     body = `<p class="small green-text" style="font-weight:600">${esc(friend?.jmeno)} se přidá. Užijte si to spolu.</p>
-      <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Hotovo spolu s ${esc(friend?.jmeno)}</button>`;
+      <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Hotovo spolu</button>`;
   } else {
     body = `<p class="small green-text">Pozvánka odeslána (${esc(friend?.jmeno)}). Odpověď uvidíš tady.</p>
       <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Hotovo i bez kamaráda</button></div>`;
