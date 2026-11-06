@@ -61,6 +61,7 @@ grant select on public.activities to app_system;
 -- groups a členství
 grant select, insert on public.groups to app_user;
 grant update (name) on public.groups to app_user;
+grant select on public.groups to app_system;
 grant select, insert, delete on public.group_members to app_user;
 grant select, insert on public.group_invitations to app_user;
 grant update (status, responded_at) on public.group_invitations to app_user;

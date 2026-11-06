@@ -49,7 +49,11 @@ export async function getGameState(userId: string) {
     if (!s.gameEnabled) return { hraZapnuta: false as const };
 
     const today = localDay(new Date(), s.timezone);
-    const state = computeGameState(await loadGameEvents(tx, userId), today);
+    const events = await loadGameEvents(tx, userId);
+    const state = computeGameState(events, today);
+    // Zahrada: kolik splněných chvil má každý druh odpočinku (každá chvíle = kousek růstu).
+    const zahrada: Record<string, number> = {};
+    for (const e of events) if (e.type === 'MOMENT') zahrada[e.category] = (zahrada[e.category] ?? 0) + 1;
     const owned = await tx
       .select({ code: userBadges.badgeCode, awardedAt: userBadges.awardedAt, name: badges.name })
       .from(userBadges)
@@ -66,6 +70,7 @@ export async function getGameState(userId: string) {
       tydnuSRytmem: state.rhythmWeeksTotal,
       zprava: state.welcomeBack ? GAME_TEXT.welcomeBack : state.dailyCapReached ? GAME_TEXT.dailyCap : null,
       odznaky: owned,
+      zahrada,
     };
   });
 }

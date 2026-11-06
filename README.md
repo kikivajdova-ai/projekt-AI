@@ -15,7 +15,9 @@ backend/                     server: Supabase (PostgreSQL) + Drizzle ORM + Edge 
   supabase/tests/            testy pravidel přímo v databázi (pgTAP)
   sql/granty.sql             kdo smí s kterou tabulkou a sloupcem pracovat
   tests/                     testy logiky a „strážní“ testy pravidel aplikace
+web/                         webová aplikace s designem z plátna (ukázkový režim nebo napojení na Supabase)
 app/                         Flutter: krizové kontakty, pozvánky, náhled sdílení, notifikace
+design/                      klikací návrh obrazovek
 docs/kdo-co-vidi.md          přehled viditelnosti všech údajů
 PROJEKT.md                   deník projektu: rozhodnutí, stav, slabá místa
 ```
@@ -113,6 +115,11 @@ V nastavení projektu Supabase ještě:
 5. Doporučení: v **Settings → API** odebrat schéma `public` z vystavených schémat (aplikace ho nepotřebuje).
 6. **Settings → JWT Keys**: projekt musí používat asymetrické podpisové klíče (JWKS). API ověřuje
    tokeny přes `/.well-known/jwks.json`; se starým sdíleným tajemstvím (HS256) ověření selže.
+
+## Webová aplikace
+
+Nejrychlejší způsob, jak aplikaci spustit: `cd web && npx serve -l 3000` a otevřít http://localhost:3000.
+Bez nastavení běží v ukázkovém režimu, napojení na Supabase popisuje `web/README.md`.
 
 ## Mobilní aplikace (Flutter)
 

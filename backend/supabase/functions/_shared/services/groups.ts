@@ -69,6 +69,26 @@ export async function answerGroupInvite(userId: string, invitationId: string, ac
   return { stav: accept ? 'CLEN' : 'ODMITNUTO' };
 }
 
+/** Pozvánky do skupin, které čekají na moji odpověď (název skupiny + kdo zve). */
+export async function listGroupInvitations(userId: string) {
+  const invs = await asUser(userId, (tx) =>
+    tx
+      .select({ id: groupInvitations.id, groupId: groupInvitations.groupId, from: users.displayName })
+      .from(groupInvitations)
+      .innerJoin(users, eq(users.id, groupInvitations.inviterId))
+      .where(and(eq(groupInvitations.inviteeId, userId), eq(groupInvitations.status, 'CEKA'))),
+  );
+  if (invs.length === 0) return [];
+  // Pozvaný ještě není člen, takže název skupiny mu prozradí jen systém (a jen pro jeho pozvánky).
+  const names = await asSystem((tx) =>
+    tx
+      .select({ id: groups.id, name: groups.name })
+      .from(groups)
+      .where(inArray(groups.id, invs.map((i) => i.groupId))),
+  );
+  return invs.map((i) => ({ id: i.id, skupina: names.find((n) => n.id === i.groupId)?.name ?? '', odKoho: i.from }));
+}
+
 /** Odchod ze skupiny je tichý. Nikdo nedostane oznámení. */
 export async function leaveGroup(userId: string, groupId: string) {
   await asUser(userId, (tx) =>

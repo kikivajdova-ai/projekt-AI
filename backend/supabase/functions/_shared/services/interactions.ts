@@ -189,6 +189,8 @@ export async function listRestInvites(userId: string) {
         text: incoming
           ? `${CATEGORY_LABEL[r.category]}: přidáš se?`
           : `${CATEGORY_LABEL[r.category]}`,
+        kategorie: r.category,
+        prijato: r.status === 'PRIDAM_SE',
         muzesOdpovedet: incoming && r.status === 'CEKA' && !expired,
         stav: incoming ? r.status : senderStatusLabel(r.status, expired),
       });

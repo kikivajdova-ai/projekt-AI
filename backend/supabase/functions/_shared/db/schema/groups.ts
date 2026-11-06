@@ -53,6 +53,11 @@ export const groups = pgTable(
       to: appUser,
       withCheck: sql`${t.createdBy} = ${uid}`,
     }),
+    pgPolicy('groups: systém čte název pro pozvaného', {
+      for: 'select',
+      to: appSystem,
+      using: sql`true`,
+    }),
     pgPolicy('groups: přejmenovat smí zakladatel, dokud je členem', {
       for: 'update',
       to: appUser,

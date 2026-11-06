@@ -77,7 +77,9 @@ Hotovo (verze 0.1):
 - testy: 35 testů logiky a strážních testů, 46 testů RLS v databázi (ověřeno na PostgreSQL 16).
 - nezávislá kontrola (6. 11. 2026): opraveny všechny VYSOKÉ nálezy a část STŘEDNÍCH, viz níže.
 
-Na řadě: `npm install` + typová kontrola služeb, vygenerovat a commitnout migrace, spustit `npm run db:test`, rozhodnout otevřené otázky (hlavně nezletilí).
+Hotovo navíc: webová aplikace (`web/`) s designem z plátna, ukázkový režim i napojení na API; prokliknutá automatickým testem v prohlížeči (registrace, chvilka sám i s kamarádem, zahrada, přátelé, blokování, sdílení s náhledem, vypnutá hra, nálada, pomoc).
+
+Na řadě: Flutter verze se stejnými obrazovkami; `npm install` + typová kontrola služeb, vygenerovat a commitnout migrace, spustit `npm run db:test`, rozhodnout otevřené otázky (hlavně nezletilí).
 
 ## Známá slabá místa
 
@@ -105,6 +107,8 @@ Odloženo:
 | Token náhledu sdílení je UX pojistka, ne bezpečnostní hranice (klient může náhled zavolat sám) | nízká | nezávislý kontrolor | vědomě ponecháno; podstatné je, že nový záznam je vždy soukromý |
 | Pomocné funkce accepts_pings/shares_badges jde volat s libovolným id (prozradí nastavení) | nízká | nezávislý kontrolor | dostupné jen přes SQL jako app_user, ne přes API; vázat na přátelství |
 | Migrace z drizzle-kit nejsou v repozitáři, testy RLS běžely nad SQL z náhradního generátoru | střední | ověřeno | `npm run db:generate`, commitnout migrace, `npm run db:test` |
+| Webová verze ukládá přihlašovací token do úložiště prohlížeče (localStorage) | nízká | můj úsudek | u Flutteru zabezpečené úložiště; na webu zvážit kratší relace |
+| Napojení webu na skutečné API zatím neběželo (bez Supabase projektu) | vysoká | neověřeno | projít `web/README.md`, krok B |
 | API ověřuje tokeny jen přes JWKS (asymetrické klíče) | nízká | můj úsudek | zapnout JWT Signing Keys v Supabase |
 
 ## Otevřené otázky (rozhoduje tým)

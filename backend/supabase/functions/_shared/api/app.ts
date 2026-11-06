@@ -114,7 +114,18 @@ export function createApp() {
 
   // Mobilní aplikace CORS nepotřebuje; webu povolíme jen vlastní doménu (pokud je nastavená).
   const allowedOrigin = env('ALLOWED_ORIGIN');
-  if (allowedOrigin) app.use('*', cors({ origin: allowedOrigin }));
+  // Webová aplikace: ALLOWED_ORIGIN = adresa, odkud běží (např. http://localhost:3000).
+  // Víc adres jde oddělit čárkou. CORS musí být PŘED kontrolou přihlášení (preflight nemá token).
+  if (allowedOrigin) {
+    app.use(
+      '*',
+      cors({
+        origin: allowedOrigin.split(',').map((o) => o.trim()),
+        allowHeaders: ['authorization', 'content-type', 'apikey', 'x-client-info'],
+        allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      }),
+    );
+  }
 
   app.onError((err, c) => {
     if (err instanceof AppError) return c.json({ error: { code: err.code, message: err.message } }, err.status);
@@ -226,6 +237,7 @@ export function createApp() {
   app.post('/groups/:id/invitations', async (c) =>
     c.json(await groups.inviteToGroup(uid(c), param(c.req.param('id')), (await body(c.req.raw, schemas.groupInvite)).friendId), 201),
   );
+  app.get('/group-invitations', async (c) => c.json(await groups.listGroupInvitations(uid(c))));
   app.post('/group-invitations/:id/answer', async (c) =>
     c.json(await groups.answerGroupInvite(uid(c), param(c.req.param('id')), (await body(c.req.raw, schemas.groupAnswer)).accept)),
   );
