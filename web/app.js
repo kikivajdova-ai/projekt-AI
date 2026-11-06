@@ -328,13 +328,14 @@ function weeklyCard() {
     return `<section class="card"><div class="row between"><div><p class="label">Cíl tohoto týdne</p><h2>${esc(w.category ? CAT[w.category].title : 'Chvilky pro sebe')}</h2></div><span class="chip">Jen já</span></div>
       <p style="font-size:15px"${w.splneno ? ' class="green-text"' : ''}>${esc(w.text)}</p>
       <div class="bar" role="img" aria-label="${esc(w.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
-      <div class="row between"><button class="btn ghost small-btn" data-a="weeklyOpen">Upravit cíl</button><button class="btn ghost small-btn" data-a="goToGoal">Výzva s kamarády</button></div>
+      <button class="btn ghost small-btn" data-a="weeklyOpen">Upravit můj cíl</button>
+      <button class="btn ghost small-btn" data-a="goToGoal">Nastavit společnou výzvu s kamarády</button>
     </section>`;
   }
   return `<section class="card"><p class="label">Cíl tohoto týdne</p><h2>Dej si cíl na tento týden</h2>
     <p class="muted">Třeba 5 chvilek pro sebe nebo 3 procházky. Když se to nepovede, nic se neděje.</p>
-    <button class="btn" data-a="weeklyOpen">Nastavit cíl</button>
-    <button class="btn ghost small-btn" data-a="goToGoal">Nebo si s kamarády dejte společnou výzvu</button>
+    <button class="btn" data-a="weeklyOpen">Nastavit můj cíl</button>
+    <button class="btn ghost" data-a="goToGoal">Nastavit společnou výzvu s kamarády</button>
   </section>`;
 }
 
