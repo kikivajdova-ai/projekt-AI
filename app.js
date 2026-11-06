@@ -231,18 +231,18 @@ function homeView() {
   const incoming = S.invites.find((i) => i.smer === 'PRICHOZI' && (i.muzesOdpovedet || S.inviteAnswered[i.id]));
   const name = S.me?.profil?.prezdivka || '';
   const goalCard = goal
-    ? `<section class="card"><div class="row between"><div><p class="label">Společný cíl tohoto týdne</p><h2>${esc(goal.group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
+    ? `<section class="card"><div class="row between"><div><p class="label">Společná výzva týdne</p><h2>${esc(goal.group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
         <p style="font-size:15px">${esc(goal.goal.text)}</p>
         <div class="bar" role="img" aria-label="${esc(goal.goal.text)}"><span style="width:${Math.min(100, Math.round((100 * goal.goal.together) / goal.goal.target))}%"></span></div></section>`
     : weeklyCard();
   const inviteCard = incoming
-    ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
+    ? `<section class="card"><div><p class="label">${esc(incoming.kdo)} tě zve odpočinout si spolu</p><h2 style="font-size:17px">${esc(CAT[incoming.kategorie]?.title || incoming.text)}: přidáš se?</h2></div>
         ${S.inviteAnswered[incoming.id]
           ? `<p class="small green-text" aria-live="polite">${S.inviteAnswered[incoming.id] === 'PRIDAM_SE' ? 'Super, užijte si to spolu. Až to bude, zapiš to jako společnou chvilku.' : 'V pohodě. Nic vysvětlovat nemusíš.'}</p>`
           : `<div class="btn-row"><button class="btn ghost" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="TED_NE">Teď ne</button><button class="btn" data-a="answerRest" data-id="${esc(incoming.id)}" data-v="PRIDAM_SE">Přidám se</button></div>`}
       </section>`
     : '';
-  const tasks = PRESETS.map((c) => taskCard(c, goal)).join('') + S.custom.map(customCard).join('') + customCreateCard();
+  const tasks = PRESETS.map((c) => taskCard(c)).join('') + S.custom.map(customCard).join('') + customCreateCard();
   return `<div class="screen home">
     <header class="hero">
       <div class="hero-top">
@@ -258,40 +258,65 @@ function homeView() {
         ${inviteCard}
       </div>
       <div class="home-main">
-        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Sám, sama, nebo s někým. Každá splněná chvilka nechá něco vyrůst v zahradě. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
+        <div><h2 style="font-size:19px">Vyber si chvilku pro sebe</h2><p class="muted small">Každá splněná chvilka nechá něco vyrůst v zahradě. Chceš ji zažít s někým? Klepni na „Odpočinout si spolu“. Chybí ti tu něco? Vytvoř si vlastní chvilku dole.</p></div>
         <div class="tasks">${tasks}</div>
       </div>
     </div>
   </div>`;
 }
 
-function taskCard(c, goal) {
+// Karta chvilky: hlavně Hotovo. „Odpočinout si spolu“ je vedlejší volba (pozvánka jednomu kamarádovi).
+// Do společné výzvy skupiny se chvilka započítá sama (dá se vypnout v Já).
+function taskCard(c) {
   const spolu = S.mode[c.id] === 'spolu';
   const friends = confirmedFriends();
   const friendId = S.friendFor[c.id] || friends[0]?.id;
   const friend = friends.find((f) => f.id === friendId);
   const sent = sentFor(c.id);
-  const goalMatch = goal && goal.goal.category === c.id;
-  let action;
-  if (!spolu) action = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>`;
-  else if (!friends.length) action = `<p class="small muted">Zatím nemáš kamarády. Pozvi je v záložce Přátelé.</p>`;
-  else if (!sent) action = `<button class="btn" data-a="inviteFor" data-cat="${c.id}">Pozvat: ${esc(friend?.jmeno)}</button>`;
-  else if (sent.prijato) action = `<button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Splněno spolu s ${esc(friend?.jmeno)}</button>`;
-  else action = `<p class="small green-text">Pozvánka odeslána: ${esc(friend?.jmeno)}. Odmítnout jde jedním klepnutím, bez vysvětlování.</p>
-      <button class="btn ghost" data-a="complete" data-cat="${c.id}">Splnit i tak sám/sama</button>`;
+  const head = `<div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip${spolu ? ' group' : ''}">${spolu ? 'Spolu' : 'Jen já'}</span></div>`;
+  let body;
+  if (!spolu) {
+    body = `<button class="btn" data-a="complete" data-cat="${c.id}">Hotovo</button>
+      <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Odpočinout si spolu</span></button>`;
+  } else if (!friends.length) {
+    body = `<p class="small muted">Zatím nemáš kamarády. Pozvi je v záložce Přátelé.</p>
+      <button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zpět</button>`;
+  } else if (!sent) {
+    body = `<p class="small green-text">Koho pozveš? Kamarád může jedním klepnutím odmítnout, bez vysvětlování.</p>
+      <div class="pills">${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>
+      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="inviteFor" data-cat="${c.id}">Pozvat: ${esc(friend?.jmeno)}</button></div>`;
+  } else if (sent.prijato) {
+    body = `<p class="small green-text" style="font-weight:600">${esc(friend?.jmeno)} se přidá. Užijte si to spolu.</p>
+      <button class="btn" data-a="complete" data-cat="${c.id}" data-joint="1">Hotovo spolu s ${esc(friend?.jmeno)}</button>`;
+  } else {
+    body = `<p class="small green-text">Pozvánka odeslána: ${esc(friend?.jmeno)}. Odpověď uvidíš tady.</p>
+      <div class="btn-row"><button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zrušit</button><button class="btn" data-a="complete" data-cat="${c.id}">Hotovo i bez toho</button></div>`;
+  }
   // Po splnění se karta vrátí do původní podoby, ať jde chvilku kdykoli zapsat znovu.
-  return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">
-    <div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${c.title}</h3><p class="muted small">${c.hint}</p></div><span class="chip">${spolu ? 'Spolu' : 'Jen já'}</span></div>
-    <div class="stack">
-      <div class="seg" role="group" aria-label="S kým"><button type="button" aria-pressed="${!spolu}" data-a="mode" data-cat="${c.id}" data-v="sam">Sám / sama</button><button type="button" aria-pressed="${spolu}" data-a="mode" data-cat="${c.id}" data-v="spolu">S kamarádem</button></div>
-      ${spolu && friends.length && !sent ? `<div class="pills"><span class="small muted">Pozvat:</span>${friends.map((f) => `<button type="button" class="pill" aria-pressed="${f.id === friendId}" data-a="pickFriend" data-cat="${c.id}" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
-      ${goalMatch ? `<label class="check small"><input type="checkbox" data-a="contribute" ${S.contribute ? 'checked' : ''}> <span>Započítat do cíle skupiny ${esc(goal.group.nazev)} (skupina uvidí jen společný součet)</span></label>` : ''}
-      ${action}
-    </div>
-  </section>`;
+  return `<section class="card${S.justDone === c.id ? ' just-done' : ''}">${head}<div class="stack">${body}</div></section>`;
 }
 
-// Cíl tohoto týdne pro jednoho. Jakmile si s kamarády dáte společný cíl, ukáže se na jeho místě ten.
+/** Věta do okénka Skvělá práce: kam se chvilka započítala (jen společný součet). */
+function challengeNote(res) {
+  const ids = res?.zapocitanoDoCilu || [];
+  if (!ids.length) return '';
+  for (const g of S.groups) for (const c of g.cile || []) {
+    if (ids.includes(c.goalId) && c.reached && c.together === c.target) return `Společná výzva skupiny ${g.nazev} je splněná! Spolu jste to dali.`;
+  }
+  const g = S.groups.find((x) => (x.cile || []).some((c) => ids.includes(c.goalId)));
+  return g ? `Započítáno do společné výzvy skupiny ${g.nazev}.` : 'Započítáno do společné výzvy.';
+}
+
+/** Všechny společné výzvy, které tahle chvilka může naplnit (jen když to člověk nevypnul). */
+function matchingChallengeIds(cat) {
+  if (!autoChallenge()) return [];
+  const ids = [];
+  for (const g of S.groups) for (const c of g.cile || []) if (c.category === cat) ids.push(c.goalId);
+  return ids;
+}
+function autoChallenge() { return store.get('os-auto-challenge') !== '0'; }
+
+// Cíl tohoto týdne pro jednoho. Jakmile si s kamarády dáte společnou výzvu, ukáže se na jeho místě ta.
 function weeklyCard() {
   const w = S.weekly;
   if (S.weeklyForm) {
@@ -314,13 +339,13 @@ function weeklyCard() {
     return `<section class="card"><div class="row between"><div><p class="label">Cíl tohoto týdne</p><h2>${esc(w.category ? CAT[w.category].title : 'Chvilky pro sebe')}</h2></div><span class="chip">Jen já</span></div>
       <p style="font-size:15px"${w.splneno ? ' class="green-text"' : ''}>${esc(w.text)}</p>
       <div class="bar" role="img" aria-label="${esc(w.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
-      <div class="row between"><button class="btn ghost small-btn" data-a="weeklyOpen">Upravit cíl</button><button class="btn ghost small-btn" data-a="goToGoal">Cíl s kamarády</button></div>
+      <div class="row between"><button class="btn ghost small-btn" data-a="weeklyOpen">Upravit cíl</button><button class="btn ghost small-btn" data-a="goToGoal">Výzva s kamarády</button></div>
     </section>`;
   }
   return `<section class="card"><p class="label">Cíl tohoto týdne</p><h2>Dej si cíl na tento týden</h2>
     <p class="muted">Třeba 5 chvilek pro sebe nebo 3 procházky. Když se to nepovede, nic se neděje.</p>
     <button class="btn" data-a="weeklyOpen">Nastavit cíl</button>
-    <button class="btn ghost small-btn" data-a="goToGoal">Nebo si dejte společný cíl s kamarády</button>
+    <button class="btn ghost small-btn" data-a="goToGoal">Nebo si s kamarády dejte společnou výzvu</button>
   </section>`;
 }
 
@@ -386,11 +411,11 @@ function friendsView() {
   </div>`;
 }
 
-// Společný cíl tohoto týdne: založit skupinu, přidat cíl a plnit ho. Jen společný součet, nic po lidech.
+// Společná výzva týdne: založit skupinu, přidat výzvu a plnit ji. Jen společný součet, nic po lidech.
 function goalSection(group, friends) {
   if (!group) {
-    return `<section class="card" id="cil"><p class="label">Společný cíl tohoto týdne</p><h2>Založte si skupinu</h2>
-      <p class="muted small">Skupina je pro pár kamarádů (nejvýš 8). Dáte si společný cíl na týden a uvidíte jen, kolik jste dali dohromady. Žádné pořadí.</p>
+    return `<section class="card" id="cil"><p class="label">Společná výzva týdne</p><h2>Založte si skupinu</h2>
+      <p class="muted small">Skupina je pro pár kamarádů (nejvýš 8). Dáte si společnou výzvu, třeba 10 procházek za týden. Každý odpočívá, kdy se mu hodí, a uvidíte jen, kolik jste dali dohromady. Žádné pořadí.</p>
       <form data-form="group" class="stack">
         <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" value="Chill crew" required></div>
         <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button>
@@ -411,26 +436,26 @@ function goalSection(group, friends) {
     return `<div class="stack goal-item" style="gap:10px">
       <div class="row"><div class="task-icon">${taskIcon(c.flower)}</div><div class="grow"><h3>${esc(c.title || g.category)}</h3><p class="small${g.reached ? ' green-text' : ' muted'}" style="font-weight:600">${esc(g.text)}</p></div></div>
       <div class="bar" role="img" aria-label="${esc(g.text)}"><span style="width:${Math.max(pct, 3)}%"></span></div>
-      <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Přidat další chvilku' : 'Splnit chvilku do cíle'}</button>
+      <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Přidat další chvilku' : 'Splnit chvilku do výzvy'}</button>
     </div>`;
   };
   const form = S.goalForm && free.length
     ? `<div class="stack goal-form">
-        <p style="font-weight:600">Na čem si dáte cíl?</p>
+        <p style="font-weight:600">Na čem bude výzva?</p>
         <div class="pills">${free.map((c) => `<button type="button" class="pill" aria-pressed="${c.id === cat}" data-a="goalCat" data-v="${c.id}">${esc(c.title)}</button>`).join('')}</div>
         <p style="font-weight:600">Kolik chvilek spolu za týden?</p>
         <div class="row stepper"><button type="button" class="icon-btn soft" aria-label="Méně" data-a="goalTarget" data-v="-1">−</button>
           <span class="stepper-value" aria-live="polite">${S.goalTarget}</span>
           <button type="button" class="icon-btn soft" aria-label="Více" data-a="goalTarget" data-v="1">+</button>
           <span class="muted small grow">${esc(CAT[cat]?.gen || '')} dohromady</span></div>
-        <div class="btn-row"><button class="btn ghost" data-a="goalCancel">Zrušit</button><button class="btn" data-a="goalCreate" data-v="${cat}">Přidat cíl</button></div>
+        <div class="btn-row"><button class="btn ghost" data-a="goalCancel">Zrušit</button><button class="btn" data-a="goalCreate" data-v="${cat}">Přidat výzvu</button></div>
       </div>`
-    : free.length ? `<button class="btn ghost" data-a="goalOpen">+ Přidat cíl na tento týden</button>` : '';
+    : free.length ? `<button class="btn ghost" data-a="goalOpen">+ Přidat výzvu na tento týden</button>` : '';
   return `<section class="card" id="cil">
-    <div class="row between"><div><p class="label">Společný cíl tohoto týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
+    <div class="row between"><div><p class="label">Společná výzva týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
     <p class="muted small">Ve skupině: ${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}. Vidíte jen společný součet.</p>
-    ${reachedCount ? `<p class="small green-text" style="font-weight:600">Tento týden jste spolu splnili ${reachedCount === 1 ? '1 cíl' : reachedCount < 5 ? `${reachedCount} cíle` : `${reachedCount} cílů`}. Skvělé!</p>` : ''}
-    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím nemáte žádný cíl. Klidně si ho dejte, nebo jen tak odpočívejte.</p>')}
+    ${reachedCount ? `<p class="small green-text" style="font-weight:600">Tento týden jste spolu zvládli ${reachedCount === 1 ? '1 výzvu' : reachedCount < 5 ? `${reachedCount} výzvy` : `${reachedCount} výzev`}. Skvělé!</p>` : ''}
+    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím nemáte žádnou výzvu. Klidně si ji dejte, nebo jen tak odpočívejte.</p>')}
     ${form}
     ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
   </section>`;
@@ -672,7 +697,9 @@ function meView() {
       ${toggle('gameEnabled', 'Herní prvky', 'Zahrada a úrovně. Vypnutí ostatní nevidí.')}
       ${toggle('quietHoursEnabled', `Noční klid ${esc(st.quietStart || '22:00')}–${esc(st.quietEnd || '08:00')}`, 'V noci žádné notifikace')}
       ${toggle('receivePings', 'Přijímat povzbuzení', 'Když vypneš, odesílatel se to nedozví')}
-      ${toggle('receiveRestInvites', 'Přijímat pozvánky k odpočinku', 'Když vypneš, odesílatel se to nedozví')}
+      ${toggle('receiveRestInvites', 'Přijímat pozvánky Odpočinout si spolu', 'Když vypneš, odesílatel se to nedozví')}
+      <div class="setting"><div class="grow"><p style="font-weight:600">Započítávat chvilky do společné výzvy</p><p class="muted small">Skupina vidí jen společný součet, nikdy ne to, kdo co udělal</p></div>
+        <button type="button" class="switch" role="switch" aria-checked="${autoChallenge()}" aria-label="Započítávat chvilky do společné výzvy" data-a="toggleAutoChallenge"><span></span></button></div>
     </section>
     </div><div class="col">
     <section class="card"><h3>Moje chvilky</h3><p class="muted small">Nová chvilka je vždy „Jen já“. Sdílet můžeš po náhledu.</p>
@@ -797,7 +824,7 @@ const actions = {
   demoReset() { if (api.reset) { api.reset(); location.hash = ''; location.reload(); } },
   mode(d) { S.mode[d.cat] = d.v; delete S.sentInvite[d.cat]; },
   pickFriend(d) { S.friendFor[d.cat] = d.id; },
-  contribute(_d, el) { S.contribute = el.checked; },
+  toggleAutoChallenge() { store.set('os-auto-challenge', autoChallenge() ? '0' : '1'); },
   async inviteFor(d) {
     const friends = confirmedFriends();
     const fid = S.friendFor[d.cat] || friends[0]?.id;
@@ -807,18 +834,17 @@ const actions = {
     S.toast = `Pozvánka odeslána: ${friends.find((f) => f.id === fid)?.jmeno}.`;
   },
   async complete(d) {
-    const goal = myGoal();
     const sent = d.joint ? sentFor(d.cat) : null;
     const res = await api.logMoment({
       category: d.cat,
       ...(sent?.prijato ? { restInvitationId: sent.id } : {}),
-      ...(goal && goal.goal.category === d.cat && S.contribute ? { goalIds: [goal.goal.goalId] } : {}),
+      ...(matchingChallengeIds(d.cat).length ? { goalIds: matchingChallengeIds(d.cat) } : {}),
     });
     delete S.sentInvite[d.cat];
     delete S.mode[d.cat];
     S.lastGrown = d.cat;
     await loadAll();
-    celebrate(CAT[d.cat].title, d.cat, res);
+    celebrate(CAT[d.cat].title, d.cat, res, challengeNote(res));
   },
   async completeCustom(d) {
     const c = S.custom.find((x) => x.id === d.id);
@@ -861,15 +887,13 @@ const actions = {
     await api.createGoal(group.id, d.v, S.goalTarget);
     S.goalForm = false; S.goalCat = null;
     S.groups = await api.groups();
-    S.toast = `Cíl je přidaný: ${S.goalTarget} ${CAT[d.v].gen} spolu. Plnit ho můžete tady nebo na domovské stránce.`;
+    S.toast = `Výzva je přidaná: ${S.goalTarget} ${CAT[d.v].gen} spolu. Každá taková chvilka se do ní započítá sama.`;
   },
   async goalDo(d) {
     const res = await api.logMoment({ category: d.cat, goalIds: [d.id] });
     S.lastGrown = d.cat;
     await loadAll();
-    const counted = (res.zapocitanoDoCilu || []).includes(d.id);
-    const nowReached = S.groups.some((g) => (g.cile || []).some((x) => x.goalId === d.id && x.reached));
-    celebrate(CAT[d.cat].title, d.cat, res, nowReached ? 'Společný cíl je splněný! Spolu jste to dali.' : counted ? 'Započítáno do společného cíle.' : '');
+    celebrate(CAT[d.cat].title, d.cat, res, challengeNote(res));
   },
   closeCelebrate() { S.celebrate = null; },
   async createInvite() {
@@ -885,7 +909,7 @@ const actions = {
   async answerGroup(d) { await api.answerGroupInvite(d.id, d.v === '1'); S.groupInvites = await api.groupInvitations(); S.groups = await api.groups(); },
   menu(d) { S.menuFor = S.menuFor === d.id ? null : d.id; },
   async ping(d) { await api.sendPing(d.id, d.v); S.pinged[d.id] = true; S.game = await api.game(); S.toast = 'Povzbuzení odesláno. Nemusí odpovídat.'; },
-  async inviteToGroup(d) { await api.inviteToGroup(S.groups[0].id, d.id); S.menuFor = null; S.toast = 'Pozvánka do skupiny odeslána. Až ji kamarád přijme, uvidí váš cíl.'; },
+  async inviteToGroup(d) { await api.inviteToGroup(S.groups[0].id, d.id); S.menuFor = null; S.toast = 'Pozvánka do skupiny odeslána. Až ji kamarád přijme, uvidí vaši výzvu.'; },
   async block(d) {
     const f = S.friends.find((x) => x.id === d.id);
     await api.block(d.id);
@@ -1008,7 +1032,7 @@ root.addEventListener('submit', (ev) => {
       await api.createGroup(name);
       S.groups = await api.groups();
       S.goalForm = true; S.goalTarget = 10; S.goalCat = null;
-      S.toast = 'Skupina je založená. Teď si dejte cíl a pozvěte kamarády.';
+      S.toast = 'Skupina je založená. Teď si dejte výzvu a pozvěte kamarády.';
     });
   }
   if (form.dataset.form === 'profile') {

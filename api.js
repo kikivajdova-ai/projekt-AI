@@ -377,7 +377,7 @@ class DemoApi {
   }
   async createGoal(_groupId, category, target) {
     const g = this.s.group;
-    if (g.goals.some((x) => x.category === category)) throw new ApiError(409, 'Tenhle cíl už si tento týden máte. Vyber jiný druh odpočinku.');
+    if (g.goals.some((x) => x.category === category)) throw new ApiError(409, 'Tuhle výzvu už tento týden máte. Vyber jiný druh odpočinku.');
     // Ukázka: kamarádi už mají pár chvilek za sebou, ať je vidět společný součet.
     g.goals.push({ goalId: newId(), category, target, othersTogether: Math.min(2, target - 1), contributions: [] }); this.save();
     return {};
