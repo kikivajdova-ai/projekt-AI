@@ -364,7 +364,7 @@ function friendsView() {
   const friends = confirmedFriends();
   const group = S.groups[0];
   return `<div class="screen">
-    <div><h1>Přátelé</h1><p class="muted">Jen lidé, které si sem pozveš.</p></div>
+    <div><h1>Přátelé</h1><p class="muted">Odpočívá se lépe ve dvou. Pozvi sem ty, se kterými je ti dobře.</p></div>
     <div class="two-col"><div class="col">
     <section class="card tint">
       <div class="stack" style="gap:6px"><h2>Pozvi kamaráda</h2><p class="green-text small" style="line-height:1.5">Pošli mu odkaz. Jakmile ho přijme, jste přátelé a můžete spolu odpočívat a navzájem se podporovat.</p></div>
