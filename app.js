@@ -268,7 +268,7 @@ function taskCard(c) {
     body = `<button class="btn" data-a="complete" data-cat="${c.id}">Zapsat chvilku</button>
       <button class="btn ghost small-btn" data-a="mode" data-cat="${c.id}" data-v="spolu">${ICON.tab.pratele('#3F4E16').replace('width="24" height="24"', 'width="18" height="18"')}<span style="margin-left:6px">Přizvat kamaráda</span></button>`;
   } else if (!friends.length) {
-    body = `<p class="small muted">Zatím tu nemáš žádné kamarády. Pozvat je můžeš v záložce Přátelé.</p>
+    body = `<p class="small muted">Zatím tu nemáš přidané žádné kamarády. Přidáš je v záložce Přátelé.</p>
       <button class="btn ghost" data-a="mode" data-cat="${c.id}" data-v="sam">Zpět</button>`;
   } else if (!sent) {
     body = `<p class="small green-text">Koho přizveš? Kamarád může jedním klepnutím říct „teď ne“, bez vysvětlování.</p>
@@ -364,14 +364,14 @@ function friendsView() {
   const friends = confirmedFriends();
   const group = S.groups[0];
   return `<div class="screen">
-    <div><h1>Přátelé</h1><p class="muted">Kamarády přidáš jen přes pozvánku. Nikoho cizího tu nenajdeš.</p></div>
+    <div><h1>Přátelé</h1><p class="muted">Jen lidé, které si sem pozveš.</p></div>
     <div class="two-col"><div class="col">
     <section class="card tint">
-      <div class="stack" style="gap:6px"><h2>Odpočívat spolu je víc</h2><p class="green-text small" style="line-height:1.5">Pošli kamarádovi osobní odkaz. Jakmile ho přijme, jste přátelé. Nic dalšího potvrzovat nemusíš.</p></div>
+      <div class="stack" style="gap:6px"><h2>Pozvi kamaráda</h2><p class="green-text small" style="line-height:1.5">Pošli mu odkaz. Jakmile ho přijme, jste přátelé a můžete spolu odpočívat a navzájem se podporovat.</p></div>
       ${S.inviteLink
-        ? `<div class="field"><label for="f-link">Odkaz platí 3 dny a jen pro jednoho člověka</label><input id="f-link" readonly value="${esc(S.inviteLink)}"></div>
+        ? `<div class="field"><label for="f-link">Platí 3 dny pro jednoho člověka</label><input id="f-link" readonly value="${esc(S.inviteLink)}"></div>
            <div class="btn-row"><button class="btn" data-a="copyLink">Zkopírovat</button>${navigator.share ? '<button class="btn ghost" data-a="shareLink">Poslat…</button>' : ''}</div>`
-        : `<button class="btn big" data-a="createInvite">Pozvat kamaráda odkazem</button>`}
+        : `<button class="btn big" data-a="createInvite">Vytvořit odkaz</button>`}
     </section>
     ${goalSection(group, friends)}
     </div><div class="col">
@@ -379,15 +379,14 @@ function friendsView() {
       <div class="btn-row"><button class="btn ghost" data-a="removeFriend" data-id="${esc(f.id)}">Teď ne</button><button class="btn" data-a="confirmFriend" data-id="${esc(f.id)}">Potvrdit</button></div></section>`).join('')}
     ${S.groupInvites.map((g) => `<section class="card"><p class="label">${esc(g.odKoho)} tě zve do skupiny</p><h3>${esc(g.skupina)}</h3>
       <div class="btn-row"><button class="btn ghost" data-a="answerGroup" data-id="${esc(g.id)}" data-v="0">Teď ne</button><button class="btn" data-a="answerGroup" data-id="${esc(g.id)}" data-v="1">Přidat se</button></div></section>`).join('')}
-    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“ Nemusíš odpovídat.</p></div></div></section>`).join('')}
-    <h2 style="margin-top:6px">Povzbudit jedním klepnutím</h2>
-    <p class="muted small" style="margin-top:-8px">Kamarád dostane krátký vzkaz. Odpovídat nemusí.</p>
-    ${friends.length ? '' : '<p class="muted">Až budeš mít kamarády, uvidíš je tady.</p>'}
+    ${S.pings.slice(0, 3).map((p) => `<section class="card"><div class="row"><div class="avatar warm">${esc(p.odKoho.charAt(0))}</div><div class="grow"><h3>Povzbuzení od: ${esc(p.odKoho)}</h3><p class="muted small">„${esc(p.text)}“</p></div></div></section>`).join('')}
+    <h2 style="margin-top:6px">Povzbuď kamaráda</h2>
+    ${friends.length ? '' : '<p class="muted">Zatím tu nemáš přidané žádné kamarády. Jakmile přijmou tvůj odkaz, uvidíš je tady.</p>'}
     ${friends.map((f) => `<section class="card">
       <div class="row"><div class="avatar">${esc(f.jmeno.charAt(0))}</div><h3 class="grow">${esc(f.jmeno)}</h3>
         <button class="icon-btn soft" aria-label="Možnosti pro ${esc(f.jmeno)}" aria-expanded="${S.menuFor === f.id}" data-a="menu" data-id="${esc(f.id)}">${ICON.dots}</button></div>
       ${S.pinged[f.id]
-        ? `<p class="small green-text" style="font-weight:600">Odesláno. Hezké, že na sebe myslíte.</p>`
+        ? `<p class="small green-text" style="font-weight:600">Odesláno.</p>`
         : `<div class="btn-row"><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="MYSLIM_NA_TEBE">Myslím na tebe</button><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="DEJ_SI_PAUZU">Dej si pauzu</button></div>`}
       ${S.menuFor === f.id ? `<div class="stack">
         ${group && !api.demo ? `<button class="btn soft small-btn" data-a="inviteToGroup" data-id="${esc(f.id)}">Pozvat do skupiny ${esc(group.nazev)}</button>` : ''}
@@ -395,9 +394,8 @@ function friendsView() {
         <button class="btn soft small-btn" data-a="removeFriend" data-id="${esc(f.id)}">Odebrat z přátel</button></div>` : ''}
     </section>`).join('')}
     ${waiting.length ? `<p class="muted small">Čeká na potvrzení: ${waiting.map((w) => esc(w.jmeno)).join(', ')}</p>` : ''}
-    <h2 style="margin-top:6px">Co se kamarádům podařilo</h2>
-    <p class="muted small" style="margin-top:-8px">Jen splněné chvilky, které kamarádi sami nasdíleli.</p>
-    ${S.feed.length ? S.feed.map((e) => `<div class="feed-item"><p><b>${esc(e.authorName)}</b> · ${esc(e.label)}</p><span class="small muted">${e.day === todayStr() ? 'dnes' : esc(new Date(e.day + 'T12:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }))}</span></div>`).join('') : '<p class="muted">Zatím tu nic není.</p>'}
+    <h2 style="margin-top:6px">Co kamarádi nasdíleli</h2>
+    ${S.feed.length ? S.feed.map((e) => `<div class="feed-item"><p><b>${esc(e.authorName)}</b> · ${esc(e.label)}</p><span class="small muted">${e.day === todayStr() ? 'dnes' : esc(new Date(e.day + 'T12:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }))}</span></div>`).join('') : '<p class="muted">Zatím nic. Až kamarádi něco nasdílí, uvidíš to tady.</p>'}
     </div></div>
   </div>`;
 }
@@ -406,7 +404,7 @@ function friendsView() {
 function goalSection(group, friends) {
   if (!group) {
     return `<section class="card" id="cil"><p class="label">Společná výzva týdne</p><h2>Založte si skupinu</h2>
-      <p class="muted small">Skupina je pro pár kamarádů (nejvýš 8). Dáte si společnou výzvu, třeba 10 procházek za týden. Každý odpočívá, kdy se mu hodí, a uvidíte jen, kolik jste dali dohromady. Žádné pořadí.</p>
+      <p class="muted small">Dejte si cíl na týden, třeba 10 procházek. Každý odpočívá, kdy chce, a počítá se to dohromady.</p>
       <form data-form="group" class="stack">
         <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" value="Chill crew" required></div>
         <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button>
@@ -434,7 +432,7 @@ function goalSection(group, friends) {
     ? `<div class="stack goal-form">
         <p style="font-weight:600">Na čem bude výzva?</p>
         <div class="pills">${free.map((c) => `<button type="button" class="pill" aria-pressed="${c.id === cat}" data-a="goalCat" data-v="${c.id}">${esc(c.title)}</button>`).join('')}</div>
-        <p style="font-weight:600">Kolik chvilek spolu za týden?</p>
+        <p style="font-weight:600">Kolik chvilek dohromady?</p>
         <div class="row stepper"><button type="button" class="icon-btn soft" aria-label="Méně" data-a="goalTarget" data-v="-1">−</button>
           <span class="stepper-value" aria-live="polite">${S.goalTarget}</span>
           <button type="button" class="icon-btn soft" aria-label="Více" data-a="goalTarget" data-v="1">+</button>
@@ -444,9 +442,9 @@ function goalSection(group, friends) {
     : free.length ? `<button class="btn ghost" data-a="goalOpen">+ Přidat výzvu na tento týden</button>` : '';
   return `<section class="card" id="cil">
     <div class="row between"><div><p class="label">Společná výzva týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
-    <p class="muted small">Ve skupině: ${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}. Vidíte jen společný součet.</p>
+    <p class="muted small">${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}</p>
     ${reachedCount ? `<p class="small green-text" style="font-weight:600">Společně splněné výzvy tento týden: ${reachedCount}. Krása!</p>` : ''}
-    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím nemáte žádnou výzvu. Klidně si ji dejte, nebo jen tak odpočívejte.</p>')}
+    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím žádná výzva.</p>')}
     ${form}
     ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
   </section>`;
