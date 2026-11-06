@@ -589,12 +589,13 @@ const GARDEN_LEVELS = [
 
 function gardenLevel(level) { return GARDEN_LEVELS[Math.max(0, Math.min(GARDEN_LEVELS.length, level || 1) - 1)]; }
 
-function gardenScene(total, grewIndex, level = 1) {
+function gardenScene(total, grewIndex, level = 1, crop = false) {
   const L = gardenLevel(level);
   const { items, butterflies } = gardenItems(total);
   items.sort((a, b) => a.p.y - b.p.y);
   const label = `${L.name}. ${items.length ? `${items.length} ${items.length === 1 ? 'rostlina' : items.length < 5 ? 'rostliny' : 'rostlin'}` : 'Zatím jen krajina, první chvilka zasadí semínko'}`;
-  return `<svg class="big-garden${L.dusk ? ' dusk' : ''}" viewBox="0 0 390 760" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Tvoje zahrada: ${label}">
+  // crop = výřez jen s krajinou a rostlinami (pro menší ilustrace, třeba u sdílení)
+  return `<svg class="big-garden${L.dusk ? ' dusk' : ''}" viewBox="${crop ? '0 380 390 300' : '0 0 390 760'}" preserveAspectRatio="${crop ? 'xMidYMid' : 'xMidYMax'} slice" role="img" aria-label="Tvoje zahrada: ${label}">
     <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.sky[0]}"/><stop offset="0.7" stop-color="${L.sky[1]}"/></linearGradient></defs>
     <rect width="390" height="760" fill="url(#sky)"/>
     ${L.sky2(total)}
@@ -691,9 +692,14 @@ function moodView() {
 function shareView() {
   const group = S.groups[0];
   const p = S.preview;
-  return `<div class="sheet-wrap" style="background:#8A8E82">
-    <div style="flex:1;padding:20px"><button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
-    <section class="sheet dim-bg" aria-label="Náhled sdílení">
+  // Nahoře tvoje vlastní zahrada (stejná jako v záložce Zahrada), jinak obecná ilustrace.
+  const g = S.game || {};
+  const art = g.hraZapnuta
+    ? gardenScene(Object.values(g.zahrada || {}).reduce((x, y) => x + y, 0), -1, g.uroven, true)
+    : GARDEN_SCENE;
+  return `<div class="sheet-wrap">
+    <div class="sheet-top">${art}<button class="btn ghost small-btn" style="background:rgba(255,255,255,.92);border:none" data-a="closeOverlay">Zpět</button></div>
+    <section class="sheet" aria-label="Náhled sdílení">
       <div class="handle"></div>
       <h1 style="font-size:22px">S kým to sdílet?</h1>
       <div class="pills"><button class="pill" aria-pressed="${S.shareTarget === 'PRATELE'}" data-a="shareTarget" data-v="PRATELE">Přátelé</button>
