@@ -205,3 +205,8 @@ h3 { font-size: 15px; font-weight: 700; }
 @keyframes gp-grow { from { transform: scale(0.15); opacity: .2; } to { transform: scale(1); opacity: 1; } }
 @keyframes flutter { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(14px, -10px); } }
 @media (prefers-reduced-motion: reduce) { .big-garden .gp.grew, .big-garden .butterfly { animation: none; } }
+.big-garden .fireflies circle { animation: glow 2.6s ease-in-out infinite alternate; }
+.big-garden .fireflies circle:nth-child(4n) { animation-delay: .8s; }
+.big-garden .fireflies circle:nth-child(3n) { animation-delay: 1.5s; }
+@keyframes glow { from { opacity: .25; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .big-garden .fireflies circle { animation: none; } }
