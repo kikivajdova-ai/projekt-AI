@@ -18,7 +18,7 @@ const CATEGORIES = [
 const CAT = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
 class ApiError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, code) { super(message); this.status = status; this.code = code; }
 }
 
 function newId() { return crypto.randomUUID(); }
@@ -46,7 +46,16 @@ class SupabaseApi {
   }
   async signIn(email, password) {
     const { error } = await this.sb.auth.signInWithPassword({ email, password });
-    if (error) throw new ApiError(401, 'Nesprávný e-mail nebo heslo.');
+    if (!error) return;
+    if (error.code === 'email_not_confirmed' || /not confirmed/i.test(error.message || '')) {
+      throw new ApiError(403, 'Nejdřív potvrď svůj e-mail. Odkaz jsme ti poslali, zkontroluj i Hromadné a Spam.', 'NEPOTVRZENO');
+    }
+    if (error.status === 429) throw new ApiError(429, 'Moc pokusů za sebou. Zkus to prosím za pár minut.');
+    throw new ApiError(401, 'Nesprávný e-mail nebo heslo.');
+  }
+  async resendConfirmation(email) {
+    const { error } = await this.sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.origin + location.pathname } });
+    if (error) throw new ApiError(429, 'E-mail teď nejde poslat znovu. Zkus to prosím za pár minut.');
   }
   async resetPassword(email) {
     await this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
@@ -181,6 +190,7 @@ class DemoApi {
   }
   async signIn() { this.s.loggedIn = true; this.save(); this.emit(); }
   async resetPassword() {}
+  async resendConfirmation() {}
   async signOut() { this.s.loggedIn = false; this.save(); this.emit(); }
   reset() { try { localStorage.removeItem(DEMO_KEY); } catch { /* nevadí */ } this.s = demoSeed(); }
 

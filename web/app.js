@@ -137,7 +137,7 @@ function view() {
   const demo = api.demo ? `<div class="demo-banner">Ukázkový režim: data jsou jen v tomto prohlížeči. <button class="btn soft small-btn" style="min-height:28px;padding:0 10px;margin-left:6px" data-a="demoReset">Začít znovu</button></div>` : '';
   if (S.phase === 'loading') return `${demo}<div class="center"><p class="muted">Načítám…</p></div>`;
   if (S.phase === 'auth') return demo + authView();
-  if (S.phase === 'onboarding') return demo + onboardingView();
+  if (S.phase === 'onboarding') return demo + onboardingView() + toastView();
   if (S.overlay === 'pomoc') return demo + helpView();
   if (S.overlay === 'nalada') return demo + moodView() + toastView();
   if (S.overlay === 'sdileni') return demo + shareView() + toastView();
@@ -158,6 +158,7 @@ function authView() {
     </div>
     ${S.authError ? `<p class="error" role="alert">${esc(S.authError)}</p>` : ''}
     ${S.authInfo ? `<p class="card tint" style="padding:14px 16px" role="status">${esc(S.authInfo)}</p>` : ''}
+    ${S.needsConfirm ? `<button class="btn ghost" type="button" data-a="resend">Poslat potvrzovací e-mail znovu</button>` : ''}
     <form data-form="auth" class="stack" novalidate>
       ${reg ? `<div class="field"><label for="f-name">Přezdívka (uvidí ji jen tvoji přátelé)</label><input id="f-name" name="name" maxlength="40" required autocomplete="nickname"></div>` : ''}
       <div class="field"><label for="f-email">E-mail</label><input id="f-email" name="email" type="email" required autocomplete="email"></div>
@@ -442,6 +443,11 @@ const actions = {
   openHelp() { S.overlay = 'pomoc'; },
   closeOverlay() { S.overlay = null; S.preview = null; S.shareTarget = null; },
   authMode(d) { S.authMode = d.v; S.authError = null; S.authInfo = null; },
+  async resend() {
+    await api.resendConfirmation(S.needsConfirm);
+    S.authError = null;
+    S.authInfo = `Poslali jsme nový potvrzovací e-mail na ${S.needsConfirm}. Klikni na odkaz v něm a pak se přihlas.`;
+  },
   async forgot() {
     const email = root.querySelector('#f-email')?.value.trim();
     if (!email) { S.authError = 'Napiš nejdřív svůj e-mail.'; return; }
@@ -572,7 +578,8 @@ root.addEventListener('submit', (ev) => {
   const f = Object.fromEntries(new FormData(form));
   if (form.dataset.form === 'auth') {
     guard(async () => {
-      S.authError = null; S.authInfo = null;
+      S.authError = null; S.authInfo = null; S.needsConfirm = null;
+      try {
       const email = String(f.email || '').trim();
       const password = String(f.password || '');
       if (!email || !password) { S.authError = 'Vyplň e-mail a heslo.'; return; }
@@ -583,11 +590,21 @@ root.addEventListener('submit', (ev) => {
         if (!f.terms) { S.authError = 'Pro vytvoření účtu potřebujeme souhlas s podmínkami.'; return; }
         store.set('os-pending-name', name);
         const r = await api.signUp(email, password);
-        if (r.needsConfirmation) { S.authInfo = 'Poslali jsme ti e-mail. Potvrď registraci a pak se přihlas.'; S.authMode = 'login'; return; }
+        if (r.needsConfirmation) {
+          S.authInfo = `Poslali jsme ti e-mail na ${email}. Klikni na odkaz v něm (zkontroluj i Hromadné a Spam) a pak se tady přihlas.`;
+          S.authMode = 'login';
+          S.needsConfirm = email;
+          return;
+        }
       } else {
         await api.signIn(email, password);
       }
       await boot();
+      } catch (e) {
+        // Na přihlašovací obrazovce se chyba ukáže přímo nad formulářem (ne v oznámení).
+        S.authError = e.message || 'Něco se pokazilo.';
+        if (e.code === 'NEPOTVRZENO') S.needsConfirm = String(f.email || '').trim();
+      }
     });
   }
   if (form.dataset.form === 'profile') {
