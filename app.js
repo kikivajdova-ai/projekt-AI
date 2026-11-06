@@ -16,7 +16,6 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch { /* nevadí */ } },
 };
 const moments = (n) => (n === 1 ? '1 chvilka' : n >= 2 && n <= 4 ? `${n} chvilky` : `${n} chvil`);
-const STAGES = ['Semínko', 'Klíček', 'Roste', 'Kvete', 'Kvete naplno'];
 
 const ICON = {
   heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23301A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
@@ -33,21 +32,6 @@ const ICON = {
 
 function taskIcon(color) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 25V13" stroke="#5F7424" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="10" cy="17" rx="4" ry="2.4" fill="#7E9240"/><circle cx="14" cy="10" r="5" fill="${color}"/></svg>`;
-}
-
-function plantSvg(c, n) {
-  const st = Math.min(n, 4);
-  const top = [66, 52, 40, 28, 24][st];
-  const fr = st >= 3 ? (st === 4 ? 12 : 9) : st === 2 ? 4 : 0;
-  return `<svg width="72" height="72" viewBox="0 0 80 80" role="img" aria-label="${esc(c.plant)}: ${STAGES[st]}">
-    <ellipse cx="40" cy="70" rx="30" ry="7" fill="#A9B676"/>
-    ${st === 0 ? '<circle cx="40" cy="66" r="4" fill="#8B6B4A"/>' : `<line x1="40" y1="68" x2="40" y2="${top}" stroke="#5F7424" stroke-width="3" stroke-linecap="round"/>`}
-    ${st >= 1 ? `<ellipse cx="32" cy="${top + 16}" rx="8" ry="4" fill="#7E9240"/>` : ''}
-    ${st >= 2 ? `<ellipse cx="48" cy="${top + 9}" rx="8" ry="4" fill="#8FA34A"/>` : ''}
-    ${fr ? `<circle cx="40" cy="${top}" r="${fr}" fill="${c.flower}"/>` : ''}
-    ${st >= 3 ? `<circle cx="40" cy="${top}" r="3.5" fill="#FFF6D6"/>` : ''}
-    ${st === 4 ? `<circle cx="24" cy="${top + 26}" r="6" fill="${c.flower}"/><circle cx="57" cy="${top + 26}" r="6" fill="${c.flower}"/>` : ''}
-  </svg>`;
 }
 
 const GARDEN_SCENE = `<svg viewBox="0 0 390 280" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Ilustrace rozkvetlé zahrady">
@@ -95,7 +79,7 @@ function celebrate(title, cat, res, extra = '') {
   S.celebrate = {
     title,
     flower: c.flower,
-    text: game ? `V zahradě ti roste: ${c.plant}.` : 'Chvilka pro tebe je zapsaná.',
+    text: game ? 'Tvoje zahrada zase o kousek vyrostla.' : 'Chvilka pro tebe je zapsaná.',
     extra: [extra, note].filter(Boolean).join(' '),
   };
 }
@@ -157,6 +141,7 @@ async function boot() {
     S.phase = 'onboarding'; render(); return;
   }
   await loadAll();
+  S.gardenSeen = Object.values(S.game?.zahrada || {}).reduce((a, b) => a + b, 0);
   S.phase = 'app';
   if (S.inviteToken) {
     S.overlay = 'pozvanka';
@@ -219,8 +204,10 @@ function onboardingView() {
 }
 
 function myGoal() {
-  for (const g of S.groups) for (const c of g.cile || []) return { group: g, goal: c };
-  return null;
+  // Přednost má cíl, který se ještě plní; splněný se ukáže, jen když jiný není.
+  let reached = null;
+  for (const g of S.groups) for (const c of g.cile || []) { if (!c.reached) return { group: g, goal: c }; reached ??= { group: g, goal: c }; }
+  return reached;
 }
 function sentFor(cat) {
   const id = S.sentInvite[cat];
@@ -391,8 +378,11 @@ function goalSection(group, friends) {
         <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button>
       </form></section>`;
   }
-  const goals = group.cile || [];
-  const used = new Set(goals.map((g) => g.category));
+  const allGoals = group.cile || [];
+  // Splněný cíl ze seznamu zmizí (druh odpočinku zůstává na tento týden obsazený).
+  const goals = allGoals.filter((g) => !g.reached);
+  const reachedCount = allGoals.length - goals.length;
+  const used = new Set(allGoals.map((g) => g.category));
   const free = PRESETS.filter((c) => !used.has(c.id));
   const cat = S.goalCat && !used.has(S.goalCat) ? S.goalCat : free[0]?.id;
   const memberIds = new Set((group.clenove || []).map((m) => m.id));
@@ -421,10 +411,108 @@ function goalSection(group, friends) {
   return `<section class="card" id="cil">
     <div class="row between"><div><p class="label">Společný cíl tohoto týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
     <p class="muted small">Ve skupině: ${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}. Vidíte jen společný součet.</p>
-    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm ? '' : '<p class="muted">Tento týden zatím nemáte žádný cíl. Klidně si ho dejte, nebo jen tak odpočívejte.</p>')}
+    ${reachedCount ? `<p class="small green-text" style="font-weight:600">Tento týden jste spolu splnili ${reachedCount === 1 ? '1 cíl' : reachedCount < 5 ? `${reachedCount} cíle` : `${reachedCount} cílů`}. Skvělé!</p>` : ''}
+    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím nemáte žádný cíl. Klidně si ho dejte, nebo jen tak odpočívejte.</p>')}
     ${form}
     ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
   </section>`;
+}
+
+// ---------- jedna velká zahrada ----------
+// Začíná jen krajinou (nebe, slunce, kopce). Každá splněná chvilka posune růst o krok:
+// rostliny přibývají jedna po druhé a každá má 3 fáze (klíček -> poupě -> květ).
+// Nic nevadne a nic se neubírá; počítá se jen to, co se podařilo.
+const GARDEN_PLANTS = [
+  { kind: 'daisy', x: 292, y: 248, color: '#FFFFFF' },
+  { kind: 'sunflower', x: 168, y: 240, color: '#F2994A' },
+  { kind: 'lavender', x: 229, y: 244, color: '#B48ACB' },
+  { kind: 'tulip', x: 346, y: 252, color: '#E8742A' },
+  { kind: 'tree', x: 78, y: 222, color: '#E8742A' },
+  { kind: 'dot', x: 130, y: 250, color: '#F2C94C' },
+  { kind: 'daisy', x: 120, y: 262, color: '#FFFFFF' },
+  { kind: 'dot', x: 30, y: 252, color: '#B48ACB' },
+  { kind: 'tulip', x: 200, y: 262, color: '#F2C94C' },
+  { kind: 'dot', x: 262, y: 258, color: '#FFFFFF' },
+  { kind: 'lavender', x: 318, y: 262, color: '#9B8FD1' },
+  { kind: 'dot', x: 372, y: 262, color: '#F2C94C' },
+  { kind: 'sunflower', x: 24, y: 268, color: '#F2C94C' },
+  { kind: 'daisy', x: 150, y: 270, color: '#F6E7A1' },
+];
+const GARDEN_STEPS = GARDEN_PLANTS.length * 3;
+
+function sprout(x, y) {
+  return `<path d="M${x} ${y} V${y - 12}" stroke="#5F7424" stroke-width="2.6" stroke-linecap="round"/>
+    <ellipse cx="${x - 5}" cy="${y - 10}" rx="5" ry="2.6" fill="#8FA34A" transform="rotate(-25 ${x - 5} ${y - 10})"/>
+    <ellipse cx="${x + 5}" cy="${y - 12}" rx="5" ry="2.6" fill="#7E9240" transform="rotate(25 ${x + 5} ${y - 12})"/>`;
+}
+
+function gardenPlant(p, stage) {
+  const { x, y, color } = p;
+  if (stage === 1) return sprout(x, y);
+  const bud = stage === 2;
+  switch (p.kind) {
+    case 'tree': {
+      if (bud) return `<path d="M${x} ${y} V${y - 40}" stroke="#5F7424" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="${x}" cy="${y - 50}" r="20" fill="#7E9240"/><circle cx="${x - 14}" cy="${y - 40}" r="11" fill="#8FA34A"/>`;
+      return `<path d="M${x} ${y} V${y - 68}" stroke="#5F7424" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="${x}" cy="${y - 90}" r="34" fill="#6E8B2E"/><circle cx="${x - 26}" cy="${y - 70}" r="22" fill="#8FA34A"/><circle cx="${x + 26}" cy="${y - 68}" r="20" fill="#7E9240"/>
+        <circle cx="${x - 10}" cy="${y - 100}" r="4.5" fill="${color}"/><circle cx="${x + 16}" cy="${y - 82}" r="4.5" fill="${color}"/><circle cx="${x - 22}" cy="${y - 66}" r="4" fill="${color}"/>`;
+    }
+    case 'sunflower': {
+      const top = y - (bud ? 40 : 66);
+      return `<path d="M${x} ${y} V${top}" stroke="#5F7424" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="${x - 12}" cy="${y - 28}" rx="11" ry="5.5" fill="#7E9240"/>
+        ${bud ? `<circle cx="${x}" cy="${top}" r="7" fill="#8FA34A"/><circle cx="${x}" cy="${top - 2}" r="4" fill="${color}"/>`
+          : `<circle cx="${x}" cy="${top}" r="18" fill="${color}"/><circle cx="${x}" cy="${top}" r="8" fill="#8B6B4A"/>`}`;
+    }
+    case 'lavender': {
+      const h = bud ? 0.6 : 1;
+      return [-11, 0, 11].map((dx, i) => {
+        const top = y - (50 + (i === 1 ? 8 : 0)) * h;
+        return `<path d="M${x + dx} ${y} V${top}" stroke="#5F7424" stroke-width="2.8" stroke-linecap="round"/>
+          <ellipse cx="${x + dx}" cy="${top - 4}" rx="${bud ? 3 : 4.5}" ry="${bud ? 6 : 10}" fill="${bud ? '#C9B7DA' : color}"/>`;
+      }).join('');
+    }
+    case 'tulip': {
+      const top = y - (bud ? 22 : 32);
+      return `<path d="M${x} ${y} V${top}" stroke="#5F7424" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="${x + 9}" cy="${y - 14}" rx="9" ry="4.5" fill="#8FA34A"/>
+        ${bud ? `<ellipse cx="${x}" cy="${top - 4}" rx="4.5" ry="7" fill="${color}" opacity="0.8"/>`
+          : `<path d="M${x - 10} ${top} Q${x - 10} ${top - 16} ${x - 5} ${top - 14} L${x} ${top - 8} L${x + 5} ${top - 14} Q${x + 10} ${top - 16} ${x + 10} ${top} Q${x} ${top + 9} ${x - 10} ${top}Z" fill="${color}"/>`}`;
+    }
+    case 'dot': {
+      return `<path d="M${x} ${y} V${y - 10}" stroke="#5F7424" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="${x}" cy="${y - 13}" r="${bud ? 3.5 : 6}" fill="${color}"/>${bud ? '' : `<circle cx="${x}" cy="${y - 13}" r="2" fill="#FFF6D6"/>`}`;
+    }
+    default: { // daisy
+      const top = y - (bud ? 26 : 40);
+      return `<path d="M${x} ${y} V${top}" stroke="#5F7424" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="${x + 10}" cy="${y - 18}" rx="9" ry="4.5" fill="#8FA34A"/>
+        ${bud ? `<circle cx="${x}" cy="${top}" r="5" fill="#8FA34A"/><circle cx="${x}" cy="${top - 1}" r="3" fill="${color}"/>`
+          : `<circle cx="${x}" cy="${top}" r="12" fill="${color}" stroke="#E4E7D6" stroke-width="1"/><circle cx="${x}" cy="${top}" r="5" fill="#F2C94C"/>`}`;
+    }
+  }
+}
+
+function gardenScene(total, grewIndex) {
+  const steps = Math.max(0, Math.min(total, GARDEN_STEPS));
+  // Rostliny se kreslí odzadu dopředu (podle toho, jak nízko stojí), ať se nepřekrývají divně.
+  const plants = GARDEN_PLANTS.map((p, i) => ({ p, i, stage: Math.max(0, Math.min(3, steps - i * 3)) }))
+    .filter((x) => x.stage > 0)
+    .sort((a, b) => a.p.y - b.p.y);
+  const full = total >= GARDEN_STEPS;
+  return `<svg class="big-garden" viewBox="0 0 390 300" role="img" aria-label="Tvoje zahrada: ${plants.length ? `${plants.length} ${plants.length === 1 ? 'rostlina' : plants.length < 5 ? 'rostliny' : 'rostlin'}` : 'zatím jen louka, první chvilka zasadí semínko'}">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F4E4"/><stop offset="1" stop-color="#E6EBCF"/></linearGradient></defs>
+    <rect width="390" height="300" fill="url(#sky)"/>
+    <circle cx="312" cy="72" r="26" fill="#F6E7A1"/><circle cx="312" cy="72" r="40" fill="#F6E7A1" opacity="0.35"/>
+    <ellipse cx="92" cy="76" rx="30" ry="10" fill="#FFFFFF" opacity="0.85"/><ellipse cx="118" cy="68" rx="20" ry="9" fill="#FFFFFF" opacity="0.85"/>
+    <ellipse cx="226" cy="44" rx="22" ry="7" fill="#FFFFFF" opacity="0.7"/>
+    ${full || total >= 20 ? '<path d="M246 112 q7 -9 14 0 q7 -9 14 0" fill="none" stroke="#23301A" stroke-width="2" stroke-linecap="round"/>' : ''}
+    <path d="M0 190 C70 156 140 162 200 180 C266 200 330 168 390 160 L390 300 L0 300 Z" fill="#C9D29C"/>
+    <path d="M0 226 C80 204 166 208 244 222 C310 234 356 216 390 212 L390 300 L0 300 Z" fill="#A9B676"/>
+    ${plants.map(({ p, i, stage }) => `<g class="gp${i === grewIndex ? ' grew' : ''}" style="transform-origin:${p.x}px ${p.y}px">${gardenPlant(p, stage)}</g>`).join('')}
+    ${full ? `<g class="butterfly"><ellipse cx="200" cy="140" rx="7" ry="5" fill="#B48ACB" transform="rotate(-20 200 140)"/><ellipse cx="210" cy="140" rx="7" ry="5" fill="#9B8FD1" transform="rotate(20 210 140)"/><path d="M205 135 V146" stroke="#23301A" stroke-width="1.6" stroke-linecap="round"/></g>` : ''}
+  </svg>`;
 }
 
 function gardenView() {
@@ -434,17 +522,15 @@ function gardenView() {
   }
   const lo = levelPoints(g.uroven);
   const pct = Math.max(4, Math.round((100 * (g.body - lo)) / (g.dalsiUrovenPri - lo)));
-  const garden = g.zahrada || {};
+  const total = Object.values(g.zahrada || {}).reduce((a, b) => a + b, 0);
+  // Která rostlina právě povyrostla (jen jednou, při prvním zobrazení po splnění).
+  const grew = S.gardenSeen != null && total > S.gardenSeen && S.gardenSeen < GARDEN_STEPS ? Math.floor((Math.min(total, GARDEN_STEPS) - 1) / 3) : -1;
+  S.gardenSeen = total;
   return `<div class="screen">
-    <div><h1>Tvoje zahrada</h1><p class="muted">Každá chvilka pro tebe nechá něco vyrůst. Nic tu nevadne.</p></div>
-    ${g.zprava ? `<section class="card tint" style="padding:14px 18px"><p class="green-text">${esc(g.zprava)}</p></section>` : ''}
+    <h1>Moje zahrada</h1>
     <section class="card"><div class="row between"><h2>Úroveň ${esc(g.uroven)}</h2><p class="muted small">Tento týden ${moments(g.chvilekTentoTyden || 0)}</p></div>
-      <div class="bar" role="img" aria-label="Cesta k další úrovni"><span style="width:${pct}%"></span></div></section>
-    <section class="garden" aria-label="Rostliny v zahradě">
-      ${CATEGORIES.filter((c) => PRESETS.includes(c) || c.id === 'JINE' || garden[c.id]).map((c) => { const n = garden[c.id] || 0; return `<div class="plot${S.lastGrown === c.id ? ' grew' : ''}">${plantSvg(c, n)}<p class="name">${c.plant}</p><p class="green-text">${STAGES[Math.min(n, 4)]} · ${moments(n)}</p></div>`; }).join('')}
-    </section>
-    <section class="card"><h3>Jak zahrada roste</h3><p class="muted small">Semínko → klíček → roste → kvete → kvete naplno. Každý druh odpočinku má svou rostlinu. Pauza ani vynechaný týden nic nevezmou.</p>
-      <button class="btn" data-a="tab" data-v="domu">Vybrat chvilku</button></section>
+      <div class="bar" role="img" aria-label="Cesta k další úrovni: ${pct} %"><span style="width:${pct}%"></span></div></section>
+    <section class="garden-big">${gardenScene(total, grew)}</section>
   </div>`;
 }
 
@@ -633,7 +719,8 @@ const actions = {
     S.lastGrown = d.cat;
     await loadAll();
     const counted = (res.zapocitanoDoCilu || []).includes(d.id);
-    celebrate(CAT[d.cat].title, d.cat, res, counted ? 'Započítáno do společného cíle.' : '');
+    const nowReached = S.groups.some((g) => (g.cile || []).some((x) => x.goalId === d.id && x.reached));
+    celebrate(CAT[d.cat].title, d.cat, res, nowReached ? 'Společný cíl je splněný! Spolu jste to dali.' : counted ? 'Započítáno do společného cíle.' : '');
   },
   closeCelebrate() { S.celebrate = null; },
   async createInvite() {
