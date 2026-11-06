@@ -13,5 +13,5 @@
     "types": ["node"]
   },
   "include": ["supabase/functions/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
-  "exclude": ["supabase/functions/api/index.ts", "supabase/functions/dispatch/index.ts"]
+  "exclude": ["supabase/functions/api/index.ts", "supabase/functions/api/deploy-entry.ts", "supabase/functions/dispatch/index.ts"]
 }

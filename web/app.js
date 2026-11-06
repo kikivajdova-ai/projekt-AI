@@ -485,7 +485,12 @@ const actions = {
     S.groups = await api.groups();
     S.toast = 'Skupina je založená. Pozvi do ní kamarády v záložce Přátelé (tři tečky u jména).';
   },
-  async createInvite() { const r = await api.createInvite(); S.inviteLink = r.odkaz; },
+  async createInvite() {
+    const r = await api.createInvite();
+    // Odkaz poskládáme podle adresy, kde aplikace právě běží (GitHub Pages i localhost).
+    const token = String(r.odkaz).split('/').pop();
+    S.inviteLink = `${location.origin}${location.pathname}#/pozvanka/${token}`;
+  },
   async copyLink() { try { await navigator.clipboard.writeText(S.inviteLink); S.toast = 'Odkaz je zkopírovaný.'; } catch { S.toast = 'Odkaz označ a zkopíruj ručně.'; } },
   async shareLink() { try { await navigator.share({ title: 'Odpočívat spolu', text: 'Pojď se mnou odpočívat:', url: S.inviteLink }); } catch { /* zrušeno */ } },
   async confirmFriend(d) { await api.confirmFriend(d.id); S.friends = await api.friends(); S.toast = 'Jste přátelé.'; },
