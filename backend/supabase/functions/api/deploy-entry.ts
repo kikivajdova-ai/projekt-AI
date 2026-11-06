@@ -4,7 +4,7 @@
 // (spolu se souborem ../deno.json jako import map, verify_jwt = false).
 // Přihlášení ověřuje sama funkce (podpis JWT přes JWKS projektu); verify_jwt = false proto,
 // aby brána nezastavila CORS preflight z webové aplikace.
-import { createApp } from 'https://raw.githubusercontent.com/kikivajdova-ai/projekt-AI/2fbb16adadca8ca83d26c6f29caeed4804943ffd/backend/supabase/functions/_shared/api/app.ts';
+import { createApp } from 'https://raw.githubusercontent.com/kikivajdova-ai/projekt-AI/d21d82ea6b1c756ec1b558c39714b5d418aed5e2/backend/supabase/functions/_shared/api/app.ts';
 
 const app = createApp();
 Deno.serve(app.fetch);
