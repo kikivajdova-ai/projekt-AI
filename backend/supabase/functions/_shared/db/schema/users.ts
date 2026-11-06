@@ -77,6 +77,8 @@ export const userSettings = pgTable(
     quietHoursEnabled: boolean('quiet_hours_enabled').notNull().default(true),
     quietStart: time('quiet_start').notNull().default('22:00'),
     quietEnd: time('quiet_end').notNull().default('08:00'),
+    /** Vědomé rozhodnutí v nastavení: nové SPLNĚNÉ chvilky se rovnou ukážou přátelům. Výchozí VYPNUTO. */
+    autoShareFriends: boolean('auto_share_friends').notNull().default(false),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -13,6 +13,7 @@ export interface Settings {
   quietHoursEnabled: boolean;
   quietStart: string;
   quietEnd: string;
+  autoShareFriends: boolean;
 }
 
 /** Nastavení uživatele. Funguje v asUser (vlastní) i asSystem (kvůli nočnímu klidu příjemce). */
@@ -29,5 +30,6 @@ export async function loadSettings(tx: Tx, userId: string): Promise<Settings> {
     // Postgres vrací time jako 'HH:MM:SS'
     quietStart: row.quietStart.slice(0, 5),
     quietEnd: row.quietEnd.slice(0, 5),
+    autoShareFriends: row.autoShareFriends,
   };
 }

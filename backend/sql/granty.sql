@@ -23,7 +23,7 @@ grant select on public.users to app_system;
 -- user_settings: jen vlastník
 grant select, insert on public.user_settings to app_user;
 grant update (timezone, game_enabled, share_badges, receive_pings, receive_rest_invites,
-              quiet_hours_enabled, quiet_start, quiet_end, updated_at)
+              quiet_hours_enabled, quiet_start, quiet_end, auto_share_friends, updated_at)
   on public.user_settings to app_user;
 grant select on public.user_settings to app_system;
 

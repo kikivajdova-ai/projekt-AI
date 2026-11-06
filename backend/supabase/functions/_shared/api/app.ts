@@ -46,6 +46,7 @@ const schemas = {
       quietHoursEnabled: z.boolean(),
       quietStart: hhmm,
       quietEnd: hhmm,
+      autoShareFriends: z.boolean(),
     })
     .partial(),
   consent: z.strictObject({ type: z.enum(CONSENT_TYPE), granted: z.boolean() }),

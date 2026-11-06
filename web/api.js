@@ -154,7 +154,7 @@ function demoSeed() {
   return {
     loggedIn: false,
     profile: null,
-    settings: { gameEnabled: true, shareBadges: false, receivePings: true, receiveRestInvites: true, quietHoursEnabled: true, quietStart: '22:00', quietEnd: '08:00', timezone: 'Europe/Prague' },
+    settings: { gameEnabled: true, shareBadges: false, receivePings: true, receiveRestInvites: true, quietHoursEnabled: true, quietStart: '22:00', quietEnd: '08:00', timezone: 'Europe/Prague', autoShareFriends: false },
     consents: {},
     moments: [
       { id: newId(), category: 'PROCHAZKA', status: 'SPLNENO', visibility: 'JEN_JA', day: dayStr(-9), joint: false },
@@ -296,7 +296,9 @@ class DemoApi {
     const before = levelFor(this.computeGame().body);
     const joint = !!restInvitationId && this.s.restInvites.some((r) => r.id === restInvitationId && r.status === 'PRIDAM_SE');
     // Nový záznam je vždy soukromý, stejně jako na serveru.
-    const m = { id: newId(), category, status: 'SPLNENO', visibility: 'JEN_JA', day: dayStr(0), joint, customActivityId: custom?.id, customTitle: custom?.nazev };
+    // Jako na serveru: vzniká „Jen já“, a kdo si zapnul automatické sdílení, tomu se hned nasdílí přátelům.
+    const auto = !!this.s.settings.autoShareFriends;
+    const m = { id: newId(), category, status: 'SPLNENO', visibility: auto ? 'PRATELE' : 'JEN_JA', day: dayStr(0), joint, customActivityId: custom?.id, customTitle: custom?.nazev };
     this.s.moments.push(m);
     const counted = [];
     for (const goal of this.s.group?.goals || []) {

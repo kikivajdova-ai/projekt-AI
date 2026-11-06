@@ -104,7 +104,19 @@ export async function logMoment(userId: string, input: LogMomentInput) {
     if (!row || row.userId !== userId) throw new AppError(409, 'KONFLIKT_ID', 'Zkus to prosím znovu.');
 
     const counted = row.status === 'SPLNENO' ? await contribute(tx, userId, row.id, input.goalIds ?? []) : [];
-    return { row, counted, customTitle };
+    // Nový záznam vzniká vždy jako „Jen já“ (hlídá RLS). Kdo si v nastavení vědomě zapnul
+    // automatické sdílení s přáteli, tomu ho hned v téže transakci nasdílíme. Jen splněné chvilky;
+    // přátelé uvidí druh chvilky a den, název vlastní chvilky ani nálada se nesdílí nikdy.
+    let saved = row;
+    if (row.status === 'SPLNENO' && s.autoShareFriends) {
+      const [shared] = await tx
+        .update(activities)
+        .set({ visibility: 'PRATELE', crewId: null, sharedAt: new Date() })
+        .where(and(eq(activities.id, row.id), eq(activities.userId, userId)))
+        .returning();
+      if (shared) saved = shared;
+    }
+    return { row: saved, counted, customTitle };
   });
 
   return afterMoment(userId, activity.row, activity.counted, activity.customTitle);
