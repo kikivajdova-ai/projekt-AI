@@ -135,7 +135,7 @@ class SupabaseApi {
   groupInvitations() { return this.call('GET', '/group-invitations'); }
   answerGroupInvite(id, accept) { return this.call('POST', `/group-invitations/${id}/answer`, { accept }); }
 
-  checkin(mood) { return this.call('POST', '/checkins', { id: newId(), mood }); }
+  checkin(mood, day) { return this.call('POST', '/checkins', day ? { id: newId(), mood, day } : { id: newId(), mood }); }
   checkins() { return this.call('GET', '/checkins'); }
   deleteCheckin(id) { return this.call('DELETE', `/checkins/${id}`); }
 }
@@ -400,10 +400,12 @@ class DemoApi {
   async groupInvitations() { return this.s.groupInviteAnswered ? [] : [{ id: 'gi-1', skupina: 'Knihomolové', odKoho: 'Ema' }]; }
   async answerGroupInvite() { this.s.groupInviteAnswered = true; this.save(); return {}; }
 
-  async checkin(mood) {
+  async checkin(mood, forDay) {
     if (!this.s.consents.ZDRAVOTNI_UDAJE) throw new ApiError(403, 'Abychom mohli náladu ukládat, potřebujeme tvůj souhlas.');
     const d = new Date(); d.setHours(d.getHours() - 4);
-    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (forDay && forDay > today) throw new ApiError(400, 'Náladu jde zapsat jen za dnešek nebo za dny v posledním roce.');
+    const day = forDay || today;
     this.s.checkins.unshift({ id: newId(), mood, stress: null, day }); this.save();
     return { ulozeno: true, nabidnoutPomoc: mood === 1 };
   }

@@ -346,3 +346,10 @@ h3 { font-size: 15px; font-weight: 700; }
 .mood-screen > * { max-width: 600px; }
 .cal-cell.has svg { width: 62%; height: auto; max-width: 46px; }
 @media (min-width: 720px) { .cal-cell.has { font-size: 12px; } .cal-cell { aspect-ratio: 1 / 0.9; } }
+.cal-cell.open { cursor: pointer; }
+.cal-cell.open:hover, .cal-cell.open:focus-visible { background: var(--chip); }
+.cal-detail { flex-direction: column; align-items: stretch; gap: 10px; }
+.cal-pick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.cal-pick button { height: 48px; border-radius: 12px; border: 1.5px solid transparent; background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.cal-pick button:hover { background: var(--mood); }
+.cal-pick button[aria-checked="true"] { background: var(--mood); border-color: var(--ink); }
