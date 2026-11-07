@@ -69,7 +69,7 @@ const S = {
   mood: null, moodResult: null,
   shareFor: null, shareTarget: null, preview: null,
   confirmDelete: false, inviteAnswered: {},
-  goalForm: null, goalCat: null, goalTarget: 10, newGroupOpen: false, shareGroup: null, // goalForm = id skupiny s otevřeným formulářem
+  goalForm: null, goalCat: null, goalTarget: 10, newGroupOpen: false, shareGroup: null, groupDelete: null, // goalForm = id skupiny s otevřeným formulářem
   weekly: null, weeklyForm: false, wCat: null, wTarget: 5,
 };
 
@@ -462,7 +462,23 @@ function goalSection(group, friends, isFirst) {
     ${goals.length ? goals.map(goalCard).join('') : (open || reachedCount ? '' : '<p class="muted">Tento týden zatím žádná výzva.</p>')}
     ${form}
     ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}" data-g="${esc(group.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
+    ${groupRemoveBlock(group)}
   </section>`;
+}
+
+// Zakladatel skupinu smaže všem, ostatní z ní odejdou. Vždy s potvrzením přímo v kartě.
+function groupRemoveBlock(group) {
+  const own = group.mojeSkupina !== false;
+  if (S.groupDelete !== group.id) {
+    return `<div class="group-remove"><button type="button" class="link-btn danger-text" data-a="groupDeleteAsk" data-g="${esc(group.id)}">${own ? 'Smazat skupinu' : 'Odejít ze skupiny'}</button></div>`;
+  }
+  return `<div class="stack group-confirm" role="group" aria-label="${own ? 'Smazat skupinu' : 'Odejít ze skupiny'}">
+    <p style="font-weight:600">${own ? `Smazat skupinu ${esc(group.nazev)}?` : `Odejít ze skupiny ${esc(group.nazev)}?`}</p>
+    <p class="small muted">${own
+      ? 'Skupina i její výzvy zmizí všem členům. Tvoje chvilky i zahrada zůstanou.'
+      : 'Skupina ti zmizí ze seznamu. Ostatním zůstane a nikdo nedostane žádné oznámení.'}</p>
+    <div class="btn-row"><button class="btn ghost" data-a="groupDeleteCancel">Zrušit</button><button class="btn danger" data-a="groupDelete" data-g="${esc(group.id)}" data-own="${own ? '1' : ''}">${own ? 'Smazat' : 'Odejít'}</button></div>
+  </div>`;
 }
 
 // ---------- jedna velká zahrada ----------
@@ -1034,6 +1050,17 @@ const actions = {
   goalCancel() { S.goalForm = null; },
   newGroup() { S.newGroupOpen = true; },
   newGroupCancel() { S.newGroupOpen = false; },
+  groupDeleteAsk(d) { S.groupDelete = d.g; },
+  groupDeleteCancel() { S.groupDelete = null; },
+  async groupDelete(d) {
+    const g = S.groups.find((x) => x.id === d.g);
+    if (d.own) await api.deleteGroup(d.g); else await api.leaveGroup(d.g);
+    S.groupDelete = null;
+    if (S.goalForm === d.g) S.goalForm = null;
+    if (S.shareGroup === d.g) S.shareGroup = null;
+    await loadAll();
+    S.toast = d.own ? `Skupina ${g ? g.nazev : ''} je smazaná.` : `Skupina ${g ? g.nazev : ''} už v tvém seznamu není.`;
+  },
   goalCat(d) { S.goalCat = d.v; },
   goalTarget(d) { S.goalTarget = Math.max(1, Math.min(50, S.goalTarget + Number(d.v))); },
   async goalCreate(d) {
