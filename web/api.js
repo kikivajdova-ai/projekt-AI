@@ -115,7 +115,6 @@ class SupabaseApi {
   confirmFriend(id) { return this.call('POST', `/friends/${id}/confirm`); }
   removeFriend(id) { return this.call('DELETE', `/friends/${id}`); }
   block(id) { return this.call('POST', `/blocks/${id}`); }
-  report(r) { return this.call('POST', '/reports', r); }
 
   pings() { return this.call('GET', '/pings'); }
   sendPing(recipientId, kind) { return this.call('POST', '/pings', { id: newId(), recipientId, kind }); }
@@ -174,7 +173,7 @@ function demoSeed() {
       { id: 'x2', authorName: 'Tom', label: 'Procházka venku', day: dayStr(0), visibility: 'CHILL_CREW', authorId: 'f-tom' },
       { id: 'x3', authorName: 'Jakub', label: 'Večer bez telefonu', day: dayStr(-1), visibility: 'PRATELE', authorId: 'f-jakub' },
     ],
-    group: { id: 'g-chill', nazev: 'Chill crew', goals: [{ goalId: 'goal-1', category: 'PROCHAZKA', target: 10, othersTogether: 7, contributions: [] }] },
+    groups: [{ id: 'g-chill', nazev: 'Chill crew', goals: [{ goalId: 'goal-1', category: 'PROCHAZKA', target: 10, othersTogether: 7, contributions: [] }] }],
     badges: {},
   };
 }
@@ -185,10 +184,12 @@ class DemoApi {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null'); } catch { /* soukromé okno apod. */ }
     this.s = saved || demoSeed();
-    // starší uložená ukázka měla jen jeden cíl
-    const g = this.s.group;
-    if (g && !g.goals) {
-      g.goals = g.goalId ? [{ goalId: g.goalId, category: g.goalCategory, target: g.target, othersTogether: g.othersTogether || 0, contributions: g.contributions || [] }] : [];
+    // starší uložená ukázka měla jen jednu skupinu s jedním cílem
+    if (!this.s.groups) {
+      const g = this.s.group;
+      if (g && !g.goals) g.goals = g.goalId ? [{ goalId: g.goalId, category: g.goalCategory, target: g.target, othersTogether: g.othersTogether || 0, contributions: g.contributions || [] }] : [];
+      this.s.groups = g ? [g] : [];
+      delete this.s.group;
     }
     this.listeners = [];
   }
@@ -305,7 +306,7 @@ class DemoApi {
     const m = { id: newId(), category, status: 'SPLNENO', visibility: auto ? 'PRATELE' : 'JEN_JA', day: dayStr(0), joint, customActivityId: custom?.id, customTitle: custom?.nazev };
     this.s.moments.push(m);
     const counted = [];
-    for (const goal of this.s.group?.goals || []) {
+    for (const goal of this.s.groups.flatMap((g) => g.goals)) {
       if (goalIds.includes(goal.goalId) && category === goal.category) { goal.contributions.push(m.id); counted.push(goal.goalId); }
     }
     this.save();
@@ -314,12 +315,12 @@ class DemoApi {
     return { chvile: m, zapocitanoDoCilu: counted, hra, zprava: levelUp ? `Nová úroveň ${hra.uroven}!` : hra.zprava || 'Chvilka pro tebe je zapsaná.' };
   }
   findMoment(id) { const m = this.s.moments.find((x) => x.id === id); if (!m) throw new ApiError(404, 'Tohle jsme nenašli.'); return m; }
-  async sharePreview(id, visibility) {
+  async sharePreview(id, visibility, crewId) {
     const m = this.findMoment(id);
     return {
       // Název vlastní chvilky ostatní neuvidí (může být osobní), jen obecné „Chvíle pro sebe“.
       nahled: { authorName: this.s.profile, label: m.category === 'JINE' ? 'Chvilka pro sebe' : CAT[m.category].title, day: m.day, visibility },
-      publikum: visibility === 'PRATELE' ? 'Uvidí tvoji přátelé.' : `Uvidí členové skupiny ${this.s.group.nazev}.`,
+      publikum: visibility === 'PRATELE' ? 'Uvidí tvoji přátelé.' : `Uvidí členové skupiny ${(this.s.groups.find((g) => g.id === crewId) || this.s.groups[0])?.nazev || ''}.`,
       poznamka: null,
       previewToken: `demo.${id}.${visibility}`,
     };
@@ -338,7 +339,6 @@ class DemoApi {
   async confirmFriend(id) { const f = this.s.friends.find((x) => x.id === id); if (f) f.stav = 'PRATELE'; this.save(); }
   async removeFriend(id) { this.s.friends = this.s.friends.filter((f) => f.id !== id); this.save(); }
   async block(id) { this.s.blocked.push(id); this.save(); }
-  async report() { return { prijato: true, text: 'Díky. Nahlášení si přečte člověk z našeho týmu.' }; }
 
   async pings() { await this.wait(); return this.s.pingsReceived.filter((p) => !this.s.blocked.includes(p.odKohoId)); }
   async sendPing(recipientId) { this.s.pingsSent.push({ to: recipientId, day: dayStr(0) }); this.save(); return { odeslano: true }; }
@@ -363,29 +363,30 @@ class DemoApi {
 
   async groups() {
     await this.wait();
-    const g = this.s.group;
-    if (!g) return [];
-    return [{
+    return this.s.groups.map((g, i) => ({
       id: g.id, nazev: g.nazev,
-      clenove: [{ id: 'me', jmeno: this.s.profile }, { id: 'f-tom', jmeno: 'Tom' }, { id: 'f-ema', jmeno: 'Ema' }],
+      // ukázka: v první skupině jsou vymyšlení kamarádi, v nových jen ty
+      clenove: i === 0 && g.id === 'g-chill' ? [{ id: 'me', jmeno: this.s.profile }, { id: 'f-tom', jmeno: 'Tom' }, { id: 'f-ema', jmeno: 'Ema' }] : [{ id: 'me', jmeno: this.s.profile }],
       cile: g.goals.map((x) => {
         const together = x.othersTogether + x.contributions.length;
         const cat = CAT[x.category];
         return { goalId: x.goalId, category: x.category, together, target: x.target, reached: together >= x.target,
           text: together >= x.target ? `Spolu jste to dali! ${together} z ${x.target} ${cat.gen}.` : `Spolu ${together} z ${x.target} ${cat.gen}` };
       }),
-    }];
+    }));
   }
   async createGroup(name) {
-    if (this.s.group) throw new ApiError(400, 'V ukázce už skupinu máš.');
-    this.s.group = { id: newId(), nazev: String(name || 'Chill crew').trim().slice(0, 40), goals: [] }; this.save();
-    return { id: this.s.group.id, nazev: this.s.group.nazev };
+    if (this.s.groups.length >= 10) throw new ApiError(400, 'Skupin už máš hodně. Zkus nejdřív některou z nich.');
+    const g = { id: newId(), nazev: String(name || 'Chill crew').trim().slice(0, 40), goals: [] };
+    this.s.groups.push(g); this.save();
+    return { id: g.id, nazev: g.nazev };
   }
-  async createGoal(_groupId, category, target) {
-    const g = this.s.group;
+  async createGoal(groupId, category, target) {
+    const g = this.s.groups.find((x) => x.id === groupId);
+    if (!g) throw new ApiError(404, 'Tuhle skupinu jsme nenašli.');
     if (g.goals.some((x) => x.category === category)) throw new ApiError(409, 'Tuhle výzvu už tento týden máte. Vyber jiný druh odpočinku.');
     // Ukázka: kamarádi už mají pár chvilek za sebou, ať je vidět společný součet.
-    g.goals.push({ goalId: newId(), category, target, othersTogether: Math.min(2, target - 1), contributions: [] }); this.save();
+    g.goals.push({ goalId: newId(), category, target, othersTogether: g.id === 'g-chill' ? Math.min(2, target - 1) : 0, contributions: [] }); this.save();
     return {};
   }
   async inviteToGroup() { return { id: newId() }; }
