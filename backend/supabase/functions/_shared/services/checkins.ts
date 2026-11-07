@@ -37,7 +37,7 @@ export async function createCheckin(userId: string, input: { id: string; mood: n
   return { ulozeno: true, nabidnoutPomoc: offerSupport, zprava: offerSupport ? GAME_TEXT.support : null };
 }
 
-export async function listCheckins(userId: string, limit = 60) {
+export async function listCheckins(userId: string, limit = 400) {
   return asUser(userId, (tx) =>
     tx
       .select({ id: wellbeingCheckins.id, mood: wellbeingCheckins.mood, stress: wellbeingCheckins.stress, day: wellbeingCheckins.localDay })

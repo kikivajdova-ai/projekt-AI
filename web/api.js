@@ -136,6 +136,8 @@ class SupabaseApi {
   answerGroupInvite(id, accept) { return this.call('POST', `/group-invitations/${id}/answer`, { accept }); }
 
   checkin(mood) { return this.call('POST', '/checkins', { id: newId(), mood }); }
+  checkins() { return this.call('GET', '/checkins'); }
+  deleteCheckin(id) { return this.call('DELETE', `/checkins/${id}`); }
 }
 
 // =====================================================================
@@ -193,6 +195,7 @@ class DemoApi {
       this.s.groups = g ? [g] : [];
       delete this.s.group;
     }
+    if (!this.s.checkins) this.s.checkins = [];
     this.listeners = [];
   }
   save() { try { localStorage.setItem(DEMO_KEY, JSON.stringify(this.s)); } catch { /* nevadí */ } }
@@ -399,8 +402,26 @@ class DemoApi {
 
   async checkin(mood) {
     if (!this.s.consents.ZDRAVOTNI_UDAJE) throw new ApiError(403, 'Abychom mohli náladu ukládat, potřebujeme tvůj souhlas.');
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    this.s.checkins.unshift({ id: newId(), mood, stress: null, day }); this.save();
     return { ulozeno: true, nabidnoutPomoc: mood === 1 };
   }
+  async checkins() {
+    // Ukázka: pár vymyšlených dnů v minulosti, ať je kalendář vidět i bez dlouhého zapisování.
+    if (!this.s.checkinsSeeded) {
+      const moods = [4, 3, 5, 0, 4, 2, 3, 0, 4, 5, 0, 3, 4, 1, 3, 4, 0, 5, 4];
+      moods.forEach((m, i) => {
+        if (!m) return;
+        const d = new Date(); d.setHours(d.getHours() - 4); d.setDate(d.getDate() - (i + 1));
+        const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        this.s.checkins.push({ id: newId(), mood: m, stress: null, day });
+      });
+      this.s.checkinsSeeded = true; this.save();
+    }
+    return this.s.checkins.slice();
+  }
+  async deleteCheckin(id) { this.s.checkins = this.s.checkins.filter((c) => c.id !== id); this.save(); }
 }
 
 function createApi() {

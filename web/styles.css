@@ -112,8 +112,11 @@ h3 { font-size: 15px; font-weight: 700; }
 .badge small { font-size: 10px; color: var(--ink-2); }
 
 .moods { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-.moods button { height: 56px; border-radius: 18px; border: 1.5px solid #D9DBD2; background: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
-.moods button[aria-checked="true"] { border: 2px solid var(--ink); background: var(--tint); }
+.moods button { min-height: 88px; border-radius: 18px; border: 1.5px solid #D9DBD2; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 2px; font: inherit; font-size: 11px; font-weight: 600; line-height: 1.15; color: var(--ink); text-align: center; transition: transform .15s ease; }
+.moods button:hover { background: var(--mood); }
+.moods button svg { transition: transform .2s ease; }
+.moods button[aria-checked="true"] { border: 2px solid var(--ink); background: var(--mood); }
+.moods button[aria-checked="true"] svg { transform: scale(1.12); }
 
 /* Spodní lišta */
 .tabbar {
@@ -324,3 +327,22 @@ h3 { font-size: 15px; font-weight: 700; }
 .group-confirm { gap: 8px; background: #fbefeb; border-radius: 16px; padding: 14px; }
 .btn.danger { background: #a8432f; border-color: #a8432f; color: #fff; }
 .btn.danger:hover { background: #8f3726; color: #fff; }
+
+/* Kalendář nálad */
+.mood-cal { gap: 12px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-head span { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+.cal-cell { aspect-ratio: 1 / 1.12; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 12px; color: var(--ink-2); border: 0; background: transparent; padding: 0; font-family: inherit; }
+.cal-cell.empty { visibility: hidden; }
+.cal-cell.has { cursor: pointer; color: var(--ink); font-weight: 600; font-size: 10px; }
+.cal-cell.has:hover, .cal-cell.has:focus-visible { box-shadow: inset 0 0 0 1.5px rgba(35, 48, 26, 0.25); }
+.cal-cell.future { opacity: 0.35; }
+.cal-cell.today { box-shadow: inset 0 0 0 2px var(--primary); }
+.cal-cell.sel { box-shadow: inset 0 0 0 2px var(--ink); }
+.cal-detail { background: var(--chip); border-radius: 14px; padding: 10px 12px; gap: 12px; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; font-size: 11px; color: var(--ink-2); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.icon-btn[disabled] { opacity: 0.35; cursor: default; }
+.mood-screen > * { max-width: 600px; }
+.cal-cell.has svg { width: 62%; height: auto; max-width: 46px; }
+@media (min-width: 720px) { .cal-cell.has { font-size: 12px; } .cal-cell { aspect-ratio: 1 / 0.9; } }
