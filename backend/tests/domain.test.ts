@@ -288,3 +288,16 @@ test('profilová fotka: jen skutečný malý JPEG/PNG/WebP', () => {
   const big = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(160_000)]).toString('base64');
   assert.throws(() => validateAvatar(big));
 });
+
+import { isAllowedCheckinDay } from '../supabase/functions/_shared/domain/time.ts';
+
+test('zpětný zápis nálady: dnešek a poslední rok ano, budoucnost a nesmysly ne', () => {
+  const today = '2026-11-07';
+  assert.equal(isAllowedCheckinDay('2026-11-07', today), true);
+  assert.equal(isAllowedCheckinDay('2026-10-01', today), true);
+  assert.equal(isAllowedCheckinDay('2025-11-06', today), true);
+  assert.equal(isAllowedCheckinDay('2025-11-05', today), false);
+  assert.equal(isAllowedCheckinDay('2026-11-08', today), false);
+  assert.equal(isAllowedCheckinDay('2026-02-30', today), false);
+  assert.equal(isAllowedCheckinDay('dnes', today), false);
+});

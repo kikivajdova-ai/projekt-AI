@@ -943,11 +943,13 @@ function moodCalendar() {
     const label = `${d}. ${CZ_MONTHS[mo - 1]}${c ? `: ${MOODS[c.mood - 1].label}` : ''}`;
     cells.push(c
       ? `<button type="button" class="${cls}" style="background:${MOODS[c.mood - 1].tint}" data-a="moodDay" data-v="${key}" aria-label="${esc(label)}">${moodArt(c.mood, 26)}<span>${d}</span></button>`
-      : `<span class="${cls}" aria-label="${esc(label)}"><span>${d}</span></span>`);
+      : future
+        ? `<span class="${cls}" aria-hidden="true"><span>${d}</span></span>`
+        : `<button type="button" class="${cls} open" data-a="moodDay" data-v="${key}" aria-label="${esc(label)}, zapsat náladu"><span>${d}</span></button>`);
   }
   const canNext = ym < today.slice(0, 7);
   const sel = S.moodDay && byDay[S.moodDay];
-  const selRaw = sel ? new Date(S.moodDay + 'T12:00').toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+  const selRaw = S.moodDay ? new Date(S.moodDay + 'T12:00').toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
   const selDate = selRaw.charAt(0).toUpperCase() + selRaw.slice(1);
   const count = Object.keys(byDay).filter((k) => k.startsWith(ym)).length;
   return `<section class="card mood-cal">
@@ -956,7 +958,11 @@ function moodCalendar() {
       <button type="button" class="icon-btn soft" data-a="moodMonth" data-v="1" aria-label="Další měsíc" ${canNext ? '' : 'disabled'}>›</button></div>
     <div class="cal-grid cal-head" aria-hidden="true">${['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map((d) => `<span>${d}</span>`).join('')}</div>
     <div class="cal-grid">${cells.join('')}</div>
-    ${sel ? `<div class="row cal-detail">${moodArt(sel.mood, 36)}<div class="grow"><p style="font-weight:600">${esc(selDate)}</p><p class="small muted">${esc(MOODS[sel.mood - 1].label)}</p></div><button type="button" class="link-btn danger-text" data-a="moodDelete" data-v="${esc(S.moodDay)}">Smazat</button></div>` : ''}
+    ${S.moodDay ? `<div class="stack cal-detail">
+      <div class="row between"><div><p style="font-weight:600">${esc(selDate)}</p><p class="small muted">${sel ? esc(MOODS[sel.mood - 1].label) : 'Jak ti tehdy bylo?'}</p></div>
+        ${sel ? `<button type="button" class="link-btn danger-text" data-a="moodDelete" data-v="${esc(S.moodDay)}">Smazat</button>` : ''}</div>
+      <div class="cal-pick" role="radiogroup" aria-label="Nálada za tento den">${MOODS.map((m) => `<button type="button" role="radio" aria-checked="${sel?.mood === m.n}" aria-label="${esc(m.label)}" title="${esc(m.label)}" style="--mood:${m.tint}" data-a="moodSet" data-v="${m.n}">${moodArt(m.n, 30)}</button>`).join('')}</div>
+    </div>` : ''}
     <div class="cal-legend">${MOODS.map((m) => `<span>${moodArt(m.n, 18)}${esc(m.short)}</span>`).join('')}</div>
   </section>`;
 }
@@ -1199,6 +1205,17 @@ const actions = {
     S.moodMonth = next; S.moodDay = null;
   },
   moodDay(d) { S.moodDay = S.moodDay === d.v ? null : d.v; },
+  async moodSet(d) {
+    const day = S.moodDay;
+    if (!day) return;
+    const consent = (S.me?.souhlasy || []).some((c) => c.typ === 'ZDRAVOTNI_UDAJE' && c.platny);
+    if (!consent) { S.toast = 'Abychom mohli náladu ukládat, potřebujeme tvůj souhlas.'; return; }
+    const mood = Number(d.v);
+    await api.checkin(mood, day === todayStr() ? undefined : day);
+    S.checkins = await api.checkins();
+    if (day === todayStr()) { S.mood = mood; S.moodResult = null; }
+    S.toast = 'Nálada je zapsaná.';
+  },
   async moodDelete(d) {
     for (const c of S.checkins.filter((x) => x.day === d.v)) await api.deleteCheckin(c.id);
     S.checkins = S.checkins.filter((x) => x.day !== d.v);

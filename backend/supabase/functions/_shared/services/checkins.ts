@@ -7,14 +7,18 @@ import { asUser, isPermissionError } from '../db/client.ts';
 import { wellbeingCheckins } from '../db/schema/index.ts';
 import { MOOD_MIN } from '../domain/config.ts';
 import { GAME_TEXT } from '../domain/labels.ts';
-import { localDay } from '../domain/time.ts';
+import { isAllowedCheckinDay, localDay } from '../domain/time.ts';
 import { AppError } from '../errors.ts';
 import { loadSettings } from './settings.ts';
 
-export async function createCheckin(userId: string, input: { id: string; mood: number; stress?: number }) {
+export async function createCheckin(userId: string, input: { id: string; mood: number; stress?: number; day?: string }) {
   try {
     await asUser(userId, async (tx) => {
       const s = await loadSettings(tx, userId);
+      const today = localDay(new Date(), s.timezone);
+      if (input.day !== undefined && !isAllowedCheckinDay(input.day, today)) {
+        throw new AppError(400, 'NEPLATNY_DEN', 'Náladu jde zapsat jen za dnešek nebo za dny v posledním roce.');
+      }
       await tx
         .insert(wellbeingCheckins)
         .values({
@@ -22,7 +26,7 @@ export async function createCheckin(userId: string, input: { id: string; mood: n
           userId,
           mood: input.mood,
           stress: input.stress ?? null,
-          localDay: localDay(new Date(), s.timezone),
+          localDay: input.day ?? today,
         })
         .onConflictDoNothing();
     });

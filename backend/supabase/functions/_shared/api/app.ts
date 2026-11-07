@@ -84,6 +84,8 @@ const schemas = {
     id,
     mood: z.number().int().min(MOOD_MIN).max(MOOD_MAX),
     stress: z.number().int().min(1).max(5).optional(),
+    /** Zpětný zápis z kalendáře (YYYY-MM-DD); bez něj se zapíše dnešek. */
+    day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }),
   group: z.strictObject({ name: z.string().trim().min(1).max(40) }),
   groupInvite: z.strictObject({ friendId: id }),

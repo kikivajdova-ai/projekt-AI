@@ -148,3 +148,12 @@ export function nextAllowedSendTime(now: Date, q: QuietHours): Date {
   const endToday = zonedToInstant(today, q.end, q.timeZone);
   return endToday.getTime() > now.getTime() ? endToday : zonedToInstant(addDays(today, 1), q.end, q.timeZone);
 }
+
+/** Náladu jde zapsat zpětně jen za den z posledního roku, nikdy za budoucí. */
+export const MAX_BACKFILL_DAYS = 366;
+export function isAllowedCheckinDay(day: string, today: LocalDay): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const d = new Date(day + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== day) return false;
+  return day <= today && day >= addDays(today, -MAX_BACKFILL_DAYS);
+}
