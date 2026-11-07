@@ -69,7 +69,7 @@ const S = {
   mood: null, moodResult: null,
   shareFor: null, shareTarget: null, preview: null,
   confirmDelete: false, inviteAnswered: {},
-  goalForm: false, goalCat: null, goalTarget: 10,
+  goalForm: null, goalCat: null, goalTarget: 10, newGroupOpen: false, shareGroup: null, // goalForm = id skupiny s otevřeným formulářem
   weekly: null, weeklyForm: false, wCat: null, wTarget: 5,
 };
 
@@ -371,7 +371,6 @@ function friendsView() {
   const pending = S.friends.filter((f) => f.stav === 'CEKA_NA_TEBE');
   const waiting = S.friends.filter((f) => f.stav === 'CEKA_NA_NI_NEJ');
   const friends = confirmedFriends();
-  const group = S.groups[0];
   return `<div class="screen">
     <div><h1>Přátelé</h1><p class="muted">Odpočívá se lépe ve dvou. Pozvi sem ty, se kterými je ti dobře.</p></div>
     <div class="two-col"><div class="col">
@@ -382,7 +381,9 @@ function friendsView() {
            <div class="btn-row"><button class="btn" data-a="copyLink">Zkopírovat</button>${navigator.share ? '<button class="btn ghost" data-a="shareLink">Poslat…</button>' : ''}</div>`
         : `<button class="btn big" data-a="createInvite">Vytvořit odkaz</button>`}
     </section>
-    ${goalSection(group, friends)}
+    ${S.groups.length ? `<h2 style="margin-top:6px">Moje skupiny</h2>` : ''}
+    ${S.groups.map((g, i) => goalSection(g, friends, i === 0)).join('')}
+    ${newGroupCard()}
     </div><div class="col">
     ${pending.map((f) => `<section class="card"><div class="row">${avatar(f.jmeno, f.fotka)}<div class="grow"><h3>${esc(f.jmeno)}</h3><p class="muted small">Chce se s tebou spřátelit.</p></div></div>
       <div class="btn-row"><button class="btn ghost" data-a="removeFriend" data-id="${esc(f.id)}">Teď ne</button><button class="btn" data-a="confirmFriend" data-id="${esc(f.id)}">Potvrdit</button></div></section>`).join('')}
@@ -398,8 +399,8 @@ function friendsView() {
         ? `<p class="small green-text" style="font-weight:600">Odesláno.</p>`
         : `<div class="btn-row"><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="MYSLIM_NA_TEBE">Myslím na tebe</button><button class="btn ghost small-btn" data-a="ping" data-id="${esc(f.id)}" data-v="DEJ_SI_PAUZU">Dej si pauzu</button></div>`}
       ${S.menuFor === f.id ? `<div class="stack">
-        ${group && !api.demo ? `<button class="btn soft small-btn" data-a="inviteToGroup" data-id="${esc(f.id)}">Pozvat do skupiny ${esc(group.nazev)}</button>` : ''}
-        <div class="btn-row"><button class="btn soft small-btn" data-a="block" data-id="${esc(f.id)}">Zablokovat</button><button class="btn soft small-btn" data-a="report" data-id="${esc(f.id)}">Nahlásit</button></div>
+        ${api.demo ? '' : S.groups.filter((g) => !(g.clenove || []).some((m) => m.id === f.id)).map((g) => `<button class="btn soft small-btn" data-a="inviteToGroup" data-id="${esc(f.id)}" data-g="${esc(g.id)}">Pozvat do skupiny ${esc(g.nazev)}</button>`).join('')}
+        <button class="btn soft small-btn" data-a="block" data-id="${esc(f.id)}">Zablokovat</button>
         <button class="btn soft small-btn" data-a="removeFriend" data-id="${esc(f.id)}">Odebrat z přátel</button></div>` : ''}
     </section>`).join('')}
     ${waiting.length ? `<p class="muted small">Čeká na potvrzení: ${waiting.map((w) => esc(w.jmeno)).join(', ')}</p>` : ''}
@@ -410,15 +411,20 @@ function friendsView() {
 }
 
 // Společná výzva týdne: založit skupinu, přidat výzvu a plnit ji. Jen společný součet, nic po lidech.
-function goalSection(group, friends) {
-  if (!group) {
-    return `<section class="card" id="cil"><p class="label">Společná výzva týdne</p><h2>Založte si skupinu</h2>
-      <p class="muted small">Dejte si cíl na týden, třeba 10 procházek. Každý odpočívá, kdy chce, a počítá se to dohromady.</p>
-      <form data-form="group" class="stack">
-        <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" value="Chill crew" required></div>
-        <button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button>
-      </form></section>`;
-  }
+// Nová skupina: první se nabízí rovnou, další po klepnutí na „Založit další skupinu“.
+function newGroupCard() {
+  const first = !S.groups.length;
+  if (!first && !S.newGroupOpen) return `<button class="btn ghost" data-a="newGroup">+ Založit další skupinu</button>`;
+  return `<section class="card"${first ? ' id="cil"' : ''}><p class="label">Společná výzva týdne</p><h2>${first ? 'Založte si skupinu' : 'Nová skupina'}</h2>
+    <p class="muted small">${first ? 'Dejte si cíl na týden, třeba 10 procházek. Každý odpočívá, kdy chce, a počítá se to dohromady.' : 'Třeba pro rodinu, kolegy nebo partu z kurzu. Každá skupina má vlastní výzvy.'}</p>
+    <form data-form="group" class="stack">
+      <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" ${first ? 'value="Chill crew"' : 'placeholder="Třeba Rodina"'} required></div>
+      <div class="btn-row">${first ? '' : '<button class="btn ghost" type="button" data-a="newGroupCancel">Zrušit</button>'}<button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button></div>
+    </form></section>`;
+}
+
+function goalSection(group, friends, isFirst) {
+  const open = S.goalForm === group.id;
   const allGoals = group.cile || [];
   // Splněný cíl ze seznamu zmizí (druh odpočinku zůstává na tento týden obsazený).
   const goals = allGoals.filter((g) => !g.reached);
@@ -437,7 +443,7 @@ function goalSection(group, friends) {
       <button class="btn${g.reached ? ' ghost' : ''}" data-a="goalDo" data-id="${esc(g.goalId)}" data-cat="${esc(g.category)}">${g.reached ? 'Zapsat další chvilku' : 'Zapsat chvilku do výzvy'}</button>
     </div>`;
   };
-  const form = S.goalForm && free.length
+  const form = open && free.length
     ? `<div class="stack goal-form">
         <p style="font-weight:600">Na čem bude výzva?</p>
         <div class="pills">${free.map((c) => `<button type="button" class="pill" aria-pressed="${c.id === cat}" data-a="goalCat" data-v="${c.id}">${esc(c.title)}</button>`).join('')}</div>
@@ -446,16 +452,16 @@ function goalSection(group, friends) {
           <span class="stepper-value" aria-live="polite">${S.goalTarget}</span>
           <button type="button" class="icon-btn soft" aria-label="Více" data-a="goalTarget" data-v="1">+</button>
           <span class="muted small grow">${esc(CAT[cat]?.gen || '')} dohromady</span></div>
-        <div class="btn-row"><button class="btn ghost" data-a="goalCancel">Zrušit</button><button class="btn" data-a="goalCreate" data-v="${cat}">Přidat výzvu</button></div>
+        <div class="btn-row"><button class="btn ghost" data-a="goalCancel">Zrušit</button><button class="btn" data-a="goalCreate" data-v="${cat}" data-g="${esc(group.id)}">Přidat výzvu</button></div>
       </div>`
-    : free.length ? `<button class="btn ghost" data-a="goalOpen">+ Přidat výzvu na tento týden</button>` : '';
-  return `<section class="card" id="cil">
+    : free.length ? `<button class="btn ghost" data-a="goalOpen" data-g="${esc(group.id)}">+ Přidat výzvu na tento týden</button>` : '';
+  return `<section class="card" id="${isFirst ? 'cil' : `cil-${esc(group.id)}`}">
     <div class="row between"><div><p class="label">Společná výzva týdne</p><h2>${esc(group.nazev)}</h2></div><span class="chip group">Skupina</span></div>
     <p class="muted small">${(group.clenove || []).map((m) => esc(m.jmeno)).join(', ')}</p>
     ${reachedCount ? `<p class="small green-text" style="font-weight:600">Společně splněné výzvy tento týden: ${reachedCount}. Krása!</p>` : ''}
-    ${goals.length ? goals.map(goalCard).join('') : (S.goalForm || reachedCount ? '' : '<p class="muted">Tento týden zatím žádná výzva.</p>')}
+    ${goals.length ? goals.map(goalCard).join('') : (open || reachedCount ? '' : '<p class="muted">Tento týden zatím žádná výzva.</p>')}
     ${form}
-    ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
+    ${invitable.length && !api.demo ? `<div class="pills"><span class="small muted">Pozvat do skupiny:</span>${invitable.map((f) => `<button type="button" class="pill" data-a="inviteToGroup" data-id="${esc(f.id)}" data-g="${esc(group.id)}">${esc(f.jmeno)}</button>`).join('')}</div>` : ''}
   </section>`;
 }
 
@@ -811,7 +817,7 @@ function gardenView() {
       <section class="card glass garden-levels"><h3>Podoby zahrady</h3>
         <p class="muted small">S každou chvilkou zahrada rozkvétá. S novou úrovní se zahrada promění, rostliny zůstávají.</p>
         ${GARDEN_LEVELS.map((L, i) => { const n = i + 1; const now = Math.min(g.uroven, GARDEN_LEVELS.length) === n; const open = g.uroven >= n;
-          return `<div class="row level-row${now ? ' now' : ''}"><div class="level-thumb">${open ? gardenScene(total, -1, n, true) : ''}</div>
+          return `<div class="row level-row${now ? ' now' : ''}${open ? '' : ' locked'}"><div class="level-thumb">${gardenScene(open ? total : GARDEN_STEPS, -1, n, true)}${open ? '' : `<span class="level-lock" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>`}</div>
             <div class="grow"><p style="font-weight:600">${esc(L.name)}</p><p class="muted small">${now ? 'Tvoje zahrada teď' : open ? 'Tuhle podobu už máš za sebou' : `Od úrovně ${n}`}</p></div>${now ? '<span class="chip group">Teď</span>' : ''}</div>`; }).join('')}
       </section>
     </div>
@@ -883,7 +889,6 @@ function moodView() {
 }
 
 function shareView() {
-  const group = S.groups[0];
   const p = S.preview;
   // Nahoře tvoje vlastní zahrada (stejná jako v záložce Zahrada), jinak obecná ilustrace.
   const g = S.game || {};
@@ -896,7 +901,7 @@ function shareView() {
       <div class="handle"></div>
       <h1 style="font-size:22px">S kým chvilku sdílet?</h1>
       <div class="pills"><button class="pill" aria-pressed="${S.shareTarget === 'PRATELE'}" data-a="shareTarget" data-v="PRATELE">Přátelé</button>
-        ${group ? `<button class="pill" aria-pressed="${S.shareTarget === 'CHILL_CREW'}" data-a="shareTarget" data-v="CHILL_CREW">Skupina ${esc(group.nazev)}</button>` : ''}</div>
+        ${S.groups.map((g) => `<button class="pill" aria-pressed="${S.shareTarget === 'CHILL_CREW' && S.shareGroup === g.id}" data-a="shareTarget" data-v="CHILL_CREW" data-g="${esc(g.id)}">Skupina ${esc(g.nazev)}</button>`).join('')}</div>
       ${p ? `<h2>Takhle to uvidí ostatní</h2><p class="muted">${esc(p.publikum)}</p>
         <div class="card tint" style="padding:16px;flex-direction:row;align-items:center"><div class="avatar" style="background:#fff">${esc((p.nahled?.authorName || '').charAt(0))}</div>
           <div class="grow"><p style="font-weight:600">${esc(p.nahled?.authorName)} · ${esc(p.nahled?.label)}</p><p class="green-text small">${p.nahled?.day === todayStr() ? 'dnes' : esc(p.nahled?.day)}</p></div>
@@ -1011,7 +1016,8 @@ const actions = {
   },
   goToGoal() {
     S.tab = 'pratele';
-    if (S.groups.length) S.goalForm = true;
+    if (S.groups.length) S.goalForm = (myGoal()?.group || S.groups[0]).id;
+    else S.newGroupOpen = true;
     S.scrollTo = 'cil';
   },
   weeklyOpen() { S.weeklyForm = true; S.wCat = S.weekly?.category || null; S.wTarget = S.weekly?.cil || 5; },
@@ -1024,14 +1030,15 @@ const actions = {
     S.toast = 'Cíl na tento týden je nastavený. Chvilky, které k němu patří, se započítají samy.';
   },
   async weeklyDelete() { await api.deleteWeeklyGoal(); S.weekly = null; S.weeklyForm = false; S.toast = 'Tento týden bez cíle. I to je v pořádku.'; },
-  goalOpen() { S.goalForm = true; S.goalTarget = 10; S.goalCat = null; },
-  goalCancel() { S.goalForm = false; },
+  goalOpen(d) { S.goalForm = d.g; S.goalTarget = 10; S.goalCat = null; },
+  goalCancel() { S.goalForm = null; },
+  newGroup() { S.newGroupOpen = true; },
+  newGroupCancel() { S.newGroupOpen = false; },
   goalCat(d) { S.goalCat = d.v; },
   goalTarget(d) { S.goalTarget = Math.max(1, Math.min(50, S.goalTarget + Number(d.v))); },
   async goalCreate(d) {
-    const group = S.groups[0];
-    await api.createGoal(group.id, d.v, S.goalTarget);
-    S.goalForm = false; S.goalCat = null;
+    await api.createGoal(d.g, d.v, S.goalTarget);
+    S.goalForm = null; S.goalCat = null;
     S.groups = await api.groups();
     S.toast = `Výzva je přidaná: ${S.goalTarget} ${CAT[d.v].gen} spolu. Každá taková chvilka se do ní započítá sama.`;
   },
@@ -1055,7 +1062,7 @@ const actions = {
   async answerGroup(d) { await api.answerGroupInvite(d.id, d.v === '1'); S.groupInvites = await api.groupInvitations(); S.groups = await api.groups(); },
   menu(d) { S.menuFor = S.menuFor === d.id ? null : d.id; },
   async ping(d) { await api.sendPing(d.id, d.v); S.pinged[d.id] = true; S.game = await api.game(); S.toast = 'Povzbuzení odesláno.'; },
-  async inviteToGroup(d) { await api.inviteToGroup(S.groups[0].id, d.id); S.menuFor = null; S.toast = 'Pozvánka do skupiny odeslána. Až ji kamarád přijme, uvidí vaši výzvu.'; },
+  async inviteToGroup(d) { await api.inviteToGroup(d.g, d.id); S.menuFor = null; S.toast = 'Pozvánka do skupiny odeslána. Až ji kamarád přijme, uvidí vaši výzvu.'; },
   async block(d) {
     const f = S.friends.find((x) => x.id === d.id);
     await api.block(d.id);
@@ -1063,12 +1070,7 @@ const actions = {
     await loadAll();
     S.toast = `Zablokováno. ${f?.jmeno || 'Kamarád'} se o tom nedozví.`;
   },
-  async report(d) {
-    const r = await api.report({ reportedUserId: d.id, reason: 'OBTEZOVANI', contextType: 'profile', alsoBlock: true });
-    S.menuFor = null;
-    await loadAll();
-    S.toast = `${r.text} Člověka jsme zároveň zablokovali.`;
-  },
+
   async setting(d) {
     const cur = !!S.me.nastaveni[d.v];
     S.me = await api.settings({ [d.v]: !cur });
@@ -1090,10 +1092,11 @@ const actions = {
   openShare(d) { S.overlay = 'sdileni'; S.shareFor = d.id; S.shareTarget = null; S.preview = null; },
   async shareTarget(d) {
     S.shareTarget = d.v;
-    S.preview = await api.sharePreview(S.shareFor, d.v, d.v === 'CHILL_CREW' ? S.groups[0]?.id : undefined);
+    S.shareGroup = d.v === 'CHILL_CREW' ? d.g : null;
+    S.preview = await api.sharePreview(S.shareFor, d.v, S.shareGroup || undefined);
   },
   async doShare() {
-    await api.share(S.shareFor, S.shareTarget, S.preview.previewToken, S.shareTarget === 'CHILL_CREW' ? S.groups[0]?.id : undefined);
+    await api.share(S.shareFor, S.shareTarget, S.preview.previewToken, S.shareGroup || undefined);
     S.moments = await api.moments();
     S.overlay = null; S.preview = null;
     S.toast = 'Nasdíleno. Kdykoli to vrátíš na „Jen já“.';
@@ -1180,9 +1183,12 @@ root.addEventListener('submit', (ev) => {
     guard(async () => {
       const name = String(f.name || '').trim();
       if (!name) return;
-      await api.createGroup(name);
+      const made = await api.createGroup(name);
       S.groups = await api.groups();
-      S.goalForm = true; S.goalTarget = 10; S.goalCat = null;
+      const idx = S.groups.findIndex((g) => g.id === made?.id);
+      S.newGroupOpen = false;
+      S.goalForm = made?.id || null; S.goalTarget = 10; S.goalCat = null;
+      S.scrollTo = idx <= 0 ? 'cil' : `cil-${made.id}`;
       S.toast = 'Skupina je založená. Teď si dejte výzvu a pozvěte kamarády.';
     });
   }
