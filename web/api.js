@@ -130,6 +130,8 @@ class SupabaseApi {
   createGroup(name) { return this.call('POST', '/groups', { name }); }
   createGoal(groupId, category, target) { return this.call('POST', `/groups/${groupId}/goals`, { category, target }); }
   inviteToGroup(groupId, friendId) { return this.call('POST', `/groups/${groupId}/invitations`, { friendId }); }
+  deleteGroup(groupId) { return this.call('DELETE', `/groups/${groupId}`); }
+  leaveGroup(groupId) { return this.call('DELETE', `/groups/${groupId}/membership`); }
   groupInvitations() { return this.call('GET', '/group-invitations'); }
   answerGroupInvite(id, accept) { return this.call('POST', `/group-invitations/${id}/answer`, { accept }); }
 
@@ -364,7 +366,7 @@ class DemoApi {
   async groups() {
     await this.wait();
     return this.s.groups.map((g, i) => ({
-      id: g.id, nazev: g.nazev,
+      id: g.id, nazev: g.nazev, mojeSkupina: true,
       // ukázka: v první skupině jsou vymyšlení kamarádi, v nových jen ty
       clenove: i === 0 && g.id === 'g-chill' ? [{ id: 'me', jmeno: this.s.profile }, { id: 'f-tom', jmeno: 'Tom' }, { id: 'f-ema', jmeno: 'Ema' }] : [{ id: 'me', jmeno: this.s.profile }],
       cile: g.goals.map((x) => {
@@ -390,6 +392,8 @@ class DemoApi {
     return {};
   }
   async inviteToGroup() { return { id: newId() }; }
+  async deleteGroup(groupId) { this.s.groups = this.s.groups.filter((g) => g.id !== groupId); this.save(); }
+  async leaveGroup(groupId) { return this.deleteGroup(groupId); }
   async groupInvitations() { return this.s.groupInviteAnswered ? [] : [{ id: 'gi-1', skupina: 'Knihomolové', odKoho: 'Ema' }]; }
   async answerGroupInvite() { this.s.groupInviteAnswered = true; this.save(); return {}; }
 

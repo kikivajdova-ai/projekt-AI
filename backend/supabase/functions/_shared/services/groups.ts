@@ -1,6 +1,6 @@
 // Skupiny („Chill crew“) a společné cíle. Ven jde jen součet skupiny, nikdy čísla po lidech.
 
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import { asSystem, asUser, isPermissionError, isUniqueViolation } from '../db/client.ts';
 import {
   activities,
@@ -96,6 +96,18 @@ export async function leaveGroup(userId: string, groupId: string) {
   );
 }
 
+/**
+ * Smazání skupiny pro všechny. Smí jen zakladatel (kontroluje private.delete_group).
+ * Sdílené chvilky se autorům vrátí jako soukromé, nic dalšího se nemaže.
+ */
+export async function deleteGroup(userId: string, groupId: string) {
+  const ok = await asUser(userId, async (tx) => {
+    const r = await tx.execute(sql`select private.delete_group(${groupId}::uuid) as ok`);
+    return (r[0] as { ok: boolean } | undefined)?.ok === true;
+  });
+  if (!ok) throw forbidden('Skupinu může smazat jen ten, kdo ji založil. Ze skupiny ale můžeš odejít.');
+}
+
 export async function createGoal(
   userId: string,
   groupId: string,
@@ -148,7 +160,7 @@ export async function getGoalProgress(userId: string, goalId: string) {
 export async function listMyGroups(userId: string) {
   const mine = await asUser(userId, async (tx) => {
     const rows = await tx
-      .select({ id: groups.id, name: groups.name })
+      .select({ id: groups.id, name: groups.name, createdBy: groups.createdBy })
       .from(groups)
       .innerJoin(groupMembers, and(eq(groupMembers.groupId, groups.id), eq(groupMembers.userId, userId)));
     const ids = rows.map((r) => r.id);
@@ -176,6 +188,8 @@ export async function listMyGroups(userId: string) {
     mine.rows.map(async (g) => ({
       id: g.id,
       nazev: g.name,
+      // smí ji smazat (zakladatel); ostatní můžou odejít
+      mojeSkupina: g.createdBy === userId,
       // Jména členů ano (je to skupina kamarádů), ale bez jakýchkoli čísel u jmen.
       // id kvůli blokování a nahlášení člena
       clenove: mine.members.filter((m) => m.groupId === g.id).map((m) => ({ id: m.userId, jmeno: m.name })),

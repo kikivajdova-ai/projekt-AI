@@ -285,6 +285,10 @@ export function createApp() {
   app.post('/group-invitations/:id/answer', async (c) =>
     c.json(await groups.answerGroupInvite(uid(c), param(c.req.param('id')), (await body(c.req.raw, schemas.groupAnswer)).accept)),
   );
+  app.delete('/groups/:id', async (c) => {
+    await groups.deleteGroup(uid(c), param(c.req.param('id')));
+    return c.body(null, 204);
+  });
   app.delete('/groups/:id/membership', async (c) => {
     await groups.leaveGroup(uid(c), param(c.req.param('id')));
     return c.body(null, 204);

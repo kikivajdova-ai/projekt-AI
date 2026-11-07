@@ -315,3 +315,12 @@ h3 { font-size: 15px; font-weight: 700; }
 .level-row.locked .level-thumb svg { filter: grayscale(1) contrast(0.9); opacity: 0.55; }
 .level-row.locked p:first-child { color: var(--ink-2); }
 .level-lock { position: absolute; inset: 0; margin: auto; width: 24px; height: 24px; border-radius: 999px; background: rgba(35, 48, 26, 0.55); display: flex; align-items: center; justify-content: center; }
+
+/* Smazání / opuštění skupiny */
+.group-remove { display: flex; justify-content: flex-end; border-top: 1px solid var(--line, rgba(35, 48, 26, 0.08)); padding-top: 10px; }
+.link-btn { background: none; border: 0; padding: 6px 2px; font: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: var(--ink-2); }
+.link-btn:hover, .link-btn:focus-visible { text-decoration: underline; }
+.danger-text { color: #a8432f; }
+.group-confirm { gap: 8px; background: #fbefeb; border-radius: 16px; padding: 14px; }
+.btn.danger { background: #a8432f; border-color: #a8432f; color: #fff; }
+.btn.danger:hover { background: #8f3726; color: #fff; }
