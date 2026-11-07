@@ -414,12 +414,18 @@ function friendsView() {
 // Nová skupina: první se nabízí rovnou, další po klepnutí na „Založit další skupinu“.
 function newGroupCard() {
   const first = !S.groups.length;
-  if (!first && !S.newGroupOpen) return `<button class="btn ghost" data-a="newGroup">+ Založit další skupinu</button>`;
-  return `<section class="card"${first ? ' id="cil"' : ''}><p class="label">Společná výzva týdne</p><h2>${first ? 'Založte si skupinu' : 'Nová skupina'}</h2>
-    <p class="muted small">${first ? 'Dejte si cíl na týden, třeba 10 procházek. Každý odpočívá, kdy chce, a počítá se to dohromady.' : 'Třeba pro rodinu, kolegy nebo partu z kurzu. Každá skupina má vlastní výzvy.'}</p>
+  const id = first ? ' id="cil"' : '';
+  if (!S.newGroupOpen) {
+    if (!first) return `<button class="btn ghost" data-a="newGroup">+ Založit další skupinu</button>`;
+    return `<section class="card"${id}><p class="label">Společná výzva týdne</p><h2>Odpočívejte spolu</h2>
+      <p class="muted small">Založ skupinu a dejte si cíl na týden, třeba 10 procházek. Každý odpočívá, kdy chce, a počítá se to dohromady.</p>
+      <button class="btn" data-a="newGroup">+ Založit skupinu</button></section>`;
+  }
+  return `<section class="card"${id}><p class="label">Společná výzva týdne</p><h2>Nová skupina</h2>
+    <p class="muted small">Třeba pro rodinu, kolegy nebo partu z kurzu. Každá skupina má vlastní výzvy.</p>
     <form data-form="group" class="stack">
-      <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" ${first ? 'value="Chill crew"' : 'placeholder="Třeba Rodina"'} required></div>
-      <div class="btn-row">${first ? '' : '<button class="btn ghost" type="button" data-a="newGroupCancel">Zrušit</button>'}<button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button></div>
+      <div class="field"><label for="f-group">Název skupiny</label><input id="f-group" name="name" maxlength="40" placeholder="Třeba Rodina" required></div>
+      <div class="btn-row"><button class="btn ghost" type="button" data-a="newGroupCancel">Zrušit</button><button class="btn" type="submit" ${S.busy ? 'disabled' : ''}>Založit skupinu</button></div>
     </form></section>`;
 }
 
