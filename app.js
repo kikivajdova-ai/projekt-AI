@@ -66,7 +66,7 @@ const S = {
   mode: {}, friendFor: {}, sentInvite: {}, contribute: true,
   lastGrown: null, toast: null, menuFor: null, pinged: {}, inviteLink: null,
   inviteToken: null, invitePreview: null,
-  mood: null, moodResult: null,
+  mood: null, moodResult: null, checkins: [], moodMonth: null, moodDay: null,
   shareFor: null, shareTarget: null, preview: null,
   confirmDelete: false, inviteAnswered: {},
   goalForm: null, goalCat: null, goalTarget: 10, newGroupOpen: false, shareGroup: null, groupDelete: null, // goalForm = id skupiny s otevřeným formulářem
@@ -859,7 +859,7 @@ function meView() {
     </div>
     <div class="two-col"><div class="col">
     <button class="card" style="text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between" data-a="openMood">
-      <span><b>Jak se dnes máš?</b><br><span class="muted small">Záznam nálady vidíš jen ty</span></span>${ICON.chevron}</button>
+      <span><b>Jak se dnes máš?</b><br><span class="muted small">Zápis nálady a kalendář. Vidíš je jen ty.</span></span>${ICON.chevron}</button>
     <section class="card" style="padding:6px 18px;gap:0">
       ${toggle('gameEnabled', 'Zahrada a úrovně', 'Když vypneš, nikdo to neuvidí')}
       ${toggle('quietHoursEnabled', `Noční klid ${esc(st.quietStart || '22:00')}–${esc(st.quietEnd || '08:00')}`, 'V noci žádné notifikace')}
@@ -886,19 +886,97 @@ function meView() {
   </div>`;
 }
 
+// ---------- nálada: 5 kytiček (každá jiná barva a podoba) a kalendář ----------
+const MOODS = [
+  { n: 1, label: 'Je to těžké', short: 'Těžké', color: '#8DA4BF', tint: '#E4EBF3' },
+  { n: 2, label: 'Spíš špatně', short: 'Spíš špatně', color: '#AE9BD3', tint: '#EEE8F7' },
+  { n: 3, label: 'Ujde to', short: 'Ujde to', color: '#EBC155', tint: '#FBF1D2' },
+  { n: 4, label: 'Docela dobře', short: 'Docela dobře', color: '#F2A06B', tint: '#FDEADC' },
+  { n: 5, label: 'Je mi dobře', short: 'Dobře', color: '#EC7E93', tint: '#FCE3E8' },
+];
+// Kytička podle nálady: od svěšeného poupěte po rozkvetlý květ. Bez obličejů, čistý flat styl.
+const STEM = '#6F9A4F', LEAF = '#93BC6E';
+function moodArt(n, size = 40) {
+  const c = MOODS[n - 1].color;
+  const ring = (k, cy, rx, ry, cx0, cy0, fill, off = 0) => Array.from({ length: k }, (_, i) => `<ellipse cx="${cx0}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${off + (360 / k) * i} ${cx0} ${cy0})" fill="${fill}"/>`).join('');
+  const leafL = `<path d="M24 38c-6.5 0-9.6-3.4-10.6-7.6 5.4 0 9.4 2.4 10.6 7.6z" fill="${LEAF}"/>`;
+  const leafR = `<path d="M24 34.5c6.5 0 9.6-3.4 10.6-7.6-5.4 0-9.4 2.4-10.6 7.6z" fill="${LEAF}"/>`;
+  const art = {
+    1: `<path d="M24 46c0-11 .6-17.5 6-22.5" fill="none" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}
+        <g transform="rotate(150 31 26)"><path d="M31 15c4 3.6 5.8 7.2 5.8 10.4a5.8 5.8 0 0 1-11.6 0c0-3.2 1.8-6.8 5.8-10.4z" fill="${c}"/><path d="M25.6 26.6c1.8 3 3.4 4.2 5.4 4.6 2-.4 3.6-1.6 5.4-4.6-1.8 1.2-3.6 1.6-5.4 1.6s-3.6-.4-5.4-1.6z" fill="${STEM}"/></g>`,
+    2: `<path d="M24 46V27" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}
+        <path d="M24 9.5c4.6 4 6.6 8 6.6 11.6a6.6 6.6 0 0 1-13.2 0c0-3.6 2-7.6 6.6-11.6z" fill="${c}"/>
+        <path d="M17.6 22.4c2 3.8 4 5.4 6.4 5.9 2.4-.5 4.4-2.1 6.4-5.9-2 1.4-4.2 2-6.4 2s-4.4-.6-6.4-2z" fill="${STEM}"/>`,
+    3: `<path d="M24 46V26" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        <path d="M15.5 12.5c-.4 8.6 2.8 14.5 8.5 14.5s8.9-5.9 8.5-14.5c-2.6 1.8-4.6 3-6.2 3.4L24 9.5l-2.3 6.4c-1.6-.4-3.6-1.6-6.2-3.4z" fill="${c}"/>
+        <path d="M24 9.5l2.3 6.4c-.4 3.6-1.2 7.6-2.3 11.1-1.1-3.5-1.9-7.5-2.3-11.1z" fill="#fff" opacity=".28"/>`,
+    4: `<path d="M24 46V22" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        ${ring(5, 10.6, 4.8, 6.6, 24, 17.5, c)}<circle cx="24" cy="17.5" r="3.6" fill="#7A5A3A"/><circle cx="23" cy="16.5" r="1" fill="#fff" opacity=".35"/>`,
+    5: `<path d="M24 46V22" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        ${ring(8, 6.8, 3.9, 7, 24, 16.5, c)}${ring(8, 10.6, 2.6, 4.4, 24, 16.5, '#fff', 22.5).replace(/fill="#fff"/g, 'fill="#fff" opacity=".35"')}<circle cx="24" cy="16.5" r="3.6" fill="#7A5A3A"/><circle cx="23" cy="15.5" r="1" fill="#fff" opacity=".35"/>`,
+  };
+  return `<svg viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true" focusable="false">${art[n]}</svg>`;
+}
+const CZ_MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+/** Nejnovější záznam za každý den (víc zápisů za den = platí poslední). */
+function moodByDay() {
+  const map = {};
+  for (const c of S.checkins) if (!map[c.day]) map[c.day] = c;
+  return map;
+}
+function moodCalendar() {
+  const today = todayStr();
+  const ym = S.moodMonth || today.slice(0, 7);
+  const [y, mo] = ym.split('-').map(Number);
+  const first = new Date(y, mo - 1, 1);
+  const days = new Date(y, mo, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // pondělí první
+  const byDay = moodByDay();
+  const pad = (n) => String(n).padStart(2, '0');
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<span class="cal-cell empty" aria-hidden="true"></span>');
+  for (let d = 1; d <= days; d++) {
+    const key = `${y}-${pad(mo)}-${pad(d)}`;
+    const c = byDay[key];
+    const future = key > today;
+    const cls = `cal-cell${c ? ' has' : ''}${key === today ? ' today' : ''}${future ? ' future' : ''}${S.moodDay === key ? ' sel' : ''}`;
+    const label = `${d}. ${CZ_MONTHS[mo - 1]}${c ? `: ${MOODS[c.mood - 1].label}` : ''}`;
+    cells.push(c
+      ? `<button type="button" class="${cls}" style="background:${MOODS[c.mood - 1].tint}" data-a="moodDay" data-v="${key}" aria-label="${esc(label)}">${moodArt(c.mood, 26)}<span>${d}</span></button>`
+      : `<span class="${cls}" aria-label="${esc(label)}"><span>${d}</span></span>`);
+  }
+  const canNext = ym < today.slice(0, 7);
+  const sel = S.moodDay && byDay[S.moodDay];
+  const selRaw = sel ? new Date(S.moodDay + 'T12:00').toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+  const selDate = selRaw.charAt(0).toUpperCase() + selRaw.slice(1);
+  const count = Object.keys(byDay).filter((k) => k.startsWith(ym)).length;
+  return `<section class="card mood-cal">
+    <div class="row between"><button type="button" class="icon-btn soft" data-a="moodMonth" data-v="-1" aria-label="Předchozí měsíc">‹</button>
+      <div style="text-align:center"><h2 style="text-transform:capitalize">${CZ_MONTHS[mo - 1]} ${y}</h2><p class="small muted">${count ? `Zapsané dny: ${count}` : 'Tento měsíc bez záznamu'}</p></div>
+      <button type="button" class="icon-btn soft" data-a="moodMonth" data-v="1" aria-label="Další měsíc" ${canNext ? '' : 'disabled'}>›</button></div>
+    <div class="cal-grid cal-head" aria-hidden="true">${['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map((d) => `<span>${d}</span>`).join('')}</div>
+    <div class="cal-grid">${cells.join('')}</div>
+    ${sel ? `<div class="row cal-detail">${moodArt(sel.mood, 36)}<div class="grow"><p style="font-weight:600">${esc(selDate)}</p><p class="small muted">${esc(MOODS[sel.mood - 1].label)}</p></div><button type="button" class="link-btn danger-text" data-a="moodDelete" data-v="${esc(S.moodDay)}">Smazat</button></div>` : ''}
+    <div class="cal-legend">${MOODS.map((m) => `<span>${moodArt(m.n, 18)}${esc(m.short)}</span>`).join('')}</div>
+  </section>`;
+}
+
 function moodView() {
   const consent = (S.me?.souhlasy || []).some((c) => c.typ === 'ZDRAVOTNI_UDAJE' && c.platny);
-  const labels = ['Je to těžké', 'Spíš špatně', 'Ujde to', 'Docela dobře', 'Je mi dobře'];
-  return `<div class="screen" style="padding-bottom:28px">
+  const todayMood = moodByDay()[todayStr()];
+  const current = S.mood || todayMood?.mood || null;
+  return `<div class="screen mood-screen" style="padding-bottom:28px">
     <button class="btn ghost small-btn" style="align-self:flex-start" data-a="closeOverlay">Zpět</button>
-    <div><h1 style="font-size:24px">Jak se dnes máš?</h1><p class="muted">Vidíš to jen ty. Nikdy se nesdílí.</p></div>
+    <h1 style="font-size:24px">Jak se dnes máš?</h1>
     ${!consent
       ? `<section class="card"><h3>Než začneme</h3><p class="muted small">Nálada je citlivý údaj o zdraví. Ukládáme ji, jen když s tím výslovně souhlasíš. Nikdo jiný ji neuvidí a souhlas můžeš kdykoli odvolat.</p>
-         <button class="btn" data-a="consentHealth">Souhlasím</button></section>`
-      : `<div class="moods" role="radiogroup" aria-label="Nálada">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${S.mood === n}" aria-label="${labels[n - 1]}" data-a="pickMood" data-v="${n}">${n}</button>`).join('')}</div>
-         <div class="row between small muted"><span>Je to těžké</span><span>Je mi dobře</span></div>
+         <button class="btn" data-a="consentHealth">Souhlasím</button></section>
+         ${S.checkins.length ? moodCalendar() : ''}`
+      : `<div class="moods" role="radiogroup" aria-label="Nálada">${MOODS.map((m) => `<button type="button" role="radio" aria-checked="${current === m.n}" style="--mood:${m.tint}" data-a="pickMood" data-v="${m.n}">${moodArt(m.n, 40)}<span>${esc(m.short)}</span></button>`).join('')}</div>
+         ${todayMood && !S.moodResult ? '<p class="small muted" style="text-align:center">Dnešní nálada je zapsaná. Kdyby se změnila, stačí vybrat jinou.</p>' : ''}
          ${S.moodResult === 'low' ? `<section class="card" aria-live="polite"><h2>Je nám líto, že je to teď těžké.</h2><p class="green-text" style="line-height:1.5">Nemusíš teď nic plnit ani nikomu nic vysvětlovat. Když budeš chtít, ozvi se někomu blízkému.</p></section>` : ''}
          ${S.moodResult === 'ok' ? `<section class="card" aria-live="polite"><p class="green-text">Díky, je to zapsané. Jen pro tebe.</p></section>` : ''}
+         ${moodCalendar()}
          <button class="btn soft" data-a="revokeHealth">Odvolat souhlas s ukládáním nálady</button>`}
     <p class="muted small">U záznamu nálady nejsou body ani oslavy. Aplikace tvoje texty nečte ani nevyhodnocuje.</p>
   </div>`;
@@ -1108,13 +1186,32 @@ const actions = {
     }
   },
   async removeAvatar() { S.me = await api.deleteAvatar(); S.toast = 'Fotka je odebraná.'; },
-  openMood() { S.overlay = 'nalada'; S.mood = null; S.moodResult = null; },
-  async consentHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', true); },
+  async openMood() {
+    S.overlay = 'nalada'; S.mood = null; S.moodResult = null; S.moodMonth = null; S.moodDay = null;
+    try { S.checkins = await api.checkins(); } catch { S.checkins = []; }
+  },
+  async consentHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', true); try { S.checkins = await api.checkins(); } catch { /* bez záznamů */ } },
+  moodMonth(d) {
+    const [y, m] = (S.moodMonth || todayStr().slice(0, 7)).split('-').map(Number);
+    const dt = new Date(y, m - 1 + Number(d.v), 1);
+    const next = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    if (next > todayStr().slice(0, 7)) return;
+    S.moodMonth = next; S.moodDay = null;
+  },
+  moodDay(d) { S.moodDay = S.moodDay === d.v ? null : d.v; },
+  async moodDelete(d) {
+    for (const c of S.checkins.filter((x) => x.day === d.v)) await api.deleteCheckin(c.id);
+    S.checkins = S.checkins.filter((x) => x.day !== d.v);
+    S.moodDay = null;
+    if (d.v === todayStr()) { S.mood = null; S.moodResult = null; }
+    S.toast = 'Záznam nálady je smazaný.';
+  },
   async revokeHealth() { S.me = await api.consent('ZDRAVOTNI_UDAJE', false); S.toast = 'Souhlas je odvolaný. Další náladu už neukládáme.'; },
   async pickMood(d) {
     S.mood = Number(d.v);
     const r = await api.checkin(S.mood);
     S.moodResult = r.nabidnoutPomoc ? 'low' : 'ok';
+    try { S.checkins = await api.checkins(); } catch { /* kalendář se obnoví příště */ }
   },
   openShare(d) { S.overlay = 'sdileni'; S.shareFor = d.id; S.shareTarget = null; S.preview = null; },
   async shareTarget(d) {
