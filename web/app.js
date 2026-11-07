@@ -886,25 +886,36 @@ function meView() {
   </div>`;
 }
 
-// ---------- nálada: 5 kytiček (každá jiná barva a výraz) a kalendář ----------
+// ---------- nálada: 5 kytiček (každá jiná barva a podoba) a kalendář ----------
 const MOODS = [
   { n: 1, label: 'Je to těžké', short: 'Těžké', color: '#8DA4BF', tint: '#E4EBF3' },
-  { n: 2, label: 'Spíš špatně', short: 'Spíš špatně', color: '#B3A1D6', tint: '#EEE8F7' },
-  { n: 3, label: 'Ujde to', short: 'Ujde to', color: '#EFC85E', tint: '#FBF1D2' },
-  { n: 4, label: 'Docela dobře', short: 'Docela dobře', color: '#97C76A', tint: '#E6F2D9' },
-  { n: 5, label: 'Je mi dobře', short: 'Dobře', color: '#F193A0', tint: '#FCE4E7' },
+  { n: 2, label: 'Spíš špatně', short: 'Spíš špatně', color: '#AE9BD3', tint: '#EEE8F7' },
+  { n: 3, label: 'Ujde to', short: 'Ujde to', color: '#EBC155', tint: '#FBF1D2' },
+  { n: 4, label: 'Docela dobře', short: 'Docela dobře', color: '#F2A06B', tint: '#FDEADC' },
+  { n: 5, label: 'Je mi dobře', short: 'Dobře', color: '#EC7E93', tint: '#FCE3E8' },
 ];
-const MOOD_FACE = {
-  1: '<path d="M19.2 21.4q1.6-1.6 3.2 0M25.6 21.4q1.6-1.6 3.2 0"/><path d="M20.5 29q3.5-3 7 0"/><path d="M19.6 24.2q-1.1 1.8 0 2.6q1.1-.8 0-2.6z" fill="#6E9BD1" stroke="none"/>',
-  2: '<circle cx="20.6" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><circle cx="27.4" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><path d="M20.8 28.4q3.2-1.6 6.4 0"/>',
-  3: '<circle cx="20.6" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><circle cx="27.4" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><path d="M21 27.6h6"/>',
-  4: '<circle cx="20.6" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><circle cx="27.4" cy="21.8" r="1.25" fill="#3B3A30" stroke="none"/><path d="M20.6 26.4q3.4 3 6.8 0"/>',
-  5: '<path d="M19.2 22.4q1.6-1.8 3.2 0M25.6 22.4q1.6-1.8 3.2 0"/><path d="M20 25.8h8q-.6 4.2-4 4.2t-4-4.2z" fill="#C2525F" stroke-linejoin="round"/><circle cx="17.8" cy="26" r="1.6" fill="#F7B9C1" stroke="none"/><circle cx="30.2" cy="26" r="1.6" fill="#F7B9C1" stroke="none"/>',
-};
+// Kytička podle nálady: od svěšeného poupěte po rozkvetlý květ. Bez obličejů, čistý flat styl.
+const STEM = '#6F9A4F', LEAF = '#93BC6E';
 function moodArt(n, size = 40) {
-  const m = MOODS[n - 1];
-  const petals = [0, 60, 120, 180, 240, 300].map((a) => `<ellipse cx="24" cy="10.6" rx="6.6" ry="8.6" transform="rotate(${a} 24 24)"/>`).join('');
-  return `<svg viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true" focusable="false"><g fill="${m.color}">${petals}</g><circle cx="24" cy="24" r="10.6" fill="#FFF7E6"/><g fill="none" stroke="#3B3A30" stroke-width="1.6" stroke-linecap="round">${MOOD_FACE[n]}</g></svg>`;
+  const c = MOODS[n - 1].color;
+  const ring = (k, cy, rx, ry, cx0, cy0, fill, off = 0) => Array.from({ length: k }, (_, i) => `<ellipse cx="${cx0}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${off + (360 / k) * i} ${cx0} ${cy0})" fill="${fill}"/>`).join('');
+  const leafL = `<path d="M24 38c-6.5 0-9.6-3.4-10.6-7.6 5.4 0 9.4 2.4 10.6 7.6z" fill="${LEAF}"/>`;
+  const leafR = `<path d="M24 34.5c6.5 0 9.6-3.4 10.6-7.6-5.4 0-9.4 2.4-10.6 7.6z" fill="${LEAF}"/>`;
+  const art = {
+    1: `<path d="M24 46c0-11 .6-17.5 6-22.5" fill="none" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}
+        <g transform="rotate(150 31 26)"><path d="M31 15c4 3.6 5.8 7.2 5.8 10.4a5.8 5.8 0 0 1-11.6 0c0-3.2 1.8-6.8 5.8-10.4z" fill="${c}"/><path d="M25.6 26.6c1.8 3 3.4 4.2 5.4 4.6 2-.4 3.6-1.6 5.4-4.6-1.8 1.2-3.6 1.6-5.4 1.6s-3.6-.4-5.4-1.6z" fill="${STEM}"/></g>`,
+    2: `<path d="M24 46V27" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}
+        <path d="M24 9.5c4.6 4 6.6 8 6.6 11.6a6.6 6.6 0 0 1-13.2 0c0-3.6 2-7.6 6.6-11.6z" fill="${c}"/>
+        <path d="M17.6 22.4c2 3.8 4 5.4 6.4 5.9 2.4-.5 4.4-2.1 6.4-5.9-2 1.4-4.2 2-6.4 2s-4.4-.6-6.4-2z" fill="${STEM}"/>`,
+    3: `<path d="M24 46V26" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        <path d="M15.5 12.5c-.4 8.6 2.8 14.5 8.5 14.5s8.9-5.9 8.5-14.5c-2.6 1.8-4.6 3-6.2 3.4L24 9.5l-2.3 6.4c-1.6-.4-3.6-1.6-6.2-3.4z" fill="${c}"/>
+        <path d="M24 9.5l2.3 6.4c-.4 3.6-1.2 7.6-2.3 11.1-1.1-3.5-1.9-7.5-2.3-11.1z" fill="#fff" opacity=".28"/>`,
+    4: `<path d="M24 46V22" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        ${ring(5, 10.6, 4.8, 6.6, 24, 17.5, c)}<circle cx="24" cy="17.5" r="3.6" fill="#7A5A3A"/><circle cx="23" cy="16.5" r="1" fill="#fff" opacity=".35"/>`,
+    5: `<path d="M24 46V22" stroke="${STEM}" stroke-width="2.2" stroke-linecap="round"/>${leafL}${leafR}
+        ${ring(8, 6.8, 3.9, 7, 24, 16.5, c)}${ring(8, 10.6, 2.6, 4.4, 24, 16.5, '#fff', 22.5).replace(/fill="#fff"/g, 'fill="#fff" opacity=".35"')}<circle cx="24" cy="16.5" r="3.6" fill="#7A5A3A"/><circle cx="23" cy="15.5" r="1" fill="#fff" opacity=".35"/>`,
+  };
+  return `<svg viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true" focusable="false">${art[n]}</svg>`;
 }
 const CZ_MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
 /** Nejnovější záznam za každý den (víc zápisů za den = platí poslední). */
@@ -956,7 +967,7 @@ function moodView() {
   const current = S.mood || todayMood?.mood || null;
   return `<div class="screen mood-screen" style="padding-bottom:28px">
     <button class="btn ghost small-btn" style="align-self:flex-start" data-a="closeOverlay">Zpět</button>
-    <div><h1 style="font-size:24px">Jak se dnes máš?</h1><p class="muted">Vidíš to jen ty. Nikdy se nesdílí.</p></div>
+    <h1 style="font-size:24px">Jak se dnes máš?</h1>
     ${!consent
       ? `<section class="card"><h3>Než začneme</h3><p class="muted small">Nálada je citlivý údaj o zdraví. Ukládáme ji, jen když s tím výslovně souhlasíš. Nikdo jiný ji neuvidí a souhlas můžeš kdykoli odvolat.</p>
          <button class="btn" data-a="consentHealth">Souhlasím</button></section>
