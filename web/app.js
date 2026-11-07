@@ -888,11 +888,11 @@ function meView() {
 
 // ---------- nálada: 5 kytiček (každá jiná barva a podoba) a kalendář ----------
 const MOODS = [
-  { n: 1, label: 'Je to těžké', short: 'Těžké', color: '#8DA4BF', tint: '#E4EBF3' },
+  { n: 1, label: 'Špatně', short: 'Špatně', color: '#8DA4BF', tint: '#E4EBF3' },
   { n: 2, label: 'Spíš špatně', short: 'Spíš špatně', color: '#AE9BD3', tint: '#EEE8F7' },
   { n: 3, label: 'Ujde to', short: 'Ujde to', color: '#EBC155', tint: '#FBF1D2' },
   { n: 4, label: 'Docela dobře', short: 'Docela dobře', color: '#F2A06B', tint: '#FDEADC' },
-  { n: 5, label: 'Je mi dobře', short: 'Dobře', color: '#EC7E93', tint: '#FCE3E8' },
+  { n: 5, label: 'Dobře', short: 'Dobře', color: '#EC7E93', tint: '#FCE3E8' },
 ];
 // Kytička podle nálady: od svěšeného poupěte po rozkvetlý květ. Bez obličejů, čistý flat styl.
 const STEM = '#6F9A4F', LEAF = '#93BC6E';
